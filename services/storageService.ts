@@ -15,13 +15,13 @@ export const getNotes = (): Note[] => {
 export const saveNote = (note: Note): void => {
   const notes = getNotes();
   const existingIndex = notes.findIndex(n => n.id === note.id);
-  
+
   if (existingIndex >= 0) {
     notes[existingIndex] = note;
   } else {
     notes.push(note);
   }
-  
+
   localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
 };
 
@@ -46,4 +46,23 @@ export const createNoteObject = (content: string): Note => {
     updatedAt: Date.now(),
     parentId: null
   };
+};
+
+export const deleteNote = (noteId: string): void => {
+  const notes = getNotes();
+  // Filter out the note itself
+  let remaining = notes.filter(n => n.id !== noteId);
+  // If the deleted note was a question, also remove orphaned children
+  remaining = remaining.filter(n => n.parentId !== noteId);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(remaining));
+};
+
+export const updateNoteContent = (noteId: string, newContent: string): void => {
+  const notes = getNotes();
+  const note = notes.find(n => n.id === noteId);
+  if (note) {
+    note.content = newContent;
+    note.updatedAt = Date.now();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+  }
 };

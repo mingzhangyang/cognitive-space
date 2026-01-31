@@ -1,0 +1,14 @@
+name = "cognitive-space"
+main = "worker.ts"
+compatibility_date = "2025-01-01"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+
+[vars]
+# Override to your preferred GLM model slug. Default is "glm-4.5-flash".
+BIGMODEL_MODEL = "glm-4.5-air"
+# Legacy alias MODEL_ID is still read for backward compatibility.
+# Optional: override the base URL if needed.
+# BIGMODEL_BASE_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions"

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { createNoteObject, saveNote, getQuestions } from '../services/storageService';
-import { analyzeText } from '../services/geminiService';
+import { analyzeText } from '../services/aiService';
 import { NoteType } from '../types';
 import { LoadingSpinner } from '../components/Icons';
 import { useAppContext } from '../contexts/AppContext';
