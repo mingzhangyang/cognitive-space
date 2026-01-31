@@ -1,0 +1,5 @@
+{
+  "name": "Cognitive Space",
+  "description": "A tool for externalizing thought. It does not manage notes; it accompanies problems. Write freely, and let the system discover the structure.",
+  "requestFramePermissions": []
+}
