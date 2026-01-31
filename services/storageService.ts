@@ -1,40 +1,79 @@
+import { openDB, DBSchema, IDBPDatabase } from 'idb';
 import { Note, NoteType } from '../types';
 
-const STORAGE_KEY = 'cognitive_space_v1';
+const DB_NAME = 'cognitive_space_db';
+const DB_VERSION = 1;
+const STORE_NOTES = 'notes';
 
-export const getNotes = (): Note[] => {
+interface CognitiveSpaceDB extends DBSchema {
+  notes: {
+    key: string;
+    value: Note;
+    indexes: {
+      'by-type': NoteType;
+      'by-parent': string | null;
+      'by-updated': number;
+    };
+  };
+}
+
+let dbPromise: Promise<IDBPDatabase<CognitiveSpaceDB>> | null = null;
+
+const getDb = () => {
+  if (!dbPromise) {
+    dbPromise = openDB<CognitiveSpaceDB>(DB_NAME, DB_VERSION, {
+      upgrade(db, _oldVersion, _newVersion, transaction) {
+        let store: IDBObjectStore;
+        if (!db.objectStoreNames.contains(STORE_NOTES)) {
+          store = db.createObjectStore(STORE_NOTES, { keyPath: 'id' });
+        } else {
+          store = transaction.objectStore(STORE_NOTES);
+        }
+
+        if (!store.indexNames.contains('by-type')) {
+          store.createIndex('by-type', 'type');
+        }
+        if (!store.indexNames.contains('by-parent')) {
+          store.createIndex('by-parent', 'parentId');
+        }
+        if (!store.indexNames.contains('by-updated')) {
+          store.createIndex('by-updated', 'updatedAt');
+        }
+      }
+    });
+  }
+
+  return dbPromise;
+};
+
+export const getNotes = async (): Promise<Note[]> => {
   try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+    const db = await getDb();
+    return await db.getAll(STORE_NOTES);
   } catch (e) {
     console.error("Failed to load notes", e);
     return [];
   }
 };
 
-export const saveNote = (note: Note): void => {
-  const notes = getNotes();
-  const existingIndex = notes.findIndex(n => n.id === note.id);
-
-  if (existingIndex >= 0) {
-    notes[existingIndex] = note;
-  } else {
-    notes.push(note);
-  }
-
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+export const saveNote = async (note: Note): Promise<void> => {
+  const db = await getDb();
+  await db.put(STORE_NOTES, note);
 };
 
-export const getQuestions = (): Note[] => {
-  return getNotes().filter(n => n.type === NoteType.QUESTION);
+export const getQuestions = async (): Promise<Note[]> => {
+  const db = await getDb();
+  return await db.getAllFromIndex(STORE_NOTES, 'by-type', NoteType.QUESTION);
 };
 
-export const getRelatedNotes = (questionId: string): Note[] => {
-  return getNotes().filter(n => n.parentId === questionId);
+export const getRelatedNotes = async (questionId: string): Promise<Note[]> => {
+  const db = await getDb();
+  return await db.getAllFromIndex(STORE_NOTES, 'by-parent', questionId);
 };
 
-export const getNoteById = (id: string): Note | undefined => {
-  return getNotes().find(n => n.id === id);
+export const getNoteById = async (id: string): Promise<Note | undefined> => {
+  const db = await getDb();
+  return await db.get(STORE_NOTES, id);
 };
 
 export const createNoteObject = (content: string): Note => {
@@ -48,21 +87,26 @@ export const createNoteObject = (content: string): Note => {
   };
 };
 
-export const deleteNote = (noteId: string): void => {
-  const notes = getNotes();
-  // Filter out the note itself
-  let remaining = notes.filter(n => n.id !== noteId);
-  // If the deleted note was a question, also remove orphaned children
-  remaining = remaining.filter(n => n.parentId !== noteId);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(remaining));
+export const deleteNote = async (noteId: string): Promise<void> => {
+  const db = await getDb();
+  const tx = db.transaction(STORE_NOTES, 'readwrite');
+  const store = tx.store;
+
+  await store.delete(noteId);
+  const childKeys = await store.index('by-parent').getAllKeys(noteId);
+  for (const key of childKeys) {
+    await store.delete(key);
+  }
+
+  await tx.done;
 };
 
-export const updateNoteContent = (noteId: string, newContent: string): void => {
-  const notes = getNotes();
-  const note = notes.find(n => n.id === noteId);
+export const updateNoteContent = async (noteId: string, newContent: string): Promise<void> => {
+  const db = await getDb();
+  const note = await db.get(STORE_NOTES, noteId);
   if (note) {
     note.content = newContent;
     note.updatedAt = Date.now();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+    await db.put(STORE_NOTES, note);
   }
 };

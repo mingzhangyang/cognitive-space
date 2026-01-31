@@ -42,14 +42,15 @@ const Home: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const { t } = useAppContext();
 
-  const loadData = () => {
-    const allNotes = getNotes();
+  const loadData = async () => {
+    const allNotes = await getNotes();
     setHasNotes(allNotes.length > 0);
-    setQuestions(getQuestions().sort((a, b) => b.updatedAt - a.updatedAt));
+    const questions = await getQuestions();
+    setQuestions(questions.sort((a, b) => b.updatedAt - a.updatedAt));
   };
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const handleDelete = (e: React.MouseEvent, questionId: string) => {
@@ -58,10 +59,10 @@ const Home: React.FC = () => {
     setDeleteTarget(questionId);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteTarget) {
-      deleteNote(deleteTarget);
-      loadData();
+      await deleteNote(deleteTarget);
+      void loadData();
       setDeleteTarget(null);
     }
   };

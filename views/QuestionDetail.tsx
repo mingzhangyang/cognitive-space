@@ -65,17 +65,17 @@ const QuestionDetail: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; isQuestion: boolean } | null>(null);
   const { t } = useAppContext();
 
-  const loadData = () => {
+  const loadData = async () => {
     if (id) {
-      const allNotes = getRelatedNotes(id);
+      const allNotes = await getRelatedNotes(id);
       setRelatedNotes(allNotes.sort((a, b) => b.createdAt - a.createdAt));
-      const q = getNoteById(id);
+      const q = await getNoteById(id);
       setQuestion(q || null);
     }
   };
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, [id]);
 
   const handleEdit = (note: Note) => {
@@ -83,12 +83,12 @@ const QuestionDetail: React.FC = () => {
     setEditContent(note.content);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (editingId && editContent.trim()) {
-      updateNoteContent(editingId, editContent.trim());
+      await updateNoteContent(editingId, editContent.trim());
       setEditingId(null);
       setEditContent('');
-      loadData();
+      void loadData();
     }
   };
 
@@ -101,13 +101,13 @@ const QuestionDetail: React.FC = () => {
     setDeleteTarget({ id: noteId, isQuestion });
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteTarget) {
-      deleteNote(deleteTarget.id);
+      await deleteNote(deleteTarget.id);
       if (deleteTarget.isQuestion) {
         navigate('/');
       } else {
-        loadData();
+        void loadData();
       }
       setDeleteTarget(null);
     }

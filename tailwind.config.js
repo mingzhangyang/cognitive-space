@@ -8,14 +8,14 @@ export default {
   theme: {
     extend: {
       colors: {
-        paper: '#fdfbf7',
-        'paper-dark': '#1c1917',
-        ink: '#2d2a26',
-        'ink-dark': '#e7e5e4',
-        subtle: '#8a8580',
-        'subtle-dark': '#a8a29e',
-        accent: '#d97706',
-        'accent-dark': '#fbbf24',
+        paper: '#fbf9f4',
+        'paper-dark': '#0f1115',
+        ink: '#1f2937',
+        'ink-dark': '#e2e8f0',
+        subtle: '#475569',
+        'subtle-dark': '#94a3b8',
+        accent: '#0f766e',
+        'accent-dark': '#2dd4bf',
       },
       fontFamily: {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],

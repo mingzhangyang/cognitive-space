@@ -23,7 +23,7 @@ const Write: React.FC = () => {
       const newNote = createNoteObject(content.trim());
       
       // 2. Get existing questions for context
-      const existingQuestions = getQuestions();
+      const existingQuestions = await getQuestions();
 
       // 3. AI Analysis
       const analysis = await analyzeText(newNote.content, existingQuestions, language);
@@ -38,7 +38,7 @@ const Write: React.FC = () => {
       }
 
       // 5. Save to storage
-      saveNote(newNote);
+      await saveNote(newNote);
 
       // 6. Provide UI Feedback (The "Quiet Hint")
       // Find question title for feedback
