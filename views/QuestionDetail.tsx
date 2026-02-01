@@ -141,14 +141,14 @@ const QuestionDetail: React.FC = () => {
             <>
               <button
                 onClick={() => handleEdit(note)}
-                className="p-1.5 text-stone-400 hover:text-accent dark:text-stone-500 dark:hover:text-accent-dark transition-colors rounded"
+                className="p-1.5 text-stone-500 hover:text-accent dark:text-stone-500 dark:hover:text-accent-dark transition-colors rounded"
                 title="Edit"
               >
                 <EditIcon className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => handleDelete(note.id, false)}
-                className="p-1.5 text-stone-400 hover:text-red-500 dark:text-stone-500 dark:hover:text-red-400 transition-colors rounded"
+                className="p-1.5 text-stone-500 hover:text-red-500 dark:text-stone-500 dark:hover:text-red-400 transition-colors rounded"
                 title="Delete"
               >
                 <TrashIcon className="w-3.5 h-3.5" />
@@ -223,7 +223,7 @@ const QuestionDetail: React.FC = () => {
           <span className="text-xs font-bold text-accent dark:text-accent-dark tracking-widest uppercase mb-3 block">{t('current_problem')}</span>
           <button
             onClick={() => handleDelete(question.id, true)}
-            className="p-2 text-stone-400 hover:text-red-500 dark:text-stone-500 dark:hover:text-red-400 transition-colors rounded-md hover:bg-stone-100 dark:hover:bg-stone-800"
+            className="p-2 text-stone-500 hover:text-red-500 dark:text-stone-500 dark:hover:text-red-400 transition-colors rounded-md hover:bg-stone-100 dark:hover:bg-stone-800"
             title="Delete question"
           >
             <TrashIcon className="w-4 h-4" />

@@ -108,7 +108,7 @@ const Write: React.FC = () => {
     <div className="h-[80vh] flex flex-col">
       <div className="flex-1 flex flex-col justify-center">
         <textarea
-          className="w-full h-full bg-transparent text-xl leading-relaxed text-ink dark:text-ink-dark resize-none focus:outline-none placeholder:text-stone-300 dark:placeholder:text-stone-600 font-serif"
+          className="w-full h-full bg-transparent text-xl leading-relaxed text-ink dark:text-ink-dark resize-none focus:outline-none placeholder:text-stone-500 dark:placeholder:text-stone-600 font-serif"
           placeholder={t('write_placeholder')}
           value={content}
           onChange={(e) => {

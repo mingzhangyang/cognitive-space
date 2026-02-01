@@ -1,5 +1,5 @@
+@config "../tailwind.config.js";
 @import "tailwindcss";
-@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --color-paper: #fafaf9;

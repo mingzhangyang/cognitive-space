@@ -118,7 +118,7 @@ const Home: React.FC = () => {
                 {t('recall_label')}
               </label>
               <div className="mt-3 relative">
-                <SearchIcon className="w-4 h-4 text-stone-400 dark:text-stone-500 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <SearchIcon className="w-4 h-4 text-stone-500 dark:text-stone-500 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   id="recall"
                   type="text"
@@ -132,7 +132,7 @@ const Home: React.FC = () => {
                     }
                   }}
                   placeholder={t('recall_placeholder')}
-                  className="w-full rounded-full border border-stone-200 dark:border-stone-700 bg-white/80 dark:bg-stone-900/60 text-sm text-ink dark:text-ink-dark px-10 py-3 focus:outline-none focus:ring-2 focus:ring-accent/30 dark:focus:ring-accent-dark/30 placeholder:text-stone-300 dark:placeholder:text-stone-600"
+                  className="w-full rounded-full border border-stone-200 dark:border-stone-700 bg-white/80 dark:bg-stone-900/60 text-sm text-ink dark:text-ink-dark px-10 py-3 focus:outline-none focus:ring-2 focus:ring-accent/30 dark:focus:ring-accent-dark/30 placeholder:text-stone-500 dark:placeholder:text-stone-600"
                   aria-label={t('recall_label')}
                   autoFocus
                 />
@@ -140,7 +140,7 @@ const Home: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full text-stone-400 hover:text-ink dark:text-stone-500 dark:hover:text-ink-dark hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full text-stone-500 hover:text-ink dark:text-stone-500 dark:hover:text-ink-dark hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
                     aria-label={t('clear_recall')}
                     title={t('clear_recall')}
                   >
@@ -189,12 +189,12 @@ const Home: React.FC = () => {
                 <div className="flex items-center gap-2 ml-4">
                   <button
                     onClick={(e) => handleDelete(e, q.id)}
-                    className="p-2 text-stone-300 dark:text-stone-600 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all rounded-md hover:bg-stone-100 dark:hover:bg-stone-700"
+                    className="p-2 text-stone-400 dark:text-stone-600 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all rounded-md hover:bg-stone-100 dark:hover:bg-stone-700"
                     title="Delete question"
                   >
                     <TrashIcon className="w-4 h-4" />
                   </button>
-                  <ArrowRightIcon className="text-stone-300 dark:text-stone-600 group-hover:text-accent dark:group-hover:text-accent-dark w-5 h-5 opacity-0 group-hover:opacity-100 transition-all" />
+                  <ArrowRightIcon className="text-stone-400 dark:text-stone-600 group-hover:text-accent dark:group-hover:text-accent-dark w-5 h-5 opacity-0 group-hover:opacity-100 transition-all" />
                 </div>
               </div>
               <div className="mt-4 flex items-center gap-2 text-xs text-subtle dark:text-subtle-dark font-medium uppercase tracking-wider">
