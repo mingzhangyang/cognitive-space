@@ -131,26 +131,26 @@ ${questionsContext || 'No existing questions.'}
 
 Your task is to analyze the cognitive role of this text.
 
-1. Classify the text:
-   - QUESTION: An inquiry or problem statement.
+1. Classify the text (use lowercase labels):
+   - question: An inquiry or problem statement.
      - Subtypes: 'exploratory' (broad/vague), 'specific' (targeted).
-   - CLAIM: A statement of belief, argument, or hypothesis.
+   - claim: A statement of belief, argument, or hypothesis.
      - Subtypes: 'hypothesis' (tentative), 'opinion' (subjective), 'conclusion' (derived).
-   - EVIDENCE: Data or experience supporting/refuting a claim.
+   - evidence: Data or experience supporting/refuting a claim.
      - Subtypes: 'fact' (verifiable), 'observation' (personal), 'anecdote' (story), 'citation' (reference).
-   - TRIGGER: Raw input, inspiration, or fragments.
+   - trigger: Raw input, inspiration, or fragments.
      - Subtypes: 'quote', 'feeling', 'idea'.
 
-2. Connect: If the text is NOT a question, determine if it strongly relates to one of the Living Questions.
-   - If yes, provide the ID.
+2. Connect: Determine if this text strongly overlaps with one of the Living Questions.
+   - If yes, provide the ID (even if the text itself is a question).
    - If it's a new topic entirely, return null.
-   - If the text IS a question, return null for relatedQuestionId.
 
 3. Confidence: Assign a confidence score (0.0 to 1.0) based on how clear the intent is.
 
 ${langInstruction}
 
 Return JSON only with keys: classification, subType, confidence, relatedQuestionId, reasoning.
+Classification must be one of: 'question', 'claim', 'evidence', 'trigger'.
 `.trim();
 }
 
@@ -197,8 +197,11 @@ function safeParseJson(text: string): any {
 }
 
 function normalizeResult(input: any): AnalyzeResponse {
-  const classification = CLASSIFICATIONS.has(input?.classification)
-    ? input.classification
+  const classificationRaw = typeof input?.classification === 'string'
+    ? input.classification.toLowerCase()
+    : '';
+  const classification = CLASSIFICATIONS.has(classificationRaw as AnalyzeResponse['classification'])
+    ? (classificationRaw as AnalyzeResponse['classification'])
     : 'trigger';
 
   const confidenceRaw = typeof input?.confidence === 'number' ? input.confidence : 0.5;

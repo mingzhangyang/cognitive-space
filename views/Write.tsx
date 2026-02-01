@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { createNoteObject, saveNote, getQuestions } from '../services/storageService';
+import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createNoteObject, saveNote, getQuestions, updateNoteMeta } from '../services/storageService';
 import { analyzeText } from '../services/aiService';
 import { NoteType } from '../types';
 import { LoadingSpinner } from '../components/Icons';
@@ -8,15 +9,46 @@ import { useAppContext } from '../contexts/AppContext';
 const Write: React.FC = () => {
   const [content, setContent] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [aiFeedback, setAiFeedback] = useState<{ type: string; subType?: string; linkedTo?: string } | null>(null);
+  const [linkHint, setLinkHint] = useState<{ questionId: string; title: string } | null>(null);
+  const [mergeCandidate, setMergeCandidate] = useState<{ noteId: string; relatedQuestionId: string; relatedTitle: string } | null>(null);
   const { t, language } = useAppContext();
+  const navigate = useNavigate();
+  const feedbackTimerRef = useRef<number | null>(null);
 
   // Auto-focus logic or simple textarea
+  const truncate = (text: string, max = 24) => (text.length > max ? `${text.slice(0, max)}...` : text);
+
+  useEffect(() => {
+    return () => {
+      if (feedbackTimerRef.current) {
+        window.clearTimeout(feedbackTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleMerge = async () => {
+    if (!mergeCandidate) return;
+    await updateNoteMeta(mergeCandidate.noteId, {
+      parentId: mergeCandidate.relatedQuestionId,
+      subType: 'alias'
+    });
+    setMergeCandidate(null);
+  };
+
+  const handleKeepSeparate = () => {
+    setMergeCandidate(null);
+  };
+
   const handleSave = async () => {
     if (!content.trim()) return;
 
     setIsProcessing(true);
-    setAiFeedback(null);
+    setLinkHint(null);
+    setMergeCandidate(null);
+    if (feedbackTimerRef.current) {
+      window.clearTimeout(feedbackTimerRef.current);
+      feedbackTimerRef.current = null;
+    }
 
     try {
       // 1. Create the note object locally first
@@ -33,36 +65,41 @@ const Write: React.FC = () => {
       newNote.subType = analysis.subType;
       newNote.confidence = analysis.confidence;
 
-      if (analysis.relatedQuestionId) {
-        newNote.parentId = analysis.relatedQuestionId;
+      const isQuestion = analysis.classification === NoteType.QUESTION;
+      const relatedQuestionId = analysis.relatedQuestionId || undefined;
+      const linkedQuestion = relatedQuestionId
+        ? existingQuestions.find(q => q.id === relatedQuestionId)
+        : undefined;
+
+      if (!isQuestion && relatedQuestionId) {
+        newNote.parentId = relatedQuestionId;
       }
 
       // 5. Save to storage
       await saveNote(newNote);
 
-      // 6. Provide UI Feedback (The "Quiet Hint")
-      // Find question title for feedback
-      const linkedQuestion = existingQuestions.find(q => q.id === analysis.relatedQuestionId);
-      
-      // Map classification to localized string for display
-      const localizedType = t(`type_${analysis.classification}` as any);
-
-      setAiFeedback({
-        type: localizedType,
-        subType: analysis.subType,
-        linkedTo: linkedQuestion ? linkedQuestion.content : undefined
-      });
+      if (isQuestion && linkedQuestion) {
+        setMergeCandidate({
+          noteId: newNote.id,
+          relatedQuestionId: linkedQuestion.id,
+          relatedTitle: linkedQuestion.content
+        });
+      } else if (!isQuestion && linkedQuestion) {
+        setLinkHint({
+          questionId: linkedQuestion.id,
+          title: linkedQuestion.content
+        });
+        feedbackTimerRef.current = window.setTimeout(() => {
+          setLinkHint(null);
+          feedbackTimerRef.current = null;
+        }, 4000);
+      }
 
       // Clear input but keep feedback visible for a moment
       setContent('');
-      
-      // Reset after delay or redirect
-      setTimeout(() => {
-        setIsProcessing(false);
-      }, 2500);
-
     } catch (error) {
       console.error("Error saving note:", error);
+    } finally {
       setIsProcessing(false);
     }
   };
@@ -74,7 +111,17 @@ const Write: React.FC = () => {
           className="w-full h-full bg-transparent text-xl leading-relaxed text-ink dark:text-ink-dark resize-none focus:outline-none placeholder:text-stone-300 dark:placeholder:text-stone-600 font-serif"
           placeholder={t('write_placeholder')}
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={(e) => {
+            setContent(e.target.value);
+            if (mergeCandidate) setMergeCandidate(null);
+            if (linkHint) {
+              setLinkHint(null);
+              if (feedbackTimerRef.current) {
+                window.clearTimeout(feedbackTimerRef.current);
+                feedbackTimerRef.current = null;
+              }
+            }
+          }}
           autoFocus
           disabled={isProcessing}
         />
@@ -82,22 +129,43 @@ const Write: React.FC = () => {
 
       <div className="h-20 flex items-center justify-between border-t border-stone-100 dark:border-stone-800 mt-4 pt-4">
         <div className="text-sm text-subtle dark:text-subtle-dark flex items-center gap-2">
-           {isProcessing && !aiFeedback && (
+           {isProcessing && !linkHint && !mergeCandidate && (
              <>
                <LoadingSpinner className="w-4 h-4 text-accent dark:text-accent-dark" />
                <span className="animate-pulse">{t('absorbing')}</span>
              </>
            )}
-           {aiFeedback && (
-             <div className="animate-fade-in text-ink dark:text-stone-200 bg-stone-100 dark:bg-stone-800 px-3 py-1.5 rounded-md text-xs">
-               <span className="capitalize font-bold text-accent dark:text-accent-dark">{aiFeedback.type}</span>
-               {aiFeedback.subType && <span className="opacity-70 ml-1">({aiFeedback.subType})</span>} {t('detected')} 
-               {aiFeedback.linkedTo ? (
-                 <span className="ml-1">{t('linked_to')} "{(aiFeedback.linkedTo.length > 20 ? aiFeedback.linkedTo.substring(0, 20) + '...' : aiFeedback.linkedTo)}".</span>
-               ) : (
-                  // Checking the raw key isn't ideal since we localized it, but logic holds if type is QUESTION
-                  aiFeedback.type === t('type_question') ? ` ${t('new_gravity')}` : ` ${t('stored_loosely')}`
-               )}
+           {linkHint && (
+             <div className="animate-fade-in text-ink dark:text-stone-200 bg-stone-100 dark:bg-stone-800 px-3 py-1.5 rounded-md text-xs flex items-center gap-2">
+               <span>{t('related_hint')} "{truncate(linkHint.title, 20)}".</span>
+               <button
+                 type="button"
+                 onClick={() => navigate(`/question/${linkHint.questionId}`)}
+                 className="px-2 py-0.5 rounded-full bg-ink text-white dark:bg-stone-600 hover:opacity-90 transition-opacity"
+               >
+                 {t('view_question')}
+               </button>
+             </div>
+           )}
+           {mergeCandidate && (
+             <div className="animate-fade-in text-ink dark:text-stone-200 bg-stone-100 dark:bg-stone-800 px-3 py-1.5 rounded-md text-xs space-y-2">
+               <div>{t('merge_prompt')} "{truncate(mergeCandidate.relatedTitle, 20)}"</div>
+               <div className="flex flex-wrap items-center gap-2 text-[11px] text-subtle dark:text-subtle-dark">
+                 <button
+                   type="button"
+                   onClick={handleMerge}
+                   className="px-2 py-0.5 rounded-full bg-ink text-white dark:bg-stone-600 hover:opacity-90 transition-opacity"
+                 >
+                   {t('merge_action')}
+                 </button>
+                 <button
+                   type="button"
+                   onClick={handleKeepSeparate}
+                   className="px-2 py-0.5 rounded-full border border-stone-300 dark:border-stone-600 hover:border-stone-400 dark:hover:border-stone-500 transition-colors"
+                 >
+                   {t('separate_action')}
+                 </button>
+               </div>
              </div>
            )}
         </div>

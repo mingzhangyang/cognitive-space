@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getQuestions, getNotes, deleteNote } from '../services/storageService';
 import { Note } from '../types';
-import { PlusIcon, ArrowRightIcon, TrashIcon } from '../components/Icons';
+import { PlusIcon, ArrowRightIcon, TrashIcon, SearchIcon, XIcon } from '../components/Icons';
 import { useAppContext } from '../contexts/AppContext';
 
 const ConfirmDialog: React.FC<{
@@ -40,6 +40,8 @@ const Home: React.FC = () => {
   const [questions, setQuestions] = useState<Note[]>([]);
   const [hasNotes, setHasNotes] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  const [isRecallOpen, setIsRecallOpen] = useState(false);
   const { t } = useAppContext();
 
   const loadData = async () => {
@@ -52,6 +54,22 @@ const Home: React.FC = () => {
   useEffect(() => {
     void loadData();
   }, []);
+
+  const normalizedQuery = query.trim().toLowerCase();
+  const queryTokens = normalizedQuery.split(/\s+/).filter(Boolean);
+  const filteredQuestions = queryTokens.length === 0
+    ? questions
+    : questions.filter((q) => {
+        const content = q.content.toLowerCase();
+        return queryTokens.every((token) => content.includes(token));
+      });
+  const hasQuestions = questions.length > 0;
+  const isFiltering = queryTokens.length > 0;
+
+  const openRecall = () => setIsRecallOpen(true);
+  const closeRecall = () => {
+    if (!query.trim()) setIsRecallOpen(false);
+  };
 
   const handleDelete = (e: React.MouseEvent, questionId: string) => {
     e.preventDefault();
@@ -82,17 +100,83 @@ const Home: React.FC = () => {
       </div>
 
       <div className="space-y-4 pb-24">
-        {questions.length === 0 ? (
+        <div className="mb-6">
+          {!isRecallOpen ? (
+            <button
+              type="button"
+              onClick={openRecall}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-stone-200 dark:border-stone-700 text-xs uppercase tracking-widest text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark hover:border-stone-300 dark:hover:border-stone-600 transition-colors"
+              aria-label={t('recall_label')}
+              title={t('recall_label')}
+            >
+              <SearchIcon className="w-4 h-4" />
+              <span>{t('recall_label')}</span>
+            </button>
+          ) : (
+            <>
+              <label htmlFor="recall" className="text-xs uppercase tracking-widest text-subtle dark:text-subtle-dark">
+                {t('recall_label')}
+              </label>
+              <div className="mt-3 relative">
+                <SearchIcon className="w-4 h-4 text-stone-400 dark:text-stone-500 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  id="recall"
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onBlur={closeRecall}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setQuery('');
+                      setIsRecallOpen(false);
+                    }
+                  }}
+                  placeholder={t('recall_placeholder')}
+                  className="w-full rounded-full border border-stone-200 dark:border-stone-700 bg-white/80 dark:bg-stone-900/60 text-sm text-ink dark:text-ink-dark px-10 py-3 focus:outline-none focus:ring-2 focus:ring-accent/30 dark:focus:ring-accent-dark/30 placeholder:text-stone-300 dark:placeholder:text-stone-600"
+                  aria-label={t('recall_label')}
+                  autoFocus
+                />
+                {queryTokens.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full text-stone-400 hover:text-ink dark:text-stone-500 dark:hover:text-ink-dark hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                    aria-label={t('clear_recall')}
+                    title={t('clear_recall')}
+                  >
+                    <XIcon className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+              <p className="mt-2 text-xs text-subtle dark:text-subtle-dark">{t('recall_hint')}</p>
+            </>
+          )}
+        </div>
+
+        {filteredQuestions.length === 0 ? (
           <div className="text-center py-16 px-4 border border-dashed border-stone-300 dark:border-stone-700 rounded-lg">
-            <p className="text-ink dark:text-ink-dark font-serif mb-2 text-lg">
-              {hasNotes ? t('no_question_yet') : t('space_empty')}
-            </p>
-            <p className="text-subtle dark:text-subtle-dark text-sm">
-              {t('just_write')}
-            </p>
+            {hasQuestions && isFiltering ? (
+              <>
+                <p className="text-ink dark:text-ink-dark font-serif mb-2 text-lg">
+                  {t('no_recall_results')}
+                </p>
+                <p className="text-subtle dark:text-subtle-dark text-sm">
+                  {t('recall_hint')}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-ink dark:text-ink-dark font-serif mb-2 text-lg">
+                  {hasNotes ? t('no_question_yet') : t('space_empty')}
+                </p>
+                <p className="text-subtle dark:text-subtle-dark text-sm">
+                  {t('just_write')}
+                </p>
+              </>
+            )}
           </div>
         ) : (
-          questions.map((q) => (
+          filteredQuestions.map((q) => (
             <Link
               key={q.id}
               to={`/question/${q.id}`}

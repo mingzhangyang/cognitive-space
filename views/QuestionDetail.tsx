@@ -117,6 +117,96 @@ const QuestionDetail: React.FC = () => {
     return <div className="p-8 text-center text-subtle dark:text-subtle-dark">{t('problem_not_found')}</div>;
   }
 
+  const claims = relatedNotes.filter((note) => note.type === NoteType.CLAIM);
+  const evidence = relatedNotes.filter((note) => note.type === NoteType.EVIDENCE);
+  const triggers = relatedNotes.filter((note) => note.type === NoteType.TRIGGER);
+  const otherNotes = relatedNotes.filter(
+    (note) => ![NoteType.CLAIM, NoteType.EVIDENCE, NoteType.TRIGGER].includes(note.type)
+  );
+
+  const renderNote = (note: Note) => (
+    <div
+      key={note.id}
+      className="group relative pl-6 border-l-2 border-stone-100 dark:border-stone-800 hover:border-stone-300 dark:hover:border-stone-600 transition-colors"
+    >
+      <div className="mb-2 flex items-center justify-between">
+        <div>
+          <TypeBadge type={note.type} subType={note.subType} />
+          <span className="text-[10px] text-stone-300 dark:text-stone-600 ml-2">
+            {new Date(note.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        </div>
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {editingId !== note.id && (
+            <>
+              <button
+                onClick={() => handleEdit(note)}
+                className="p-1.5 text-stone-400 hover:text-accent dark:text-stone-500 dark:hover:text-accent-dark transition-colors rounded"
+                title="Edit"
+              >
+                <EditIcon className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => handleDelete(note.id, false)}
+                className="p-1.5 text-stone-400 hover:text-red-500 dark:text-stone-500 dark:hover:text-red-400 transition-colors rounded"
+                title="Delete"
+              >
+                <TrashIcon className="w-3.5 h-3.5" />
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {editingId === note.id ? (
+        <div className="space-y-2">
+          <textarea
+            className="w-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-3 text-ink dark:text-ink-dark leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-accent/30 dark:focus:ring-accent-dark/30"
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            rows={3}
+            autoFocus
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={handleSaveEdit}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm bg-accent dark:bg-accent-dark text-white rounded-md hover:opacity-90 transition-opacity"
+            >
+              <CheckIcon className="w-3.5 h-3.5" />
+              Save
+            </button>
+            <button
+              onClick={handleCancelEdit}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark transition-colors"
+            >
+              <XIcon className="w-3.5 h-3.5" />
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className="text-ink dark:text-ink-dark leading-relaxed whitespace-pre-wrap">
+          {note.content}
+        </p>
+      )}
+    </div>
+  );
+
+  const renderSection = (title: string, emptyText: string, notes: Note[]) => (
+    <section className="space-y-4">
+      <h2 className="text-xs font-bold text-subtle dark:text-subtle-dark tracking-widest uppercase">
+        {title}
+      </h2>
+      {notes.length === 0 ? (
+        <p className="text-sm text-subtle dark:text-subtle-dark">{emptyText}</p>
+      ) : (
+        <div className="space-y-8">
+          {notes.map(renderNote)}
+        </div>
+      )}
+    </section>
+  );
+
   return (
     <div>
       <ConfirmDialog
@@ -147,74 +237,18 @@ const QuestionDetail: React.FC = () => {
         </div>
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-10">
         {relatedNotes.length === 0 ? (
           <div className="text-center py-10 opacity-60 text-subtle dark:text-subtle-dark">
             <p className="text-sm">{t('no_thoughts_here')}</p>
           </div>
         ) : (
-          relatedNotes.map((note) => (
-            <div key={note.id} className="group relative pl-6 border-l-2 border-stone-100 dark:border-stone-800 hover:border-stone-300 dark:hover:border-stone-600 transition-colors">
-              <div className="mb-2 flex items-center justify-between">
-                <div>
-                  <TypeBadge type={note.type} subType={note.subType} />
-                  <span className="text-[10px] text-stone-300 dark:text-stone-600 ml-2">{new Date(note.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {editingId !== note.id && (
-                    <>
-                      <button
-                        onClick={() => handleEdit(note)}
-                        className="p-1.5 text-stone-400 hover:text-accent dark:text-stone-500 dark:hover:text-accent-dark transition-colors rounded"
-                        title="Edit"
-                      >
-                        <EditIcon className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(note.id, false)}
-                        className="p-1.5 text-stone-400 hover:text-red-500 dark:text-stone-500 dark:hover:text-red-400 transition-colors rounded"
-                        title="Delete"
-                      >
-                        <TrashIcon className="w-3.5 h-3.5" />
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {editingId === note.id ? (
-                <div className="space-y-2">
-                  <textarea
-                    className="w-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md p-3 text-ink dark:text-ink-dark leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-accent/30 dark:focus:ring-accent-dark/30"
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                    rows={3}
-                    autoFocus
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleSaveEdit}
-                      className="flex items-center gap-1 px-3 py-1.5 text-sm bg-accent dark:bg-accent-dark text-white rounded-md hover:opacity-90 transition-opacity"
-                    >
-                      <CheckIcon className="w-3.5 h-3.5" />
-                      Save
-                    </button>
-                    <button
-                      onClick={handleCancelEdit}
-                      className="flex items-center gap-1 px-3 py-1.5 text-sm text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark transition-colors"
-                    >
-                      <XIcon className="w-3.5 h-3.5" />
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-ink dark:text-ink-dark leading-relaxed whitespace-pre-wrap">
-                  {note.content}
-                </p>
-              )}
-            </div>
-          ))
+          <>
+            {renderSection(t('section_claims'), t('no_claims'), claims)}
+            {renderSection(t('section_evidence'), t('no_evidence'), evidence)}
+            {renderSection(t('section_triggers'), t('no_triggers'), triggers)}
+            {renderSection(t('section_other'), t('no_other'), otherNotes)}
+          </>
         )}
       </div>
 

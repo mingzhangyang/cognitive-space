@@ -27,6 +27,42 @@ export interface AnalysisResult {
   reasoning: string;
 }
 
+export type NoteEvent =
+  | {
+      id: string;
+      type: 'NOTE_CREATED';
+      createdAt: number;
+      payload: { note: Note };
+    }
+  | {
+      id: string;
+      type: 'NOTE_UPDATED';
+      createdAt: number;
+      payload: { id: string; content: string; updatedAt: number };
+    }
+  | {
+      id: string;
+      type: 'NOTE_META_UPDATED';
+      createdAt: number;
+      payload: {
+        id: string;
+        updates: Pick<Partial<Note>, 'parentId' | 'type' | 'subType'>;
+        updatedAt: number;
+      };
+    }
+  | {
+      id: string;
+      type: 'NOTE_DELETED';
+      createdAt: number;
+      payload: { id: string };
+    }
+  | {
+      id: string;
+      type: 'NOTE_TOUCHED';
+      createdAt: number;
+      payload: { id: string; updatedAt: number };
+    };
+
 export interface AppState {
   notes: Note[];
   isLoading: boolean;
