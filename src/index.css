@@ -10,20 +10,28 @@
   --color-subtle-dark: #94a3b8;
   --color-accent: #0f766e;
   --color-accent-dark: #2dd4bf;
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-serif: 'Merriweather', Georgia, serif;
+  --font-sans: 'Raleway', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-serif: 'Lora', Georgia, serif;
 }
 
 /* Base body styles */
 body {
   background-color: var(--color-paper);
   color: var(--color-ink);
+  background-image:
+    radial-gradient(circle at top left, rgba(15, 118, 110, 0.08), transparent 55%),
+    radial-gradient(circle at 80% 20%, rgba(15, 118, 110, 0.06), transparent 50%),
+    radial-gradient(circle at 50% 100%, rgba(15, 118, 110, 0.05), transparent 45%);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 html.dark body {
   background-color: var(--color-paper-dark);
   color: var(--color-ink-dark);
+  background-image:
+    radial-gradient(circle at top left, rgba(45, 212, 191, 0.12), transparent 55%),
+    radial-gradient(circle at 80% 20%, rgba(45, 212, 191, 0.08), transparent 50%),
+    radial-gradient(circle at 50% 100%, rgba(30, 41, 59, 0.6), transparent 45%);
 }
 
 /* Custom Scrollbar */
@@ -48,15 +56,19 @@ html.dark ::-webkit-scrollbar-thumb {
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(4px);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in {
+    animation: none;
+  }
 }

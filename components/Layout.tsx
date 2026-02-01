@@ -8,21 +8,21 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { t, language, setLanguage, theme, toggleTheme } = useAppContext();
 
   return (
-    <div className="min-h-screen flex flex-col max-w-2xl mx-auto px-6 py-8 relative transition-colors duration-300">
-      <header className="mb-10 flex justify-between items-start">
-        <Link to="/" className="text-xl font-serif font-bold tracking-tight text-ink dark:text-ink-dark hover:text-accent dark:hover:text-accent-dark transition-colors">
+    <div className="min-h-screen flex flex-col max-w-2xl mx-auto w-full px-5 sm:px-6 pt-6 sm:pt-9 pb-10 sm:pb-12 relative transition-colors duration-300">
+      <header className="mb-8 sm:mb-10 flex flex-wrap items-center justify-between gap-3">
+        <Link to="/" className="text-lg sm:text-xl font-serif font-bold tracking-tight text-ink dark:text-ink-dark hover:text-accent dark:hover:text-accent-dark transition-colors leading-tight">
           Cognitive Space
         </Link>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {!isHome && (
             <Link to="/" className="text-sm text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark transition-colors">
               {t('back_problems')}
             </Link>
           )}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 rounded-full border border-stone-200/70 dark:border-stone-800/70 bg-white/70 dark:bg-stone-900/60 backdrop-blur px-2 py-1.5 sm:p-0 sm:border-transparent sm:bg-transparent sm:backdrop-blur-0">
             <button
               onClick={() => setLanguage(language === 'en' ? 'zh' : 'en')}
-              className="p-2 rounded-md text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-stone-100 dark:hover:bg-stone-900 transition-colors"
+              className="h-11 w-11 sm:h-9 sm:w-9 grid place-items-center rounded-full text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-stone-100/80 dark:hover:bg-stone-800/80 transition-colors"
               aria-label={language === 'en' ? 'Switch language to Chinese' : 'Switch language to English'}
               title={language === 'en' ? 'Switch language to Chinese' : 'Switch language to English'}
             >
@@ -35,7 +35,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             </button>
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-md text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-stone-100 dark:hover:bg-stone-900 transition-colors"
+              className="h-11 w-11 sm:h-9 sm:w-9 grid place-items-center rounded-full text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-stone-100/80 dark:hover:bg-stone-800/80 transition-colors"
               aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
               title={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
             >
@@ -61,11 +61,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </div>
       </header>
 
-      <main className="flex-1">
+      <main className="flex-1 animate-fade-in">
         {children}
       </main>
 
-      <footer className="mt-20 py-6 border-t border-stone-200 dark:border-stone-800 text-center text-xs text-subtle dark:text-subtle-dark">
+      <footer className="relative mt-16 sm:mt-20 py-6 text-center text-[11px] sm:text-xs text-subtle dark:text-subtle-dark before:absolute before:top-0 before:left-0 before:right-20 sm:before:right-0 before:h-px before:bg-stone-200/80 dark:before:bg-stone-800">
         <p>{t('footer_philosophy')}</p>
       </footer>
     </div>

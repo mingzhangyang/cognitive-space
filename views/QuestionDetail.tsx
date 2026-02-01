@@ -127,7 +127,7 @@ const QuestionDetail: React.FC = () => {
   const renderNote = (note: Note) => (
     <div
       key={note.id}
-      className="group relative pl-6 border-l-2 border-stone-100 dark:border-stone-800 hover:border-stone-300 dark:hover:border-stone-600 transition-colors"
+      className="group relative pl-4 sm:pl-6 border-l-2 border-stone-100 dark:border-stone-800 hover:border-stone-300 dark:hover:border-stone-600 transition-colors"
     >
       <div className="mb-2 flex items-center justify-between">
         <div>
@@ -136,19 +136,19 @@ const QuestionDetail: React.FC = () => {
             {new Date(note.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
           {editingId !== note.id && (
             <>
               <button
                 onClick={() => handleEdit(note)}
-                className="p-1.5 text-stone-500 hover:text-accent dark:text-stone-500 dark:hover:text-accent-dark transition-colors rounded"
+                className="h-11 w-11 sm:h-9 sm:w-9 grid place-items-center text-stone-500 hover:text-accent dark:text-stone-500 dark:hover:text-accent-dark transition-colors rounded-full hover:bg-stone-100 dark:hover:bg-stone-800"
                 title="Edit"
               >
                 <EditIcon className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => handleDelete(note.id, false)}
-                className="p-1.5 text-stone-500 hover:text-red-500 dark:text-stone-500 dark:hover:text-red-400 transition-colors rounded"
+                className="h-11 w-11 sm:h-9 sm:w-9 grid place-items-center text-stone-500 hover:text-red-500 dark:text-stone-500 dark:hover:text-red-400 transition-colors rounded-full hover:bg-stone-100 dark:hover:bg-stone-800"
                 title="Delete"
               >
                 <TrashIcon className="w-3.5 h-3.5" />
@@ -218,18 +218,18 @@ const QuestionDetail: React.FC = () => {
         onCancel={() => setDeleteTarget(null)}
       />
 
-      <div className="mb-12 border-b border-stone-100 dark:border-stone-800 pb-8">
+      <div className="mb-10 sm:mb-12 border-b border-stone-100 dark:border-stone-800 pb-8">
         <div className="flex justify-between items-start">
           <span className="text-xs font-bold text-accent dark:text-accent-dark tracking-widest uppercase mb-3 block">{t('current_problem')}</span>
           <button
             onClick={() => handleDelete(question.id, true)}
-            className="p-2 text-stone-500 hover:text-red-500 dark:text-stone-500 dark:hover:text-red-400 transition-colors rounded-md hover:bg-stone-100 dark:hover:bg-stone-800"
+            className="h-11 w-11 sm:h-10 sm:w-10 grid place-items-center text-stone-500 hover:text-red-500 dark:text-stone-500 dark:hover:text-red-400 transition-colors rounded-full hover:bg-stone-100 dark:hover:bg-stone-800"
             title="Delete question"
           >
             <TrashIcon className="w-4 h-4" />
           </button>
         </div>
-        <h1 className="text-3xl md:text-4xl font-serif font-medium text-ink dark:text-ink-dark leading-tight">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-medium text-ink dark:text-ink-dark leading-tight">
           {question.content}
         </h1>
         <div className="mt-4 text-xs text-subtle dark:text-subtle-dark">
@@ -252,8 +252,8 @@ const QuestionDetail: React.FC = () => {
         )}
       </div>
 
-      <div className="mt-20 flex justify-center">
-        <Link to="/write" className="text-sm text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark border-b border-transparent hover:border-accent dark:hover:border-accent-dark transition-all pb-0.5">
+      <div className="mt-16 sm:mt-20 flex justify-center">
+        <Link to="/write" className="inline-flex items-center justify-center text-sm text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark border border-stone-200 dark:border-stone-700 hover:border-accent/40 dark:hover:border-accent-dark/40 transition-all px-5 py-2.5 rounded-full bg-white/60 dark:bg-stone-900/40 min-h-[44px]">
           {t('add_thought_stream')}
         </Link>
       </div>

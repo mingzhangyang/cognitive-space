@@ -105,10 +105,10 @@ const Write: React.FC = () => {
   };
 
   return (
-    <div className="h-[80vh] flex flex-col">
-      <div className="flex-1 flex flex-col justify-center">
+    <div className="min-h-[70vh] sm:min-h-[80vh] flex flex-col">
+      <div className="flex-1 flex flex-col pt-2">
         <textarea
-          className="w-full h-full bg-transparent text-xl leading-relaxed text-ink dark:text-ink-dark resize-none focus:outline-none placeholder:text-stone-500 dark:placeholder:text-stone-600 font-serif"
+          className="w-full h-full bg-transparent text-[18px] sm:text-xl leading-relaxed text-ink dark:text-ink-dark resize-none focus:outline-none placeholder:text-stone-500 dark:placeholder:text-stone-600 font-serif"
           placeholder={t('write_placeholder')}
           value={content}
           onChange={(e) => {
@@ -127,8 +127,8 @@ const Write: React.FC = () => {
         />
       </div>
 
-      <div className="h-20 flex items-center justify-between border-t border-stone-100 dark:border-stone-800 mt-4 pt-4">
-        <div className="text-sm text-subtle dark:text-subtle-dark flex items-center gap-2">
+      <div className="min-h-[4.5rem] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-stone-100 dark:border-stone-800 mt-4 pt-4">
+        <div className="text-sm text-subtle dark:text-subtle-dark flex items-center gap-2 w-full sm:w-auto">
            {isProcessing && !linkHint && !mergeCandidate && (
              <>
                <LoadingSpinner className="w-4 h-4 text-accent dark:text-accent-dark" />
@@ -173,7 +173,7 @@ const Write: React.FC = () => {
         <button
           onClick={handleSave}
           disabled={!content.trim() || isProcessing}
-          className={`px-6 py-2 rounded-full font-medium transition-all ${
+          className={`w-full sm:w-auto px-6 py-3 min-h-[44px] rounded-full font-medium transition-all ${
             content.trim() && !isProcessing
               ? 'bg-ink dark:bg-stone-700 text-white hover:bg-black dark:hover:bg-stone-600 shadow-md'
               : 'bg-stone-200 dark:bg-stone-800 text-stone-400 dark:text-stone-600 cursor-not-allowed'
