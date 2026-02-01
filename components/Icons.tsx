@@ -8,6 +8,14 @@ export const PlusIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+export const HomeIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M3 10.5L12 4l9 6.5" />
+    <path d="M5 21h14a1 1 0 0 0 1-1V10.5" />
+    <path d="M9 21V13h6v8" />
+  </svg>
+);
+
 export const ArrowRightIcon = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <line x1="5" y1="12" x2="19" y2="12"></line>

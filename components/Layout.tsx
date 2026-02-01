@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAppContext } from '../contexts/AppContext';
+import { HomeIcon } from './Icons';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -15,8 +16,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </Link>
         <div className="flex items-center gap-3">
           {!isHome && (
-            <Link to="/" className="text-sm text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark transition-colors">
-              {t('back_problems')}
+            <Link to="/" className="text-sm text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark transition-colors" aria-label={t('back_problems')} title={t('back_problems')}>
+              <HomeIcon className="w-5 h-5" />
             </Link>
           )}
           <div className="flex items-center gap-2 rounded-full border border-stone-200/70 dark:border-stone-800/70 bg-white/70 dark:bg-stone-900/60 backdrop-blur px-2 py-1.5 sm:p-0 sm:border-transparent sm:bg-transparent sm:backdrop-blur-0">
