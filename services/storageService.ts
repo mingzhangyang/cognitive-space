@@ -169,12 +169,9 @@ const getDb = async (): Promise<IDBPDatabase<CognitiveSpaceDB> | null> => {
   if (!dbPromise) {
     dbPromise = openDB<CognitiveSpaceDB>(DB_NAME, DB_VERSION, {
       upgrade(db, _oldVersion, _newVersion, transaction) {
-        let store: IDBObjectStore;
-        if (!db.objectStoreNames.contains(STORE_NOTES)) {
-          store = db.createObjectStore(STORE_NOTES, { keyPath: 'id' });
-        } else {
-          store = transaction.objectStore(STORE_NOTES);
-        }
+        const store = db.objectStoreNames.contains(STORE_NOTES)
+          ? transaction.objectStore(STORE_NOTES)
+          : db.createObjectStore(STORE_NOTES, { keyPath: 'id' });
 
         if (!store.indexNames.contains('by-type')) {
           store.createIndex('by-type', 'type');
@@ -186,12 +183,9 @@ const getDb = async (): Promise<IDBPDatabase<CognitiveSpaceDB> | null> => {
           store.createIndex('by-updated', 'updatedAt');
         }
 
-        let eventStore: IDBObjectStore;
-        if (!db.objectStoreNames.contains(STORE_EVENTS)) {
-          eventStore = db.createObjectStore(STORE_EVENTS, { keyPath: 'id' });
-        } else {
-          eventStore = transaction.objectStore(STORE_EVENTS);
-        }
+        const eventStore = db.objectStoreNames.contains(STORE_EVENTS)
+          ? transaction.objectStore(STORE_EVENTS)
+          : db.createObjectStore(STORE_EVENTS, { keyPath: 'id' });
         if (!eventStore.indexNames.contains('by-created')) {
           eventStore.createIndex('by-created', 'createdAt');
         }

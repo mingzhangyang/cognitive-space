@@ -23,14 +23,27 @@ export const analyzeText = async (
       throw new Error(`Analyze request failed: ${response.status}`);
     }
 
-    const result = await response.json();
+    const result = (await response.json()) as Record<string, unknown>;
+
+    const classificationValue =
+      typeof result.classification === 'string' ? result.classification : undefined;
+    const classification = Object.values(NoteType).includes(
+      classificationValue as NoteType
+    )
+      ? (classificationValue as NoteType)
+      : NoteType.TRIGGER;
+    const subType = typeof result.subType === 'string' ? result.subType : undefined;
+    const confidence = typeof result.confidence === 'number' ? result.confidence : 0.5;
+    const relatedQuestionId =
+      typeof result.relatedQuestionId === 'string' ? result.relatedQuestionId : null;
+    const reasoning = typeof result.reasoning === 'string' ? result.reasoning : 'Analyzed by GLM';
 
     return {
-      classification: (result.classification as NoteType) || NoteType.TRIGGER,
-      subType: result.subType || undefined,
-      confidence: typeof result.confidence === 'number' ? result.confidence : 0.5,
-      relatedQuestionId: result.relatedQuestionId || null,
-      reasoning: result.reasoning || "Analyzed by GLM"
+      classification,
+      subType,
+      confidence,
+      relatedQuestionId,
+      reasoning
     };
 
   } catch (error) {
