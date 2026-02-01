@@ -2,11 +2,11 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-paper: #fbf9f4;
+  --color-paper: #fafaf9;
   --color-paper-dark: #0f1115;
-  --color-ink: #1f2937;
+  --color-ink: #0c0a09;
   --color-ink-dark: #e2e8f0;
-  --color-subtle: #475569;
+  --color-subtle: #44403c;
   --color-subtle-dark: #94a3b8;
   --color-accent: #0f766e;
   --color-accent-dark: #2dd4bf;

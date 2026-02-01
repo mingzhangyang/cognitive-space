@@ -8,11 +8,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        paper: '#fbf9f4',
+        paper: '#fafaf9',
         'paper-dark': '#0f1115',
-        ink: '#1f2937',
+        ink: '#0c0a09',
         'ink-dark': '#e2e8f0',
-        subtle: '#475569',
+        subtle: '#44403c',
         'subtle-dark': '#94a3b8',
         accent: '#0f766e',
         'accent-dark': '#2dd4bf',
