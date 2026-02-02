@@ -63,7 +63,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </div>
       </header>
 
-      <main className="flex-1 animate-fade-in">
+      <main className="flex-1 animate-fade-in min-h-0">
         {children}
       </main>
 

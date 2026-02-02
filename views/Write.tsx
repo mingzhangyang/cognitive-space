@@ -14,6 +14,7 @@ const Write: React.FC = () => {
   const { t, language } = useAppContext();
   const navigate = useNavigate();
   const feedbackTimerRef = useRef<number | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   // Auto-focus logic or simple textarea
   const truncate = (text: string, max = 24) => (text.length > max ? `${text.slice(0, max)}...` : text);
@@ -25,6 +26,55 @@ const Write: React.FC = () => {
       }
     };
   }, []);
+
+  // Auto-grow textarea based on content, up to available viewport height
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+
+    // Calculate max height from viewport minus fixed elements:
+    // header (~80px) + footer margin/padding (~100px) + bottom controls (~100px) + some buffer
+    const fixedHeight = 280;
+    const maxHeight = Math.max(window.innerHeight - fixedHeight, 150);
+
+    // Temporarily shrink to measure true content height
+    ta.style.height = '0px';
+    const scrollH = ta.scrollHeight;
+    
+    // Set height: grow with content up to max, then cap and show scrollbar
+    if (scrollH <= maxHeight) {
+      ta.style.height = `${scrollH}px`;
+      ta.style.overflowY = 'hidden';
+    } else {
+      ta.style.height = `${maxHeight}px`;
+      ta.style.overflowY = 'auto';
+    }
+  }, [content]);
+
+  // Recalculate on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      const ta = textareaRef.current;
+      if (!ta) return;
+      
+      const fixedHeight = 280;
+      const maxHeight = Math.max(window.innerHeight - fixedHeight, 150);
+      
+      ta.style.height = '0px';
+      const scrollH = ta.scrollHeight;
+      
+      if (scrollH <= maxHeight) {
+        ta.style.height = `${scrollH}px`;
+        ta.style.overflowY = 'hidden';
+      } else {
+        ta.style.height = `${maxHeight}px`;
+        ta.style.overflowY = 'auto';
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [content]);
 
   const handleMerge = async () => {
     if (!mergeCandidate) return;
@@ -105,10 +155,11 @@ const Write: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[70vh] sm:min-h-[80vh] flex flex-col">
+    <div className="flex-1 flex flex-col">
       <div className="flex-1 flex flex-col pt-2">
         <textarea
-          className="w-full h-full bg-transparent text-[18px] sm:text-xl leading-relaxed text-ink dark:text-ink-dark resize-none focus:outline-none placeholder:text-stone-500 dark:placeholder:text-stone-600 font-serif"
+          ref={textareaRef}
+          className="w-full bg-transparent text-[18px] sm:text-xl leading-relaxed text-ink dark:text-ink-dark resize-none focus:outline-none placeholder:text-stone-500 dark:placeholder:text-stone-600 font-serif"
           placeholder={t('write_placeholder')}
           value={content}
           onChange={(e) => {
