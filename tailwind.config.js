@@ -18,8 +18,8 @@ export default {
         'accent-dark': '#2dd4bf',
       },
       fontFamily: {
-        sans: ['Raleway', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
-        serif: ['Lora', 'Georgia', 'serif'],
+        sans: ['Raleway', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'Apple Color Emoji', 'Segoe UI Emoji', 'sans-serif'],
+        serif: ['Lora', 'ui-serif', 'Georgia', 'Times New Roman', 'Times', 'serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out forwards',

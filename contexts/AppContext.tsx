@@ -45,7 +45,7 @@ const translations = {
     no_evidence: "No evidence yet.",
     no_triggers: "No triggers yet.",
     no_other: "Nothing else yet.",
-    footer_philosophy: "I am not recording thoughts, I am accompanying problems.",
+    footer_philosophy: "Meaning will unfurl of its own accord.",
     back_problems: "Back to Problems",
     problem_not_found: "Problem not found.",
     // Type labels
@@ -88,7 +88,7 @@ const translations = {
     no_evidence: "尚无证据。",
     no_triggers: "尚无触发物。",
     no_other: "暂无其他内容。",
-    footer_philosophy: "我不在记录想法，我在陪伴问题。",
+    footer_philosophy: "意义的纹理会自行舒展。",
     back_problems: "回到问题列表",
     problem_not_found: "未找到该问题。",
     // Type labels
