@@ -108,9 +108,9 @@ async function handleAnalyze(request: Request, env: Env): Promise<Response> {
   const existingQuestions = Array.isArray(body.existingQuestions) ? body.existingQuestions : [];
   const questionIds = existingQuestions.map(q => q.id);
 
-  // Check cache first
+  // Check cache first (Cloudflare Workers Cache API)
   const cacheKey = getCacheKey(text, language, questionIds);
-  const cache = caches.default;
+  const cache = (caches as unknown as { default: Cache }).default;
   const cacheUrl = new URL(request.url);
   cacheUrl.pathname = `/cache/${encodeURIComponent(cacheKey)}`;
   const cacheRequest = new Request(cacheUrl.toString());
