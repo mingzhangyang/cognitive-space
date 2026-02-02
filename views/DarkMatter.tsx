@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { getDarkMatter, getQuestions, updateNoteMeta, deleteNote } from '../services/storageService';
 import { Note, NoteType } from '../types';
 import { useAppContext } from '../contexts/AppContext';
-import { ArrowRightIcon, TrashIcon, XIcon } from '../components/Icons';
+import { TrashIcon, XIcon } from '../components/Icons';
 
 const TypeBadge: React.FC<{ type: NoteType; subType?: string }> = ({ type, subType }) => {
   const { t } = useAppContext();
@@ -180,13 +180,6 @@ const DarkMatter: React.FC = () => {
 
       {/* Header */}
       <div className="mb-7 sm:mb-8">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-1.5 text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark text-sm mb-4 transition-colors"
-        >
-          <ArrowRightIcon className="w-4 h-4 rotate-180" />
-          {t('back_home')}
-        </Link>
         <div className="flex items-center gap-3 mb-2">
           <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
             <span className="text-gray-500 dark:text-gray-400 text-sm">🌑</span>
