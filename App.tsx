@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import Home from './views/Home';
 import Write from './views/Write';
 import QuestionDetail from './views/QuestionDetail';
+import DarkMatter from './views/DarkMatter';
 import { AppProvider } from './contexts/AppContext';
 
 const App: React.FC = () => {
@@ -15,6 +16,7 @@ const App: React.FC = () => {
             <Route path="/" element={<Home />} />
             <Route path="/write" element={<Write />} />
             <Route path="/question/:id" element={<QuestionDetail />} />
+            <Route path="/dark-matter" element={<DarkMatter />} />
           </Routes>
         </Layout>
       </Router>

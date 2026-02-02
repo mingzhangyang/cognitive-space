@@ -387,3 +387,23 @@ export const updateNoteMeta = async (
     'Failed to update note metadata'
   );
 };
+
+/**
+ * Get all "dark matter" notes - notes that are not questions and have no parent
+ * These are isolated fragments not connected to any question
+ */
+export const getDarkMatter = async (): Promise<Note[]> => {
+  return await withDb(
+    [],
+    async (db) => {
+      await ensureProjection(db);
+      const allNotes = await db.getAll(STORE_NOTES);
+      return allNotes.filter(
+        (note) =>
+          note.type !== NoteType.QUESTION &&
+          (note.parentId === null || note.parentId === undefined)
+      );
+    },
+    'Failed to load dark matter'
+  );
+};

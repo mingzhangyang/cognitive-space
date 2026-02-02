@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
-import { getQuestions, getNotes, deleteNote } from '../services/storageService';
+import { getQuestions, getNotes, deleteNote, getDarkMatter } from '../services/storageService';
 import { Note } from '../types';
 import { PlusIcon, ArrowRightIcon, TrashIcon, SearchIcon, XIcon } from '../components/Icons';
 import { useAppContext } from '../contexts/AppContext';
@@ -40,6 +40,7 @@ const ConfirmDialog: React.FC<{
 const Home: React.FC = () => {
   const [questions, setQuestions] = useState<Note[]>([]);
   const [hasNotes, setHasNotes] = useState(false);
+  const [darkMatterCount, setDarkMatterCount] = useState(0);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [isRecallOpen, setIsRecallOpen] = useState(false);
@@ -51,6 +52,8 @@ const Home: React.FC = () => {
     setHasNotes(allNotes.length > 0);
     const questions = await getQuestions();
     setQuestions(questions.sort((a, b) => b.updatedAt - a.updatedAt));
+    const darkMatter = await getDarkMatter();
+    setDarkMatterCount(darkMatter.length);
   };
 
   useEffect(() => {
@@ -106,18 +109,33 @@ const Home: React.FC = () => {
 
       <div className="space-y-5 pb-28 sm:pb-24">
         <div className="mb-6">
-          {!isRecallOpen ? (
-            <button
-              type="button"
-              onClick={openRecall}
-              className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-4 py-3 rounded-full border border-stone-200 dark:border-stone-700 text-[11px] sm:text-xs uppercase tracking-[0.2em] text-subtle dark:text-subtle-dark bg-white/70 dark:bg-stone-900/50 hover:text-ink dark:hover:text-ink-dark hover:border-stone-300 dark:hover:border-stone-600 transition-colors min-h-[44px]"
-              aria-label={t('recall_label')}
-              title={t('recall_label')}
-            >
-              <SearchIcon className="w-4 h-4" />
-              <span>{t('recall_label')}</span>
-            </button>
-          ) : (
+          <div className="flex flex-wrap gap-3">
+            {!isRecallOpen ? (
+              <button
+                type="button"
+                onClick={openRecall}
+                className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-4 py-3 rounded-full border border-stone-200 dark:border-stone-700 text-[11px] sm:text-xs uppercase tracking-[0.2em] text-subtle dark:text-subtle-dark bg-white/70 dark:bg-stone-900/50 hover:text-ink dark:hover:text-ink-dark hover:border-stone-300 dark:hover:border-stone-600 transition-colors min-h-[44px]"
+                aria-label={t('recall_label')}
+                title={t('recall_label')}
+              >
+                <SearchIcon className="w-4 h-4" />
+                <span>{t('recall_label')}</span>
+              </button>
+            ) : null}
+            {darkMatterCount > 0 && (
+              <Link
+                to="/dark-matter"
+                className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-4 py-3 rounded-full border border-stone-200 dark:border-stone-700 text-[11px] sm:text-xs uppercase tracking-[0.2em] text-subtle dark:text-subtle-dark bg-white/70 dark:bg-stone-900/50 hover:text-ink dark:hover:text-ink-dark hover:border-stone-300 dark:hover:border-stone-600 transition-colors min-h-[44px]"
+              >
+                <span className="text-sm">🌑</span>
+                <span>{t('dark_matter')}</span>
+                <span className="ml-1 px-1.5 py-0.5 bg-stone-200 dark:bg-stone-700 rounded-full text-[10px]">
+                  {darkMatterCount}
+                </span>
+              </Link>
+            )}
+          </div>
+          {isRecallOpen && (
             <>
               <label htmlFor="recall" className="text-[11px] uppercase tracking-[0.2em] text-subtle dark:text-subtle-dark">
                 {t('recall_label')}

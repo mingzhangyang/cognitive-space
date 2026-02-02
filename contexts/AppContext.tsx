@@ -53,7 +53,17 @@ const translations = {
     type_claim: "Claim",
     type_evidence: "Evidence",
     type_trigger: "Trigger",
-    type_uncategorized: "Uncategorized"
+    type_uncategorized: "Uncategorized",
+    // Dark Matter
+    dark_matter: "Dark Matter",
+    dark_matter_desc: "Fragments drifting in the void, not yet bound to any question.",
+    dark_matter_count: "fragments",
+    link_to_question: "Link to question",
+    promote_to_question: "Promote to question",
+    no_dark_matter: "No dark matter. All thoughts have found their orbit.",
+    back_home: "Back to Home",
+    select_question: "Select a question",
+    cancel: "Cancel"
   },
   zh: {
     living_questions: "鲜活的问题",
@@ -96,7 +106,17 @@ const translations = {
     type_claim: "主张",
     type_evidence: "证据",
     type_trigger: "灵感",
-    type_uncategorized: "未分类"
+    type_uncategorized: "未分类",
+    // Dark Matter
+    dark_matter: "暗物质",
+    dark_matter_desc: "游离在虚空中的碎片，尚未被任何问题捕获。",
+    dark_matter_count: "个碎片",
+    link_to_question: "关联到问题",
+    promote_to_question: "升级为问题",
+    no_dark_matter: "没有暗物质。所有思绪都已找到归宿。",
+    back_home: "回到首页",
+    select_question: "选择一个问题",
+    cancel: "取消"
   }
 };
 
