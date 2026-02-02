@@ -1,4 +1,4 @@
-# Cognitive Space: Visualization & Dark Matter Proposal
+# Cognitive Space: Question Visualization & Dark Matter Proposal
 
 > 让思考的结构可见，让孤岛浮出水面。
 
@@ -8,7 +8,7 @@
 
 本提案为 Cognitive Space 引入两个相关功能：
 
-1. **思维可视化工具**（Constellation View）—— 以空间化的方式呈现问题与笔记之间的关系网络
+1. **问题内可视化**（Question Constellation）—— 在问题详情页中可选开启，呈现该问题与其相关笔记的关系网络
 2. **暗物质视图**（Dark Matter View）—— 专门展示尚未与任何问题建立联系的孤立笔记
 
 这两个功能延续产品"延迟显现结构"的核心理念，不强迫用户整理，而是帮助用户**发现**已经存在的结构与遗漏。
@@ -37,51 +37,22 @@
 2. **不替代思考** —— 系统呈现关系，但不评判好坏
 3. **渐进发现** —— 从简单入手，复杂功能按需解锁
 4. **触发行动** —— 从可视化可以快速跳转到具体笔记
+5. **范围克制** —— 问题星图不做全局可视化，只展示与当前问题相关的数据
 
 ---
 
 ## 三、功能设计
 
-### 3.1 思维星图（Constellation View）
+### 3.1 问题星图（Question Constellation）
 
 #### 入口
-- 主页顶部增加「探索」按钮（Explore / 探索）
-- 路由：`/explore`
+- 问题详情页增加「可视化」按钮（Visualize）
+- 以抽屉 / 弹层 / 可折叠区域形式展示
+- 可随时关闭，不打断阅读与编辑
 
 #### 视图模式
 
-##### A. 星系概览（Galaxy Overview）
-展示所有问题及其相关笔记的分布：
-
-```
-                    ☆ Question A
-                   /|\
-                  / | \
-                 ●  ●  ○   (Claims, Evidence)
-                
-   ★ Question B                    ★ Question C
-    /\                              |
-   ●  ●                             ●
-   
-               · · · Dark Matter · · ·
-               (scattered, dimmer dots)
-```
-
-**视觉元素**：
-- 问题（Question）：大圆圈，颜色饱和
-- 判断（Claim）：中等圆圈，蓝色系
-- 证据（Evidence）：小圆圈，绿色系
-- 触发物（Trigger）：小圆圈，紫色系/闪烁效果
-- 暗物质：灰色小点，散布在边缘
-
-**交互**：
-- 悬停：显示笔记预览（前100字符）
-- 点击问题：进入该问题的局部视图
-- 点击笔记：弹出详情，可跳转编辑
-- 拖拽平移，滚轮缩放
-- 点击暗物质区域：进入暗物质视图
-
-##### B. 问题聚焦（Question Focus）
+##### 问题聚焦（Question Focus）
 聚焦于单个问题及其所有关联笔记：
 
 ```
@@ -96,16 +67,21 @@
 - 使用力导向图（Force-directed graph）或径向布局
 - 问题在中心，相关笔记按类型和时间分布
 
-#### 统计面板
-在视图底部或侧边显示：
+**交互**：
+- 悬停：显示笔记预览（前100字符）
+- 点击笔记：弹出详情，可跳转编辑
+- 拖拽平移，滚轮缩放
+- 一键收起/展开（保留阅读上下文）
+
+#### 统计面板（问题内）
+在视图下方以**全宽单列**显示当前问题的统计：
 
 | 指标 | 说明 |
 |------|------|
-| 问题总数 | 当前活跃的问题数量 |
-| 笔记总数 | 所有笔记的总量 |
-| 平均密度 | 每个问题平均关联的笔记数 |
-| 暗物质占比 | 孤立笔记占总笔记的百分比 |
-| 最活跃问题 | 近期触达最多的问题 |
+| 关联笔记数 | 当前问题相关笔记总量 |
+| 类型分布 | Claim / Evidence / Trigger 数量 |
+| 最近更新 | 该问题相关笔记的最近更新时间 |
+| 关联密度 | 该问题关联笔记占其创建以来总笔记的比例（可选） |
 
 ---
 
@@ -117,9 +93,9 @@
 - 类型不是 `QUESTION`
 
 这些是用户写下但尚未与任何问题建立联系的思绪碎片。
+暗物质视图是**全局列表**，不依附于任何单一问题。
 
 #### 入口
-- 星图中的"暗物质区域"点击
 - 主页增加「暗物质」入口（可选）
 - 路由：`/dark-matter`
 
@@ -211,35 +187,31 @@ export const getDarkMatter = async (): Promise<Note[]> => {
 };
 
 // 获取可视化统计
-export interface ConstellationStats {
-  totalQuestions: number;
-  totalNotes: number;
-  darkMatterCount: number;
-  darkMatterRatio: number;
-  questionDensity: Map<string, number>; // questionId -> related note count
-  mostActiveQuestion: Note | null;
+export interface QuestionConstellationStats {
+  questionId: string;
+  relatedCount: number;
+  claimCount: number;
+  evidenceCount: number;
+  triggerCount: number;
+  lastUpdatedAt: number | null;
 }
 
-export const getConstellationStats = async (): Promise<ConstellationStats> => {
-  const questions = await getQuestions();
+export const getQuestionConstellationStats = async (
+  questionId: string
+): Promise<QuestionConstellationStats> => {
   const allNotes = await getNotes();
-  const darkMatter = await getDarkMatter();
-  
-  const questionDensity = new Map<string, number>();
-  questions.forEach(q => {
-    const related = allNotes.filter(n => n.parentId === q.id);
-    questionDensity.set(q.id, related.length);
-  });
-  
-  const mostActive = questions.sort((a, b) => b.updatedAt - a.updatedAt)[0] || null;
-  
+  const related = allNotes.filter(n => n.parentId === questionId);
+  const lastUpdatedAt = related.length
+    ? Math.max(...related.map(n => n.updatedAt))
+    : null;
+
   return {
-    totalQuestions: questions.length,
-    totalNotes: allNotes.length,
-    darkMatterCount: darkMatter.length,
-    darkMatterRatio: allNotes.length > 0 ? darkMatter.length / allNotes.length : 0,
-    questionDensity,
-    mostActiveQuestion: mostActive
+    questionId,
+    relatedCount: related.length,
+    claimCount: related.filter(n => n.type === NoteType.CLAIM).length,
+    evidenceCount: related.filter(n => n.type === NoteType.EVIDENCE).length,
+    triggerCount: related.filter(n => n.type === NoteType.TRIGGER).length,
+    lastUpdatedAt
   };
 };
 ```
@@ -261,12 +233,12 @@ export const getConstellationStats = async (): Promise<ConstellationStats> => {
 
 ```
 views/
-├── Explore.tsx           # 星图主视图
+├── QuestionDetail.tsx    # 问题详情（内嵌可视化入口）
 ├── DarkMatter.tsx        # 暗物质视图
 components/
-├── ConstellationGraph.tsx    # 星图可视化组件
+├── QuestionGraph.tsx         # 问题可视化组件
+├── QuestionStatsPanel.tsx    # 问题统计面板
 ├── DarkMatterList.tsx        # 暗物质列表组件
-├── StatsPanel.tsx            # 统计面板
 ├── NotePreview.tsx           # 笔记预览卡片
 ```
 
@@ -278,7 +250,6 @@ components/
   <Route path="/" element={<Home />} />
   <Route path="/write" element={<Write />} />
   <Route path="/question/:id" element={<QuestionDetail />} />
-  <Route path="/explore" element={<Explore />} />
   <Route path="/dark-matter" element={<DarkMatter />} />
 </Routes>
 ```
@@ -301,14 +272,14 @@ components/
 ### 5.2 动画与过渡
 
 - 进入星图时：节点从中心扩散
-- 点击问题时：其他节点淡出，焦点节点居中
+- 点击节点时：其他节点淡出，焦点节点居中
 - 暗物质被关联时：节点移动到目标问题附近后消失
 - 切换视图：平滑过渡（300ms）
 
 ### 5.3 响应式设计
 
-- **桌面**：完整星图，侧边统计面板
-- **平板**：星图为主，统计面板可折叠
+- **桌面**：单列纵向堆叠（星图 → 详情 → 统计面板）
+- **平板**：单列为主，必要时折叠详情面板
 - **手机**：简化视图（可能降级为列表 + 统计卡片）
 
 ---
@@ -321,7 +292,9 @@ components/
 // contexts/AppContext.tsx translations
 
 // English
-explore: "Explore",
+visualize: "Visualize",
+hide_visualization: "Hide visualization",
+question_constellation: "Question Constellation",
 dark_matter: "Dark Matter",
 dark_matter_desc: "Fragments not yet connected to any question.",
 dark_matter_count: "{count} fragments",
@@ -330,15 +303,16 @@ promote_to_question: "Promote to question",
 dark_matter_healthy: "Your thoughts are well-connected.",
 dark_matter_moderate: "Some fragments await integration.",
 dark_matter_attention: "Many thoughts are floating freely.",
-constellation_view: "Constellation",
-stats_total_questions: "Questions",
-stats_total_notes: "Notes",
-stats_dark_matter_ratio: "Dark Matter",
-stats_most_active: "Most Active",
+stats_related_notes: "Related notes",
+stats_type_distribution: "Type distribution",
+stats_last_updated: "Last updated",
+stats_relation_density: "Relation density",
 no_dark_matter: "No dark matter. All thoughts are connected.",
 
 // Chinese
-explore: "探索",
+visualize: "可视化",
+hide_visualization: "收起可视化",
+question_constellation: "问题星图",
 dark_matter: "暗物质",
 dark_matter_desc: "尚未与任何问题产生联系的思绪碎片。",
 dark_matter_count: "{count} 个碎片",
@@ -347,11 +321,10 @@ promote_to_question: "升级为问题",
 dark_matter_healthy: "你的思绪已经很好地聚合了。",
 dark_matter_moderate: "有些碎片等待整合。",
 dark_matter_attention: "许多思绪正在自由漂浮。",
-constellation_view: "星图",
-stats_total_questions: "问题",
-stats_total_notes: "笔记",
-stats_dark_matter_ratio: "暗物质占比",
-stats_most_active: "最活跃",
+stats_related_notes: "关联笔记数",
+stats_type_distribution: "类型分布",
+stats_last_updated: "最近更新",
+stats_relation_density: "关联密度",
 no_dark_matter: "没有暗物质。所有思绪都已连接。",
 ```
 
@@ -359,28 +332,29 @@ no_dark_matter: "没有暗物质。所有思绪都已连接。",
 
 ## 七、实现优先级
 
-### Phase 1：暗物质视图（MVP）
+### Phase 1：问题内可视化（MVP）
+1. ✅ 在问题详情页新增「可视化」入口
+2. ✅ 问题星图渲染（力导向/径向布局）
+3. ✅ 基本交互（悬停、点击、缩放、收起）
+4. ✅ 问题内统计面板
+5. ✅ 单列纵向布局（星图 → 详情 → 统计）
+
+**预计工时**：2-3 天
+
+### Phase 2：暗物质视图
 1. ✅ 实现 `getDarkMatter()` 查询
 2. ✅ 创建 `/dark-matter` 路由和视图
 3. ✅ 列表展示孤立笔记
 4. ✅ "关联到问题"功能
 5. ✅ 主页增加入口
 
-**预计工时**：2-3 天
-
-### Phase 2：基础星图
-1. 集成 `react-force-graph-2d`
-2. 创建 `/explore` 路由
-3. 展示问题和关联笔记的力导向图
-4. 基本交互（悬停、点击）
-
 **预计工时**：3-4 天
 
 ### Phase 3：增强功能
-1. 统计面板
-2. 问题聚焦视图
-3. 暗物质在星图中的可视化
-4. 动画效果
+1. 动画效果
+2. 更丰富的节点样式
+3. 可选的关系过滤（按类型）
+4. 暗物质批量操作
 
 **预计工时**：3-4 天
 
@@ -388,7 +362,7 @@ no_dark_matter: "没有暗物质。所有思绪都已连接。",
 1. 响应式适配
 2. 性能优化（大量笔记时）
 3. 更丰富的过渡动画
-4. 暗物质批量操作
+4. 细节打磨（文案/空状态/引导）
 
 **预计工时**：2-3 天
 
@@ -419,7 +393,7 @@ no_dark_matter: "没有暗物质。所有思绪都已连接。",
 
 这个提案为 Cognitive Space 增加了两个互补的功能：
 
-- **星图（Constellation View）**让用户从宏观视角观察自己的认知结构
+- **问题星图（Question Constellation）**让用户在单个问题内观察认知结构
 - **暗物质（Dark Matter）**帮助用户发现被遗忘的思绪碎片
 
 两者都遵循产品的核心理念：**不强迫整理，只帮助发现**。

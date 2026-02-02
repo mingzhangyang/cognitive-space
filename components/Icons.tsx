@@ -72,3 +72,19 @@ export const SearchIcon = ({ className }: { className?: string }) => (
     <line x1="16.65" y1="16.65" x2="21" y2="21"></line>
   </svg>
 );
+
+export const EyeIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path>
+    <circle cx="12" cy="12" r="3"></circle>
+  </svg>
+);
+
+export const EyeOffIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.3 21.3 0 0 1 5.06-5.94"></path>
+    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+    <path d="M1 1l22 22"></path>
+    <path d="M9.9 4.24A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a21.4 21.4 0 0 1-4.22 5.06"></path>
+  </svg>
+);

@@ -407,3 +407,44 @@ export const getDarkMatter = async (): Promise<Note[]> => {
     'Failed to load dark matter'
   );
 };
+
+export interface QuestionConstellationStats {
+  questionId: string;
+  relatedCount: number;
+  claimCount: number;
+  evidenceCount: number;
+  triggerCount: number;
+  lastUpdatedAt: number | null;
+}
+
+export const getQuestionConstellationStats = async (
+  questionId: string
+): Promise<QuestionConstellationStats> => {
+  return await withDb(
+    {
+      questionId,
+      relatedCount: 0,
+      claimCount: 0,
+      evidenceCount: 0,
+      triggerCount: 0,
+      lastUpdatedAt: null
+    },
+    async (db) => {
+      await ensureProjection(db);
+      const related = await db.getAllFromIndex(STORE_NOTES, 'by-parent', questionId);
+      const lastUpdatedAt = related.length
+        ? Math.max(...related.map((note) => note.updatedAt))
+        : null;
+
+      return {
+        questionId,
+        relatedCount: related.length,
+        claimCount: related.filter((note) => note.type === NoteType.CLAIM).length,
+        evidenceCount: related.filter((note) => note.type === NoteType.EVIDENCE).length,
+        triggerCount: related.filter((note) => note.type === NoteType.TRIGGER).length,
+        lastUpdatedAt
+      };
+    },
+    'Failed to load question constellation stats'
+  );
+};
