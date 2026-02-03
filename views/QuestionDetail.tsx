@@ -11,7 +11,7 @@ import {
 } from '../services/storageService';
 import { Note, NoteType } from '../types';
 import { useAppContext } from '../contexts/AppContext';
-import { TrashIcon, EditIcon, CheckIcon, XIcon, EyeIcon, EyeOffIcon } from '../components/Icons';
+import { TrashIcon, EditIcon, CheckIcon, XIcon, EyeIcon, EyeOffIcon, LoadingSpinner } from '../components/Icons';
 import TypeBadge from '../components/TypeBadge';
 import QuestionGraph from '../components/QuestionGraph';
 import QuestionStatsPanel from '../components/QuestionStatsPanel';
@@ -58,6 +58,7 @@ const QuestionDetail: React.FC = () => {
   const [relationDensity, setRelationDensity] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; isQuestion: boolean } | null>(null);
   const { t } = useAppContext();
 
@@ -90,20 +91,42 @@ const QuestionDetail: React.FC = () => {
   }, [id]);
 
   const handleEdit = (note: Note) => {
+    if (isSavingEdit) return;
     setEditingId(note.id);
     setEditContent(note.content);
   };
 
   const handleSaveEdit = async () => {
-    if (editingId && editContent.trim()) {
-      await updateNoteContent(editingId, editContent.trim());
+    const trimmed = editContent.trim();
+    if (!editingId || !trimmed || isSavingEdit) return;
+    setIsSavingEdit(true);
+    const optimisticUpdatedAt = Date.now();
+    if (question && editingId === question.id) {
+      setQuestion((prev) => (prev ? { ...prev, content: trimmed, updatedAt: optimisticUpdatedAt } : prev));
+    } else {
+      setRelatedNotes((prev) =>
+        prev.map((note) =>
+          note.id === editingId ? { ...note, content: trimmed, updatedAt: optimisticUpdatedAt } : note
+        )
+      );
+      setStats((prev) => (prev
+        ? { ...prev, lastUpdatedAt: Math.max(prev.lastUpdatedAt ?? 0, optimisticUpdatedAt) }
+        : prev
+      ));
+    }
+
+    try {
+      await updateNoteContent(editingId, trimmed);
       setEditingId(null);
       setEditContent('');
-      void loadData();
+      await loadData();
+    } finally {
+      setIsSavingEdit(false);
     }
   };
 
   const handleCancelEdit = () => {
+    if (isSavingEdit) return;
     setEditingId(null);
     setEditContent('');
   };
@@ -159,7 +182,10 @@ const QuestionDetail: React.FC = () => {
             <>
               <button
                 onClick={() => handleEdit(note)}
-                className="h-10 w-10 btn-icon text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                disabled={isSavingEdit}
+                className={`h-10 w-10 btn-icon text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark ${
+                  isSavingEdit ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
                 title="Edit"
               >
                 <EditIcon className="w-4 h-4" />
@@ -182,23 +208,39 @@ const QuestionDetail: React.FC = () => {
             className="textarea-base"
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                handleCancelEdit();
+              }
+              if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                e.preventDefault();
+                void handleSaveEdit();
+              }
+            }}
             rows={3}
             autoFocus
           />
           <div className="flex gap-2">
             <button
               onClick={handleSaveEdit}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm bg-accent dark:bg-accent-dark text-white rounded-md hover:opacity-90 transition-opacity"
+              disabled={isSavingEdit || !editContent.trim()}
+              className={`flex items-center gap-1 px-3 py-1.5 text-sm bg-accent dark:bg-accent-dark text-white rounded-md hover:opacity-90 transition-opacity ${
+                isSavingEdit || !editContent.trim() ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
             >
-              <CheckIcon className="w-3.5 h-3.5" />
-              Save
+              {isSavingEdit ? <LoadingSpinner className="w-3.5 h-3.5 text-white" /> : <CheckIcon className="w-3.5 h-3.5" />}
+              {isSavingEdit ? t('saving') : t('save')}
             </button>
             <button
               onClick={handleCancelEdit}
-              className="flex items-center gap-1 px-3 py-1.5 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors"
+              disabled={isSavingEdit}
+              className={`flex items-center gap-1 px-3 py-1.5 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors ${
+                isSavingEdit ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
             >
               <XIcon className="w-3.5 h-3.5" />
-              Cancel
+              {t('cancel')}
             </button>
           </div>
         </div>
@@ -253,6 +295,18 @@ const QuestionDetail: React.FC = () => {
                 {visualizationOpen ? t('hide_visualization') : t('visualize')}
               </span>
             </button>
+            {editingId !== question.id && (
+              <button
+                onClick={() => handleEdit(question)}
+                disabled={isSavingEdit}
+                className={`h-10 w-10 btn-icon text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark ${
+                  isSavingEdit ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
+                title="Edit question"
+              >
+                <EditIcon className="w-4 h-4" />
+              </button>
+            )}
             <button
               onClick={() => handleDelete(question.id, true)}
               className="h-10 w-10 btn-icon text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
@@ -262,9 +316,53 @@ const QuestionDetail: React.FC = () => {
             </button>
           </div>
         </div>
-        <h1 className="page-title-lg">
-          {question.content}
-        </h1>
+        {editingId === question.id ? (
+          <div className="space-y-2">
+          <textarea
+            className="textarea-base"
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                handleCancelEdit();
+              }
+              if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                e.preventDefault();
+                void handleSaveEdit();
+              }
+            }}
+            rows={2}
+            autoFocus
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={handleSaveEdit}
+              disabled={isSavingEdit || !editContent.trim()}
+              className={`flex items-center gap-1 px-3 py-1.5 text-sm bg-accent dark:bg-accent-dark text-white rounded-md hover:opacity-90 transition-opacity ${
+                isSavingEdit || !editContent.trim() ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
+            >
+              {isSavingEdit ? <LoadingSpinner className="w-3.5 h-3.5 text-white" /> : <CheckIcon className="w-3.5 h-3.5" />}
+              {isSavingEdit ? t('saving') : t('save')}
+            </button>
+            <button
+              onClick={handleCancelEdit}
+              disabled={isSavingEdit}
+              className={`flex items-center gap-1 px-3 py-1.5 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors ${
+                isSavingEdit ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
+            >
+              <XIcon className="w-3.5 h-3.5" />
+              {t('cancel')}
+            </button>
+          </div>
+        </div>
+      ) : (
+          <h1 className="page-title-lg">
+            {question.content}
+          </h1>
+        )}
         <div className="mt-4 text-caption">
           {t('initiated_on')} {new Date(question.createdAt).toLocaleDateString()}
         </div>
@@ -313,10 +411,13 @@ const QuestionDetail: React.FC = () => {
                             block: 'center'
                           });
                         }}
-                        className="inline-flex items-center gap-2 px-3 py-2 text-xs bg-accent dark:bg-accent-dark text-white rounded-full hover:opacity-90 transition-opacity"
+                        disabled={isSavingEdit}
+                        className={`inline-flex items-center gap-2 px-3 py-2 text-xs bg-accent dark:bg-accent-dark text-white rounded-full hover:opacity-90 transition-opacity ${
+                          isSavingEdit ? 'opacity-60 cursor-not-allowed' : ''
+                        }`}
                       >
                         <EditIcon className="w-3.5 h-3.5" />
-                        Edit
+                        {t('edit')}
                       </button>
                       <button
                         onClick={() => {

@@ -3,6 +3,7 @@ import {
   getDarkMatter,
   getQuestions,
   updateNoteMeta,
+  updateNoteContent,
   deleteNote,
   createNoteObject,
   saveNote,
@@ -12,7 +13,7 @@ import {
 } from '../services/storageService';
 import { Note, NoteType, DarkMatterSuggestion } from '../types';
 import { useAppContext } from '../contexts/AppContext';
-import { LoadingSpinner, TrashIcon } from '../components/Icons';
+import { LoadingSpinner, TrashIcon, EditIcon, CheckIcon, XIcon } from '../components/Icons';
 import TypeBadge from '../components/TypeBadge';
 import { analyzeDarkMatter } from '../services/aiService';
 
@@ -103,6 +104,9 @@ const DarkMatter: React.FC = () => {
   const [questions, setQuestions] = useState<Note[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [linkTarget, setLinkTarget] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [suggestions, setSuggestions] = useState<DarkMatterSuggestion[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
@@ -152,6 +156,10 @@ const DarkMatter: React.FC = () => {
     if (deleteTarget) {
       await deleteNote(deleteTarget);
       void loadData();
+      if (editingId === deleteTarget) {
+        setEditingId(null);
+        setEditContent('');
+      }
       setDeleteTarget(null);
     }
   };
@@ -171,6 +179,38 @@ const DarkMatter: React.FC = () => {
   const handlePromoteToQuestion = async (noteId: string) => {
     await updateNoteMeta(noteId, { type: NoteType.QUESTION, parentId: null });
     void loadData();
+  };
+
+  const handleEdit = (note: Note) => {
+    if (isSavingEdit) return;
+    setEditingId(note.id);
+    setEditContent(note.content);
+  };
+
+  const handleSaveEdit = async () => {
+    const trimmed = editContent.trim();
+    if (!editingId || !trimmed || isSavingEdit) return;
+    setIsSavingEdit(true);
+    const optimisticUpdatedAt = Date.now();
+    setDarkMatter((prev) =>
+      prev.map((note) =>
+        note.id === editingId ? { ...note, content: trimmed, updatedAt: optimisticUpdatedAt } : note
+      )
+    );
+    try {
+      await updateNoteContent(editingId, trimmed);
+      setEditingId(null);
+      setEditContent('');
+      await loadData();
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    if (isSavingEdit) return;
+    setEditingId(null);
+    setEditContent('');
   };
 
   const formatTemplate = (template: string, params: Record<string, string | number>) => {
@@ -432,35 +472,97 @@ const DarkMatter: React.FC = () => {
                     {formatRelativeTime(note.createdAt)}
                   </span>
                 </div>
-                <button
-                  onClick={() => handleDelete(note.id)}
-                  className="h-10 w-10 btn-icon text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                  title="Delete"
-                >
-                  <TrashIcon className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                  {editingId !== note.id && (
+                    <>
+                      <button
+                        onClick={() => handleEdit(note)}
+                        disabled={isSavingEdit}
+                        className={`h-10 w-10 btn-icon text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark ${
+                          isSavingEdit ? 'opacity-60 cursor-not-allowed' : ''
+                        }`}
+                        title="Edit"
+                      >
+                        <EditIcon className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(note.id)}
+                        className="h-10 w-10 btn-icon text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                        title="Delete"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Note content */}
-              <p className="text-ink dark:text-ink-dark leading-relaxed whitespace-pre-wrap mb-4">
-                {note.content}
-              </p>
+              {editingId === note.id ? (
+                <div className="space-y-2 mb-4">
+                  <textarea
+                    className="textarea-base"
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        e.preventDefault();
+                        handleCancelEdit();
+                      }
+                      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                        e.preventDefault();
+                        void handleSaveEdit();
+                      }
+                    }}
+                    rows={3}
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSaveEdit}
+                      disabled={isSavingEdit || !editContent.trim()}
+                      className={`flex items-center gap-1 px-3 py-1.5 text-sm bg-accent dark:bg-accent-dark text-white rounded-md hover:opacity-90 transition-opacity ${
+                        isSavingEdit || !editContent.trim() ? 'opacity-60 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      {isSavingEdit ? <LoadingSpinner className="w-3.5 h-3.5 text-white" /> : <CheckIcon className="w-3.5 h-3.5" />}
+                      {isSavingEdit ? t('saving') : t('save')}
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      disabled={isSavingEdit}
+                      className={`flex items-center gap-1 px-3 py-1.5 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors ${
+                        isSavingEdit ? 'opacity-60 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      <XIcon className="w-3.5 h-3.5" />
+                      {t('cancel')}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-ink dark:text-ink-dark leading-relaxed whitespace-pre-wrap mb-4">
+                  {note.content}
+                </p>
+              )}
 
               {/* Actions */}
-              <div className="flex flex-wrap gap-2 pt-3 border-t border-line-soft dark:border-line-dark">
-                <button
-                  onClick={() => handleLinkToQuestion(note.id)}
-                  className="chip-outline hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
-                >
-                  {t('link_to_question')}
-                </button>
-                <button
-                  onClick={() => handlePromoteToQuestion(note.id)}
-                  className="chip-outline hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
-                >
-                  {t('promote_to_question')}
-                </button>
-              </div>
+              {editingId !== note.id && (
+                <div className="flex flex-wrap gap-2 pt-3 border-t border-line-soft dark:border-line-dark">
+                  <button
+                    onClick={() => handleLinkToQuestion(note.id)}
+                    className="chip-outline hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                  >
+                    {t('link_to_question')}
+                  </button>
+                  <button
+                    onClick={() => handlePromoteToQuestion(note.id)}
+                    className="chip-outline hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                  >
+                    {t('promote_to_question')}
+                  </button>
+                </div>
+              )}
             </div>
           ))
         )}
