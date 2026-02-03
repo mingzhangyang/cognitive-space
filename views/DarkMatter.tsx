@@ -110,11 +110,13 @@ const DarkMatter: React.FC = () => {
   const [suggestions, setSuggestions] = useState<DarkMatterSuggestion[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
+  const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<{
     type: 'create' | 'link';
     suggestion: DarkMatterSuggestion;
   } | null>(null);
   const { t, language } = useAppContext();
+  const aiRevealThreshold = 4;
 
   const noteById = useMemo(() => {
     const map = new Map<string, Note>();
@@ -310,6 +312,8 @@ const DarkMatter: React.FC = () => {
   const confirmLabel = pendingAction
     ? (pendingAction.type === 'create' ? t('dark_matter_ai_action_create') : t('dark_matter_ai_action_link'))
     : t('confirm');
+  const shouldShowAiCard = darkMatter.length > 0
+    && (darkMatter.length >= aiRevealThreshold || isAiPanelOpen);
 
   return (
     <div className="flex flex-col h-full relative">
@@ -356,7 +360,18 @@ const DarkMatter: React.FC = () => {
         )}
       </div>
 
-      {darkMatter.length > 0 && (
+      {darkMatter.length > 0 && darkMatter.length < aiRevealThreshold && !isAiPanelOpen && (
+        <div className="mb-4">
+          <button
+            onClick={() => setIsAiPanelOpen(true)}
+            className="text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors"
+          >
+            {t('dark_matter_ai_action')}
+          </button>
+        </div>
+      )}
+
+      {shouldShowAiCard && (
         <div className="mb-6 surface-card p-4 sm:p-5">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
