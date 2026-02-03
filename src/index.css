@@ -106,17 +106,17 @@ html.dark ::-webkit-scrollbar-thumb {
 
 @layer components {
   .surface-card {
-    @apply rounded-2xl border border-line dark:border-line-dark bg-surface/90 dark:bg-surface-dark/70;
+    @apply rounded-2xl border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60;
     box-shadow: var(--shadow-elev-1);
   }
 
   .surface-panel {
-    @apply rounded-2xl border border-line dark:border-line-dark bg-surface/85 dark:bg-surface-dark/60;
+    @apply rounded-2xl border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60;
     box-shadow: var(--shadow-elev-1);
   }
 
   .surface-empty {
-    @apply rounded-2xl border border-dashed border-line-muted dark:border-line-dark bg-surface/70 dark:bg-surface-dark/55;
+    @apply rounded-2xl border border-dashed border-line-muted dark:border-line-dark bg-surface/60 dark:bg-surface-dark/50;
     box-shadow: var(--shadow-elev-1);
   }
 
@@ -189,15 +189,16 @@ html.dark ::-webkit-scrollbar-thumb {
   }
 
   .modal-card {
-    @apply bg-surface dark:bg-surface-hover-dark rounded-lg p-6 mx-4 shadow-xl;
+    @apply bg-surface dark:bg-surface-hover-dark rounded-2xl p-6 mx-4;
+    box-shadow: var(--shadow-elev-2);
   }
 
   .btn-pill {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-3 min-h-[44px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 dark:focus-visible:ring-accent-dark/30;
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-3 min-h-11 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 dark:focus-visible:ring-accent-dark/30;
   }
 
   .btn-outline {
-    @apply border border-line dark:border-line-dark bg-surface/70 dark:bg-surface-dark/50 text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark hover:border-line-muted dark:hover:border-muted-600;
+    @apply border border-line dark:border-line-dark bg-surface/60 dark:bg-surface-dark/50 text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark hover:border-line-muted dark:hover:border-muted-600;
   }
 
   .btn-icon {
@@ -217,20 +218,20 @@ html.dark ::-webkit-scrollbar-thumb {
   }
 
   .btn-glass-icon {
-    @apply h-11 w-11 sm:h-9 sm:w-9 text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover/80 dark:hover:bg-surface-hover-dark/80 border border-line/70 dark:border-line-dark/70 bg-surface/70 dark:bg-surface-dark/60 backdrop-blur;
+    @apply h-11 w-11 sm:h-10 sm:w-10 text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 backdrop-blur-sm;
   }
 
   .menu-popover {
-    @apply absolute right-0 mt-3 w-64 rounded-2xl border border-line/70 dark:border-line-dark/70 bg-surface/90 dark:bg-surface-dark/80 backdrop-blur p-2 z-30;
+    @apply absolute right-0 mt-3 w-64 rounded-2xl border border-line dark:border-line-dark bg-surface/95 dark:bg-surface-dark/90 backdrop-blur-sm p-2 z-30;
     box-shadow: var(--shadow-elev-2);
   }
 
   .menu-caret {
-    @apply absolute right-4 -top-2 h-3 w-3 rotate-45 border border-line/70 dark:border-line-dark/70 bg-surface/90 dark:bg-surface-dark/80;
+    @apply absolute right-4 -top-2 h-3 w-3 rotate-45 border border-line dark:border-line-dark bg-surface/95 dark:bg-surface-dark/90;
   }
 
   .menu-item {
-    @apply w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-surface-hover/80 dark:hover:bg-surface-hover-dark/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 dark:focus-visible:ring-accent-dark/20;
+    @apply w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-surface-hover dark:hover:bg-surface-hover-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 dark:focus-visible:ring-accent-dark/30;
   }
 
   .card-interactive {
@@ -244,11 +245,12 @@ html.dark ::-webkit-scrollbar-thumb {
   }
 
   .btn-danger {
-    @apply bg-red-500 text-white hover:bg-red-600 transition-colors;
+    @apply bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors;
   }
 
   .input-pill {
-    @apply w-full rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 text-base sm:text-sm text-ink dark:text-ink-dark px-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-accent/30 dark:focus:ring-accent-dark/30 placeholder:text-muted-500 dark:placeholder:text-muted-500 shadow-sm;
+    @apply w-full rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 text-base sm:text-sm text-ink dark:text-ink-dark px-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-accent/30 dark:focus:ring-accent-dark/30 placeholder:text-muted-400 dark:placeholder:text-muted-500;
+    box-shadow: var(--shadow-elev-1);
   }
 
   .textarea-base {

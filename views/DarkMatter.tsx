@@ -201,7 +201,7 @@ const DarkMatter: React.FC = () => {
                 </div>
                 <button
                   onClick={() => handleDelete(note.id)}
-                  className="h-9 w-9 btn-icon text-muted-400 dark:text-muted-400 hover:text-red-500 dark:hover:text-red-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-strong-dark"
+                  className="h-10 w-10 btn-icon text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
                   title="Delete"
                 >
                   <TrashIcon className="w-4 h-4" />

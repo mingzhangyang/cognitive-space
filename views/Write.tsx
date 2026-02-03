@@ -224,7 +224,7 @@ const Write: React.FC = () => {
         <button
           onClick={handleSave}
           disabled={!content.trim() || isProcessing}
-          className={`w-full sm:w-auto px-6 py-3 min-h-[44px] rounded-full font-medium transition-all ${
+          className={`w-full sm:w-auto px-6 py-3 min-h-11 rounded-full font-medium transition-all ${
             content.trim() && !isProcessing
               ? 'bg-action dark:bg-action text-white hover:bg-action-hover dark:hover:bg-action-hover-dark shadow-md'
               : 'bg-line dark:bg-surface-hover-dark text-muted-400 dark:text-muted-500 cursor-not-allowed'

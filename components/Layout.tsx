@@ -167,7 +167,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   onMouseEnter={() => setActiveIndex(0)}
                   onFocus={() => setActiveIndex(0)}
                 >
-                  <span className="h-9 w-9 rounded-full border border-line/60 dark:border-line-dark/60 bg-surface/80 dark:bg-surface-dark/80 grid place-items-center text-subtle dark:text-subtle-dark">
+                  <span className="h-9 w-9 rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 grid place-items-center text-subtle dark:text-subtle-dark">
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <circle cx="12" cy="12" r="9" />
                       <path d="M3 12h18" />
@@ -199,7 +199,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   onMouseEnter={() => setActiveIndex(1)}
                   onFocus={() => setActiveIndex(1)}
                 >
-                  <span className="h-9 w-9 rounded-full border border-line/60 dark:border-line-dark/60 bg-surface/80 dark:bg-surface-dark/80 grid place-items-center text-subtle dark:text-subtle-dark">
+                  <span className="h-9 w-9 rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 grid place-items-center text-subtle dark:text-subtle-dark">
                     {theme === 'light' ? (
                       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M21 12.4A8.5 8.5 0 1 1 11.6 3a7 7 0 0 0 9.4 9.4Z" />
@@ -239,7 +239,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   onMouseEnter={() => setActiveIndex(2)}
                   onFocus={() => setActiveIndex(2)}
                 >
-                  <span className="h-9 w-9 rounded-full border border-line/60 dark:border-line-dark/60 bg-surface/80 dark:bg-surface-dark/80 grid place-items-center text-subtle dark:text-subtle-dark">
+                  <span className="h-9 w-9 rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 grid place-items-center text-subtle dark:text-subtle-dark">
                     <HelpIcon className="w-4 h-4" />
                   </span>
                   <span className="flex-1">
@@ -259,7 +259,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         {children}
       </main>
 
-      <footer className="relative mt-16 sm:mt-20 py-6 text-center text-mini-up text-subtle dark:text-subtle-dark before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-line/80 dark:before:bg-line-dark">
+      <footer className="relative mt-16 sm:mt-20 py-6 text-center text-mini-up text-subtle dark:text-subtle-dark before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-line dark:before:bg-line-dark">
         <p>{t('footer_philosophy')}</p>
         <p className="mt-1 flex items-center justify-center gap-2">
           <span>@{year} Orangely.xyz</span>

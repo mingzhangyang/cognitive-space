@@ -159,17 +159,17 @@ const QuestionDetail: React.FC = () => {
             <>
               <button
                 onClick={() => handleEdit(note)}
-                className="h-11 w-11 sm:h-9 sm:w-9 btn-icon text-muted-500 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                className="h-10 w-10 btn-icon text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
                 title="Edit"
               >
-                <EditIcon className="w-3.5 h-3.5" />
+                <EditIcon className="w-4 h-4" />
               </button>
               <button
                 onClick={() => handleDelete(note.id, false)}
-                className="h-11 w-11 sm:h-9 sm:w-9 btn-icon text-muted-500 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                className="h-10 w-10 btn-icon text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
                 title="Delete"
               >
-                <TrashIcon className="w-3.5 h-3.5" />
+                <TrashIcon className="w-4 h-4" />
               </button>
             </>
           )}
@@ -255,7 +255,7 @@ const QuestionDetail: React.FC = () => {
             </button>
             <button
               onClick={() => handleDelete(question.id, true)}
-              className="h-11 w-11 sm:h-10 sm:w-10 btn-icon text-muted-500 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+              className="h-10 w-10 btn-icon text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
               title="Delete question"
             >
               <TrashIcon className="w-4 h-4" />
@@ -359,7 +359,7 @@ const QuestionDetail: React.FC = () => {
       </div>
 
       <div className="mt-16 sm:mt-20 flex justify-center">
-        <Link to="/write" className="inline-flex items-center justify-center text-body-sm-muted hover:text-accent dark:hover:text-accent-dark border border-line dark:border-line-dark hover:border-accent/40 dark:hover:border-accent-dark/40 transition-all px-5 py-2.5 rounded-full bg-surface/60 dark:bg-surface-dark/40 min-h-[44px]">
+        <Link to="/write" className="btn-pill btn-outline">
           {t('add_thought_stream')}
         </Link>
       </div>

@@ -170,13 +170,13 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
   const clearHover = () => setHoveredNode(null);
 
   if (!size.width || !size.height) {
-    return <div ref={containerRef} className="h-[320px] sm:h-[420px]" />;
+    return <div ref={containerRef} className="h-80 sm:h-[420px]" />;
   }
 
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-[320px] sm:h-[420px] surface-panel overflow-hidden"
+      className="relative w-full h-80 sm:h-[420px] surface-panel overflow-hidden"
     >
       <svg
         width="100%"

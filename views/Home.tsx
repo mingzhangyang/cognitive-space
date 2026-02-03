@@ -163,11 +163,11 @@ const Home: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 h-11 w-11 sm:h-9 sm:w-9 btn-icon text-muted-500 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 btn-icon text-muted-400 hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
                     aria-label={t('clear_recall')}
                     title={t('clear_recall')}
                   >
-                    <XIcon className="w-3.5 h-3.5" />
+                    <XIcon className="w-4 h-4" />
                   </button>
                 )}
               </div>
@@ -212,12 +212,12 @@ const Home: React.FC = () => {
                 <div className="flex items-center gap-2 ml-4">
                   <button
                     onClick={(e) => handleDelete(e, q.id)}
-                    className="h-11 w-11 sm:h-10 sm:w-10 btn-icon text-muted-400 dark:text-muted-400 hover:text-red-500 dark:hover:text-red-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-strong-dark"
+                    className="h-10 w-10 btn-icon text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
                     title="Delete question"
                   >
                     <TrashIcon className="w-4 h-4" />
                   </button>
-                  <ArrowRightIcon className="text-muted-400 dark:text-muted-400 group-hover:text-accent dark:group-hover:text-accent-dark w-5 h-5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all" />
+                  <ArrowRightIcon className="text-muted-400 group-hover:text-accent dark:group-hover:text-accent-dark w-5 h-5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all" />
                 </div>
               </div>
               <div className="mt-3 flex items-center gap-2 section-kicker">
