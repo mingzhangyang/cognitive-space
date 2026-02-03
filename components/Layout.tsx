@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAppContext } from '../contexts/AppContext';
 import { HelpIcon, HomeIcon, MenuIcon } from './Icons';
+import { getSessionFooterLine } from '../services/footerLine';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -10,6 +11,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const year = new Date().getFullYear();
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [footerLine, setFooterLine] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
   const menuItemRefs = useRef<Array<HTMLButtonElement | HTMLAnchorElement | null>>([]);
@@ -42,6 +44,17 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       document.removeEventListener('keydown', handleEscape);
     };
   }, [menuOpen]);
+
+  useEffect(() => {
+    let isActive = true;
+    void getSessionFooterLine(language).then((line) => {
+      if (!isActive) return;
+      setFooterLine(line);
+    });
+    return () => {
+      isActive = false;
+    };
+  }, [language]);
 
   useEffect(() => {
     if (!menuOpen) {
@@ -260,7 +273,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       </main>
 
       <footer className="relative mt-16 sm:mt-20 py-6 text-center text-mini-up text-subtle dark:text-subtle-dark before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-line dark:before:bg-line-dark">
-        <p>{t('footer_philosophy')}</p>
+        <p>{footerLine ?? t('footer_philosophy')}</p>
         <p className="mt-1 flex items-center justify-center gap-2">
           <span>@{year} Orangely.xyz</span>
           <span aria-hidden="true" className="text-muted-300 dark:text-muted-700">|</span>
