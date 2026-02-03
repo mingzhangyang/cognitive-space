@@ -159,7 +159,7 @@ const Write: React.FC = () => {
       <div className="flex-1 flex flex-col pt-2">
         <textarea
           ref={textareaRef}
-          className="w-full bg-transparent text-[18px] sm:text-xl leading-relaxed text-ink dark:text-ink-dark resize-none focus:outline-none placeholder:text-stone-500 dark:placeholder:text-stone-600 font-serif"
+          className="w-full bg-transparent text-[18px] sm:text-xl leading-relaxed text-ink dark:text-ink-dark resize-none focus:outline-none placeholder:text-muted-500 dark:placeholder:text-muted-600 font-serif"
           placeholder={t('write_placeholder')}
           value={content}
           onChange={(e) => {
@@ -178,7 +178,7 @@ const Write: React.FC = () => {
         />
       </div>
 
-      <div className="min-h-[4.5rem] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-stone-100 dark:border-stone-800 mt-4 pt-4">
+      <div className="min-h-[4.5rem] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-line-soft dark:border-line-strong-dark mt-4 pt-4">
         <div className="text-sm text-subtle dark:text-subtle-dark flex items-center gap-2 w-full sm:w-auto">
            {isProcessing && !linkHint && !mergeCandidate && (
              <>
@@ -187,32 +187,32 @@ const Write: React.FC = () => {
              </>
            )}
            {linkHint && (
-             <div className="animate-fade-in text-ink dark:text-stone-200 bg-stone-100 dark:bg-stone-800 px-3 py-1.5 rounded-md text-xs flex items-center gap-2">
+             <div className="animate-fade-in text-ink dark:text-muted-200 bg-surface-hover dark:bg-surface-hover-dark px-3 py-1.5 rounded-md text-xs flex items-center gap-2">
                <span>{t('related_hint')} "{truncate(linkHint.title, 20)}".</span>
                <button
                  type="button"
                  onClick={() => navigate(`/question/${linkHint.questionId}`)}
-                 className="px-2 py-0.5 rounded-full bg-ink text-white dark:bg-stone-600 hover:opacity-90 transition-opacity"
+                 className="px-2 py-0.5 rounded-full bg-ink text-white dark:bg-muted-600 hover:opacity-90 transition-opacity"
                >
                  {t('view_question')}
                </button>
              </div>
            )}
            {mergeCandidate && (
-             <div className="animate-fade-in text-ink dark:text-stone-200 bg-stone-100 dark:bg-stone-800 px-3 py-1.5 rounded-md text-xs space-y-2">
+             <div className="animate-fade-in text-ink dark:text-muted-200 bg-surface-hover dark:bg-surface-hover-dark px-3 py-1.5 rounded-md text-xs space-y-2">
                <div>{t('merge_prompt')} "{truncate(mergeCandidate.relatedTitle, 20)}"</div>
                <div className="flex flex-wrap items-center gap-2 text-[11px] text-subtle dark:text-subtle-dark">
                  <button
                    type="button"
                    onClick={handleMerge}
-                   className="px-2 py-0.5 rounded-full bg-ink text-white dark:bg-stone-600 hover:opacity-90 transition-opacity"
+                   className="px-2 py-0.5 rounded-full bg-ink text-white dark:bg-muted-600 hover:opacity-90 transition-opacity"
                  >
                    {t('merge_action')}
                  </button>
                  <button
                    type="button"
                    onClick={handleKeepSeparate}
-                   className="px-2 py-0.5 rounded-full border border-stone-300 dark:border-stone-600 hover:border-stone-400 dark:hover:border-stone-500 transition-colors"
+                   className="px-2 py-0.5 rounded-full border border-line-muted dark:border-muted-600 hover:border-muted-400 dark:hover:border-muted-500 transition-colors"
                  >
                    {t('separate_action')}
                  </button>
@@ -226,8 +226,8 @@ const Write: React.FC = () => {
           disabled={!content.trim() || isProcessing}
           className={`w-full sm:w-auto px-6 py-3 min-h-[44px] rounded-full font-medium transition-all ${
             content.trim() && !isProcessing
-              ? 'bg-ink dark:bg-stone-700 text-white hover:bg-black dark:hover:bg-stone-600 shadow-md'
-              : 'bg-stone-200 dark:bg-stone-800 text-stone-400 dark:text-stone-600 cursor-not-allowed'
+              ? 'bg-action dark:bg-action text-white hover:bg-action-hover dark:hover:bg-action-hover-dark shadow-md'
+              : 'bg-line dark:bg-surface-hover-dark text-muted-400 dark:text-muted-600 cursor-not-allowed'
           }`}
         >
           {isProcessing ? t('saving') : t('cast')}

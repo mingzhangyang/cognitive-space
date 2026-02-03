@@ -21,10 +21,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <HomeIcon className="w-4 h-4" />
             </Link>
           )}
-          <div className="flex items-center gap-2 rounded-full border border-stone-200/70 dark:border-stone-800/70 bg-white/70 dark:bg-stone-900/60 backdrop-blur px-2 py-1.5 sm:p-0 sm:border-transparent sm:bg-transparent sm:backdrop-blur-0">
+          <div className="flex items-center gap-2 rounded-full border border-line/70 dark:border-line-strong-dark/70 bg-surface/70 dark:bg-surface-dark/60 backdrop-blur px-2 py-1.5 sm:p-0 sm:border-transparent sm:bg-transparent sm:backdrop-blur-0">
             <button
               onClick={() => setLanguage(language === 'en' ? 'zh' : 'en')}
-              className="h-11 w-11 sm:h-9 sm:w-9 grid place-items-center rounded-full text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-stone-100/80 dark:hover:bg-stone-800/80 transition-colors"
+              className="h-11 w-11 sm:h-9 sm:w-9 grid place-items-center rounded-full text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover/80 dark:hover:bg-surface-hover-dark/80 transition-colors"
               aria-label={language === 'en' ? 'Switch language to Chinese' : 'Switch language to English'}
               title={language === 'en' ? 'Switch language to Chinese' : 'Switch language to English'}
             >
@@ -37,7 +37,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             </button>
             <button
               onClick={toggleTheme}
-              className="h-11 w-11 sm:h-9 sm:w-9 grid place-items-center rounded-full text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-stone-100/80 dark:hover:bg-stone-800/80 transition-colors"
+              className="h-11 w-11 sm:h-9 sm:w-9 grid place-items-center rounded-full text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover/80 dark:hover:bg-surface-hover-dark/80 transition-colors"
               aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
               title={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
             >
@@ -67,11 +67,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         {children}
       </main>
 
-      <footer className="relative mt-16 sm:mt-20 py-6 text-center text-[11px] sm:text-xs text-subtle dark:text-subtle-dark before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-stone-200/80 dark:before:bg-stone-800">
+      <footer className="relative mt-16 sm:mt-20 py-6 text-center text-[11px] sm:text-xs text-subtle dark:text-subtle-dark before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-line/80 dark:before:bg-line-strong-dark">
         <p>{t('footer_philosophy')}</p>
         <p className="mt-1 flex items-center justify-center gap-2">
           <span>@{year} Orangely.xyz</span>
-          <span aria-hidden="true" className="text-stone-300 dark:text-stone-700">|</span>
+          <span aria-hidden="true" className="text-muted-300 dark:text-muted-700">|</span>
           <Link
             to="/privacy"
             className="hover:text-ink dark:hover:text-ink-dark transition-colors"

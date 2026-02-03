@@ -176,7 +176,7 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-[320px] sm:h-[420px] rounded-2xl border border-stone-200 dark:border-stone-700 bg-white/70 dark:bg-stone-900/40 overflow-hidden"
+      className="relative w-full h-[320px] sm:h-[420px] surface-panel overflow-hidden"
     >
       <svg
         width="100%"
@@ -250,7 +250,7 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
 
       {hoveredNode && (
         <div
-          className="absolute z-10 max-w-xs rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-lg p-3 text-xs text-ink dark:text-ink-dark"
+          className="absolute z-10 max-w-xs rounded-lg border border-line dark:border-line-dark bg-surface dark:bg-surface-dark shadow-lg p-3 text-xs text-ink dark:text-ink-dark"
           style={{
             left: clamp(hoverPosition.x + 12, 8, Math.max(8, size.width - 260)),
             top: clamp(hoverPosition.y + 12, 8, Math.max(8, size.height - 120))

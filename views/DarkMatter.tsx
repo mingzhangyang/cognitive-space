@@ -12,12 +12,12 @@ const TypeBadge: React.FC<{ type: NoteType; subType?: string }> = ({ type, subTy
     [NoteType.CLAIM]: 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-100 dark:border-blue-800',
     [NoteType.EVIDENCE]: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-800',
     [NoteType.TRIGGER]: 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-100 dark:border-purple-800',
-    [NoteType.QUESTION]: 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400',
+    [NoteType.QUESTION]: 'bg-surface-hover dark:bg-surface-hover-dark text-muted-600 dark:text-muted-400',
     [NoteType.UNCATEGORIZED]: 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
   };
 
   return (
-    <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded border ${colors[type] || colors[NoteType.UNCATEGORIZED]}`}>
+    <span className={`badge-base ${colors[type] || colors[NoteType.UNCATEGORIZED]}`}>
       {t(`type_${type}` as any)}
       {subType && <span className="font-normal opacity-70 ml-1 normal-case tracking-normal">· {subType}</span>}
     </span>
@@ -33,8 +33,8 @@ const ConfirmDialog: React.FC<{
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onCancel}>
-      <div className="bg-white dark:bg-stone-800 rounded-lg p-6 max-w-sm mx-4 shadow-xl" onClick={e => e.stopPropagation()}>
+    <div className="modal-backdrop" onClick={onCancel}>
+      <div className="modal-card max-w-sm" onClick={e => e.stopPropagation()}>
         <p className="text-ink dark:text-ink-dark mb-6">{message}</p>
         <div className="flex justify-end gap-3">
           <button
@@ -66,8 +66,8 @@ const QuestionSelector: React.FC<{
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onCancel}>
-      <div className="bg-white dark:bg-stone-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl max-h-[70vh] flex flex-col" onClick={e => e.stopPropagation()}>
+    <div className="modal-backdrop" onClick={onCancel}>
+      <div className="modal-card max-w-md w-full max-h-[70vh] flex flex-col" onClick={e => e.stopPropagation()}>
         <h3 className="text-lg font-medium text-ink dark:text-ink-dark mb-4">{t('select_question')}</h3>
         <div className="overflow-y-auto flex-1 space-y-2">
           {questions.length === 0 ? (
@@ -79,7 +79,7 @@ const QuestionSelector: React.FC<{
               <button
                 key={q.id}
                 onClick={() => onSelect(q.id)}
-                className="w-full text-left p-3 rounded-lg border border-stone-200 dark:border-stone-700 hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                className="w-full text-left p-3 rounded-lg border border-line dark:border-line-dark hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
               >
                 <p className="text-ink dark:text-ink-dark text-sm line-clamp-2">{q.content}</p>
               </button>
@@ -192,7 +192,7 @@ const DarkMatter: React.FC = () => {
           {t('dark_matter_desc')}
         </p>
         {darkMatter.length > 0 && (
-          <p className="mt-2 text-xs text-stone-400 dark:text-stone-500 uppercase tracking-wider">
+          <p className="mt-2 text-xs text-muted-400 dark:text-muted-500 uppercase tracking-wider">
             {darkMatter.length} {t('dark_matter_count')}
           </p>
         )}
@@ -201,7 +201,7 @@ const DarkMatter: React.FC = () => {
       {/* Content */}
       <div className="space-y-4 pb-8">
         {darkMatter.length === 0 ? (
-          <div className="text-center py-14 px-5 border border-dashed border-stone-300 dark:border-stone-700 rounded-2xl bg-white/60 dark:bg-stone-900/40 shadow-sm">
+          <div className="text-center py-14 px-5 surface-empty shadow-sm">
             <p className="text-ink dark:text-ink-dark font-serif mb-2 text-lg">
               ✨
             </p>
@@ -213,19 +213,19 @@ const DarkMatter: React.FC = () => {
           darkMatter.map((note) => (
             <div
               key={note.id}
-              className="group bg-white/80 dark:bg-stone-900/60 border border-stone-200 dark:border-stone-700 p-4 sm:p-5 rounded-2xl hover:shadow-md transition-all duration-300"
+              className="group surface-card p-4 sm:p-5 hover:shadow-md transition-all duration-300"
             >
               {/* Note header */}
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="flex items-center gap-2">
                   <TypeBadge type={note.type} subType={note.subType} />
-                  <span className="text-[10px] text-stone-400 dark:text-stone-500">
+                  <span className="muted-caption">
                     {formatRelativeTime(note.createdAt)}
                   </span>
                 </div>
                 <button
                   onClick={() => handleDelete(note.id)}
-                  className="h-9 w-9 grid place-items-center text-stone-400 dark:text-stone-600 hover:text-red-500 dark:hover:text-red-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full hover:bg-stone-100 dark:hover:bg-stone-700"
+                  className="h-9 w-9 grid place-items-center text-muted-400 dark:text-muted-600 hover:text-red-500 dark:hover:text-red-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full hover:bg-surface-hover dark:hover:bg-surface-hover-strong-dark"
                   title="Delete"
                 >
                   <TrashIcon className="w-4 h-4" />
@@ -238,16 +238,16 @@ const DarkMatter: React.FC = () => {
               </p>
 
               {/* Actions */}
-              <div className="flex flex-wrap gap-2 pt-3 border-t border-stone-100 dark:border-stone-800">
+              <div className="flex flex-wrap gap-2 pt-3 border-t border-line-soft dark:border-line-strong-dark">
                 <button
                   onClick={() => handleLinkToQuestion(note.id)}
-                  className="px-3 py-1.5 text-xs rounded-full border border-stone-200 dark:border-stone-700 text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                  className="chip-outline hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
                 >
                   {t('link_to_question')}
                 </button>
                 <button
                   onClick={() => handlePromoteToQuestion(note.id)}
-                  className="px-3 py-1.5 text-xs rounded-full border border-stone-200 dark:border-stone-700 text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                  className="chip-outline hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
                 >
                   {t('promote_to_question')}
                 </button>

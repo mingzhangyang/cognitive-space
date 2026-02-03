@@ -15,8 +15,8 @@ const ConfirmDialog: React.FC<{
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onCancel}>
-      <div className="bg-white dark:bg-stone-800 rounded-lg p-6 max-w-sm mx-4 shadow-xl" onClick={e => e.stopPropagation()}>
+    <div className="modal-backdrop" onClick={onCancel}>
+      <div className="modal-card max-w-sm" onClick={e => e.stopPropagation()}>
         <p className="text-ink dark:text-ink-dark mb-6">{message}</p>
         <div className="flex justify-end gap-3">
           <button
@@ -114,7 +114,7 @@ const Home: React.FC = () => {
               <button
                 type="button"
                 onClick={openRecall}
-                className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-4 py-3 rounded-full border border-stone-200 dark:border-stone-700 text-[11px] sm:text-xs uppercase tracking-[0.2em] text-subtle dark:text-subtle-dark bg-white/70 dark:bg-stone-900/50 hover:text-ink dark:hover:text-ink-dark hover:border-stone-300 dark:hover:border-stone-600 transition-colors min-h-[44px]"
+                className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-4 py-3 rounded-full border border-line dark:border-line-dark text-[11px] sm:text-xs muted-label bg-surface/70 dark:bg-surface-dark/50 hover:text-ink dark:hover:text-ink-dark hover:border-line-muted dark:hover:border-muted-600 transition-colors min-h-[44px]"
                 aria-label={t('recall_label')}
                 title={t('recall_label')}
               >
@@ -125,11 +125,11 @@ const Home: React.FC = () => {
             {darkMatterCount > 0 && (
               <Link
                 to="/dark-matter"
-                className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-4 py-3 rounded-full border border-stone-200 dark:border-stone-700 text-[11px] sm:text-xs uppercase tracking-[0.2em] text-subtle dark:text-subtle-dark bg-white/70 dark:bg-stone-900/50 hover:text-ink dark:hover:text-ink-dark hover:border-stone-300 dark:hover:border-stone-600 transition-colors min-h-[44px]"
+                className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-4 py-3 rounded-full border border-line dark:border-line-dark text-[11px] sm:text-xs muted-label bg-surface/70 dark:bg-surface-dark/50 hover:text-ink dark:hover:text-ink-dark hover:border-line-muted dark:hover:border-muted-600 transition-colors min-h-[44px]"
               >
                 <span className="text-sm">🌑</span>
                 <span>{t('dark_matter')}</span>
-                <span className="ml-1 px-1.5 py-0.5 bg-stone-200 dark:bg-stone-700 rounded-full text-[10px]">
+                <span className="ml-1 px-1.5 py-0.5 bg-line dark:bg-line-dark rounded-full text-[10px]">
                   {darkMatterCount}
                 </span>
               </Link>
@@ -137,11 +137,11 @@ const Home: React.FC = () => {
           </div>
           {isRecallOpen && (
             <>
-              <label htmlFor="recall" className="text-[11px] uppercase tracking-[0.2em] text-subtle dark:text-subtle-dark">
+              <label htmlFor="recall" className="text-[11px] muted-label">
                 {t('recall_label')}
               </label>
               <div className="mt-3 relative">
-                <SearchIcon className="w-4 h-4 text-stone-500 dark:text-stone-500 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <SearchIcon className="w-4 h-4 text-muted-500 dark:text-muted-500 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   id="recall"
                   type="text"
@@ -155,7 +155,7 @@ const Home: React.FC = () => {
                     }
                   }}
                   placeholder={t('recall_placeholder')}
-                  className="w-full rounded-full border border-stone-200 dark:border-stone-700 bg-white/80 dark:bg-stone-900/60 text-base sm:text-sm text-ink dark:text-ink-dark px-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-accent/30 dark:focus:ring-accent-dark/30 placeholder:text-stone-500 dark:placeholder:text-stone-600 shadow-sm"
+                  className="w-full rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 text-base sm:text-sm text-ink dark:text-ink-dark px-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-accent/30 dark:focus:ring-accent-dark/30 placeholder:text-muted-500 dark:placeholder:text-muted-600 shadow-sm"
                   aria-label={t('recall_label')}
                   autoFocus
                 />
@@ -163,7 +163,7 @@ const Home: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 h-11 w-11 sm:h-9 sm:w-9 grid place-items-center rounded-full text-stone-500 hover:text-ink dark:text-stone-500 dark:hover:text-ink-dark hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 h-11 w-11 sm:h-9 sm:w-9 grid place-items-center rounded-full text-muted-500 hover:text-ink dark:text-muted-500 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark transition-colors"
                     aria-label={t('clear_recall')}
                     title={t('clear_recall')}
                   >
@@ -177,7 +177,7 @@ const Home: React.FC = () => {
         </div>
 
         {filteredQuestions.length === 0 ? (
-          <div className="text-center py-14 px-5 border border-dashed border-stone-300 dark:border-stone-700 rounded-2xl bg-white/60 dark:bg-stone-900/40 shadow-sm">
+          <div className="text-center py-14 px-5 surface-empty shadow-sm">
             {hasQuestions && isFiltering ? (
               <>
                 <p className="text-ink dark:text-ink-dark font-serif mb-2 text-lg">
@@ -203,7 +203,7 @@ const Home: React.FC = () => {
             <Link
               key={q.id}
               to={`/question/${q.id}`}
-              className="block group bg-white/80 dark:bg-stone-900/60 border border-stone-200 dark:border-stone-700 p-4 sm:p-6 rounded-2xl hover:shadow-md transition-all duration-300 hover:border-accent/30 dark:hover:border-accent-dark/30"
+              className="block group surface-card p-4 sm:p-6 hover:shadow-md transition-all duration-300 hover:border-accent/30 dark:hover:border-accent-dark/30"
             >
               <div className="flex justify-between items-start">
                 <h3 className="text-lg font-medium text-ink dark:text-ink-dark group-hover:text-accent dark:group-hover:text-accent-dark transition-colors leading-relaxed flex-1 pr-2">
@@ -212,15 +212,15 @@ const Home: React.FC = () => {
                 <div className="flex items-center gap-2 ml-4">
                   <button
                     onClick={(e) => handleDelete(e, q.id)}
-                    className="h-11 w-11 sm:h-10 sm:w-10 grid place-items-center text-stone-400 dark:text-stone-600 hover:text-red-500 dark:hover:text-red-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full hover:bg-stone-100 dark:hover:bg-stone-700"
+                    className="h-11 w-11 sm:h-10 sm:w-10 grid place-items-center text-muted-400 dark:text-muted-600 hover:text-red-500 dark:hover:text-red-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full hover:bg-surface-hover dark:hover:bg-surface-hover-strong-dark"
                     title="Delete question"
                   >
                     <TrashIcon className="w-4 h-4" />
                   </button>
-                  <ArrowRightIcon className="text-stone-400 dark:text-stone-600 group-hover:text-accent dark:group-hover:text-accent-dark w-5 h-5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all" />
+                  <ArrowRightIcon className="text-muted-400 dark:text-muted-600 group-hover:text-accent dark:group-hover:text-accent-dark w-5 h-5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all" />
                 </div>
               </div>
-              <div className="mt-3 flex items-center gap-2 text-[11px] sm:text-xs text-subtle dark:text-subtle-dark font-medium uppercase tracking-wider">
+              <div className="mt-3 flex items-center gap-2 section-kicker">
                 <span>{t('last_active')} {new Date(q.updatedAt).toLocaleDateString()}</span>
               </div>
             </Link>
@@ -232,7 +232,7 @@ const Home: React.FC = () => {
       {fabContainer && createPortal(
         <Link
           to="/write"
-          className="fixed bottom-20 right-4 sm:bottom-24 sm:right-8 bg-[#1abc9c] text-white w-14 h-14 rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-transform hover:bg-[#16a085] focus:outline-none focus:ring-4 focus:ring-[#9ee7d8] dark:bg-[#1abc9c] dark:hover:bg-[#25d0b2] dark:focus:ring-[#9ee7d8]/50 z-50"
+          className="fixed bottom-20 right-4 sm:bottom-24 sm:right-8 bg-action text-white w-14 h-14 rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-transform hover:bg-action-hover focus:outline-none focus:ring-4 focus:ring-action-ring dark:bg-action dark:hover:bg-action-hover-dark dark:focus:ring-action-ring/50 z-50"
           aria-label="Write"
         >
           <PlusIcon className="w-6 h-6" />
