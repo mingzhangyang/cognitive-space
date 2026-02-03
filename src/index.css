@@ -227,11 +227,11 @@ html.dark ::-webkit-scrollbar-thumb {
   }
 
   .menu-caret {
-    @apply absolute right-4 -top-1.5 h-3 w-3 rotate-45 border-l border-t border-line dark:border-line-dark bg-surface/95 dark:bg-surface-dark/90;
+    @apply absolute right-4 -top-1.5 h-3 w-3 rotate-45 border-l border-t border-line dark:border-line-dark bg-surface/95 dark:bg-surface-dark/90 z-0;
   }
 
   .menu-item {
-    @apply w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-surface-hover dark:hover:bg-surface-hover-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 dark:focus-visible:ring-accent-dark/30;
+    @apply relative z-10 w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-surface-hover dark:hover:bg-surface-hover-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 dark:focus-visible:ring-accent-dark/30;
   }
 
   .card-interactive {
