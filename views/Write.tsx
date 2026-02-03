@@ -179,7 +179,7 @@ const Write: React.FC = () => {
       </div>
 
       <div className="min-h-[4.5rem] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-line-soft dark:border-line-dark mt-4 pt-4">
-        <div className="text-sm text-subtle dark:text-subtle-dark flex items-center gap-2 w-full sm:w-auto">
+        <div className="text-body-sm-muted flex items-center gap-2 w-full sm:w-auto">
            {isProcessing && !linkHint && !mergeCandidate && (
              <>
                <LoadingSpinner className="w-4 h-4 text-accent dark:text-accent-dark" />

@@ -114,7 +114,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return (
     <div className="min-h-screen flex flex-col max-w-3xl mx-auto w-full px-5 sm:px-6 pt-6 sm:pt-9 pb-10 sm:pb-12 relative transition-colors duration-300">
-      <header className="mb-8 sm:mb-10 flex flex-wrap items-center justify-between gap-3">
+      <header className="relative z-20 mb-8 sm:mb-10 flex flex-wrap items-center justify-between gap-3">
         <Link to="/" className="text-lg sm:text-xl font-serif font-bold tracking-tight text-ink dark:text-ink-dark hover:text-accent dark:hover:text-accent-dark transition-colors leading-tight">
           Cognitive Space
         </Link>
@@ -176,7 +176,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     </svg>
                   </span>
                   <span className="flex-1">
-                    <span className="block text-sm font-medium text-ink dark:text-ink-dark">{t('menu_language_label')}</span>
+                    <span className="block text-body-sm font-medium">{t('menu_language_label')}</span>
                     <span className="block text-mini text-subtle dark:text-subtle-dark">
                       {language === 'en' ? t('menu_language_action_en') : t('menu_language_action_zh')}
                     </span>
@@ -219,7 +219,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     )}
                   </span>
                   <span className="flex-1">
-                    <span className="block text-sm font-medium text-ink dark:text-ink-dark">{t('menu_theme_label')}</span>
+                    <span className="block text-body-sm font-medium">{t('menu_theme_label')}</span>
                     <span className="block text-mini text-subtle dark:text-subtle-dark">
                       {theme === 'light' ? t('menu_theme_action_light') : t('menu_theme_action_dark')}
                     </span>
@@ -243,7 +243,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     <HelpIcon className="w-4 h-4" />
                   </span>
                   <span className="flex-1">
-                    <span className="block text-sm font-medium text-ink dark:text-ink-dark">{t('help')}</span>
+                    <span className="block text-body-sm font-medium">{t('help')}</span>
                     <span className="block text-mini text-subtle dark:text-subtle-dark">
                       {t('menu_help_action')}
                     </span>

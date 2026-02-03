@@ -30,6 +30,10 @@
   --color-action-hover: #16a085;
   --color-action-hover-dark: #25d0b2;
   --color-action-ring: #9ee7d8;
+  --shadow-elev-1: 0 1px 0 rgba(12, 10, 9, 0.04), 0 8px 18px -16px rgba(12, 10, 9, 0.2);
+  --shadow-elev-2: 0 12px 28px -16px rgba(12, 10, 9, 0.28);
+  --shadow-elev-1-dark: 0 1px 0 rgba(0, 0, 0, 0.35), 0 10px 20px -16px rgba(0, 0, 0, 0.45);
+  --shadow-elev-2-dark: 0 14px 30px -18px rgba(0, 0, 0, 0.65);
   --font-sans: 'Raleway', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
   --font-serif: 'Lora', ui-serif, Georgia, 'Times New Roman', Times, serif;
 }
@@ -102,15 +106,18 @@ html.dark ::-webkit-scrollbar-thumb {
 
 @layer components {
   .surface-card {
-    @apply rounded-2xl border border-line dark:border-line-dark bg-surface/90 dark:bg-surface-dark/70 shadow-[0_1px_0_rgba(12,10,9,0.04)] dark:shadow-[0_1px_0_rgba(0,0,0,0.35)];
+    @apply rounded-2xl border border-line dark:border-line-dark bg-surface/90 dark:bg-surface-dark/70;
+    box-shadow: var(--shadow-elev-1);
   }
 
   .surface-panel {
-    @apply rounded-2xl border border-line dark:border-line-dark bg-surface/85 dark:bg-surface-dark/60 shadow-[0_1px_0_rgba(12,10,9,0.03)] dark:shadow-[0_1px_0_rgba(0,0,0,0.3)];
+    @apply rounded-2xl border border-line dark:border-line-dark bg-surface/85 dark:bg-surface-dark/60;
+    box-shadow: var(--shadow-elev-1);
   }
 
   .surface-empty {
-    @apply rounded-2xl border border-dashed border-line-muted dark:border-line-dark bg-surface/70 dark:bg-surface-dark/55 shadow-[0_1px_0_rgba(12,10,9,0.02)] dark:shadow-[0_1px_0_rgba(0,0,0,0.25)];
+    @apply rounded-2xl border border-dashed border-line-muted dark:border-line-dark bg-surface/70 dark:bg-surface-dark/55;
+    box-shadow: var(--shadow-elev-1);
   }
 
   .page-title {
@@ -134,7 +141,7 @@ html.dark ::-webkit-scrollbar-thumb {
   }
 
   .section-title {
-    @apply text-xs font-bold tracking-widest uppercase text-subtle dark:text-subtle-dark;
+    @apply text-xs sm:text-sm font-bold tracking-widest uppercase text-subtle dark:text-subtle-dark;
   }
 
   .section-meta {
@@ -143,6 +150,34 @@ html.dark ::-webkit-scrollbar-thumb {
 
   .section-kicker {
     @apply text-[11px] sm:text-xs font-medium uppercase tracking-wider text-subtle dark:text-subtle-dark;
+  }
+
+  .text-body {
+    @apply text-sm sm:text-base text-ink dark:text-ink-dark;
+  }
+
+  .text-body-muted {
+    @apply text-sm sm:text-base text-subtle dark:text-subtle-dark;
+  }
+
+  .text-body-sm {
+    @apply text-sm text-ink dark:text-ink-dark;
+  }
+
+  .text-body-sm-muted {
+    @apply text-sm text-subtle dark:text-subtle-dark;
+  }
+
+  .text-caption {
+    @apply text-xs text-muted-400 dark:text-muted-400;
+  }
+
+  .text-caption-ink {
+    @apply text-xs text-ink dark:text-ink-dark;
+  }
+
+  .text-caption-upper {
+    @apply text-xs uppercase tracking-wider text-muted-400 dark:text-muted-400;
   }
 
   .section-divider {
@@ -186,7 +221,8 @@ html.dark ::-webkit-scrollbar-thumb {
   }
 
   .menu-popover {
-    @apply absolute right-0 mt-3 w-64 rounded-2xl border border-line/70 dark:border-line-dark/70 bg-surface/90 dark:bg-surface-dark/80 backdrop-blur shadow-lg shadow-ink/5 dark:shadow-black/40 p-2;
+    @apply absolute right-0 mt-3 w-64 rounded-2xl border border-line/70 dark:border-line-dark/70 bg-surface/90 dark:bg-surface-dark/80 backdrop-blur p-2 z-30;
+    box-shadow: var(--shadow-elev-2);
   }
 
   .menu-caret {
@@ -198,7 +234,13 @@ html.dark ::-webkit-scrollbar-thumb {
   }
 
   .card-interactive {
-    @apply transition-all duration-300 ease-out hover:shadow-md hover:-translate-y-0.5;
+    @apply transition-all duration-300 ease-out;
+    box-shadow: var(--shadow-elev-1);
+  }
+
+  .card-interactive:hover {
+    box-shadow: var(--shadow-elev-2);
+    transform: translateY(-2px);
   }
 
   .btn-danger {
@@ -220,6 +262,21 @@ html.dark ::-webkit-scrollbar-thumb {
   .chip-outline {
     @apply inline-flex items-center gap-2 px-3 py-1.5 text-xs rounded-full border border-line dark:border-line-dark text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/25 dark:focus-visible:ring-accent-dark/25;
   }
+}
+
+.dark .surface-card,
+.dark .surface-panel,
+.dark .surface-empty,
+.dark .card-interactive {
+  box-shadow: var(--shadow-elev-1-dark);
+}
+
+.dark .menu-popover {
+  box-shadow: var(--shadow-elev-2-dark);
+}
+
+.dark .card-interactive:hover {
+  box-shadow: var(--shadow-elev-2-dark);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -21,7 +21,7 @@ const ConfirmDialog: React.FC<{
         <div className="flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-sm text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark transition-colors"
+            className="px-4 py-2 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors"
           >
             Cancel
           </button>
@@ -53,7 +53,7 @@ const QuestionSelector: React.FC<{
         <h3 className="text-lg font-medium text-ink dark:text-ink-dark mb-4">{t('select_question')}</h3>
         <div className="overflow-y-auto flex-1 space-y-2">
           {questions.length === 0 ? (
-            <p className="text-subtle dark:text-subtle-dark text-sm py-4 text-center">
+            <p className="text-body-sm-muted py-4 text-center">
               No questions available. Create one first.
             </p>
           ) : (
@@ -63,7 +63,7 @@ const QuestionSelector: React.FC<{
                 onClick={() => onSelect(q.id)}
                 className="w-full text-left p-3 rounded-lg border border-line dark:border-line-dark hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
               >
-                <p className="text-ink dark:text-ink-dark text-sm line-clamp-2">{q.content}</p>
+                <p className="text-body-sm line-clamp-2">{q.content}</p>
               </button>
             ))
           )}
@@ -71,7 +71,7 @@ const QuestionSelector: React.FC<{
         <div className="mt-4 flex justify-end">
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-sm text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark transition-colors"
+            className="px-4 py-2 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors"
           >
             {t('cancel')}
           </button>
@@ -170,7 +170,7 @@ const DarkMatter: React.FC = () => {
         </div>
         <p className="page-subtitle">{t('dark_matter_desc')}</p>
         {darkMatter.length > 0 && (
-          <p className="mt-2 text-xs text-muted-400 dark:text-muted-400 uppercase tracking-wider">
+          <p className="mt-2 text-caption-upper">
             {darkMatter.length} {t('dark_matter_count')}
           </p>
         )}
@@ -183,9 +183,7 @@ const DarkMatter: React.FC = () => {
             <p className="text-ink dark:text-ink-dark font-serif mb-2 text-lg">
               ✨
             </p>
-            <p className="text-subtle dark:text-subtle-dark text-sm">
-              {t('no_dark_matter')}
-            </p>
+            <p className="text-body-sm-muted">{t('no_dark_matter')}</p>
           </div>
         ) : (
           darkMatter.map((note) => (

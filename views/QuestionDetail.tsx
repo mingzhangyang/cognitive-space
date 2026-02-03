@@ -31,7 +31,7 @@ const ConfirmDialog: React.FC<{
         <div className="flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-sm text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark transition-colors"
+            className="px-4 py-2 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors"
           >
             Cancel
           </button>
@@ -195,7 +195,7 @@ const QuestionDetail: React.FC = () => {
             </button>
             <button
               onClick={handleCancelEdit}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors"
             >
               <XIcon className="w-3.5 h-3.5" />
               Cancel
@@ -216,7 +216,7 @@ const QuestionDetail: React.FC = () => {
         {title}
       </h2>
       {notes.length === 0 ? (
-        <p className="text-sm text-subtle dark:text-subtle-dark">{emptyText}</p>
+        <p className="text-body-sm-muted">{emptyText}</p>
       ) : (
         <div className="space-y-8">
           {notes.map(renderNote)}
@@ -265,7 +265,7 @@ const QuestionDetail: React.FC = () => {
         <h1 className="page-title-lg">
           {question.content}
         </h1>
-        <div className="mt-4 text-xs text-subtle dark:text-subtle-dark">
+        <div className="mt-4 text-caption">
           {t('initiated_on')} {new Date(question.createdAt).toLocaleDateString()}
         </div>
       </div>
@@ -301,7 +301,7 @@ const QuestionDetail: React.FC = () => {
                         <XIcon className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    <p className="text-sm text-ink dark:text-ink-dark leading-relaxed whitespace-pre-wrap">
+                    <p className="text-body-sm leading-relaxed whitespace-pre-wrap">
                       {selectedGraphNote.content}
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -332,7 +332,7 @@ const QuestionDetail: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs text-subtle dark:text-subtle-dark">
+                  <p className="text-caption">
                     Click a node to preview its details.
                   </p>
                 )}
@@ -346,7 +346,7 @@ const QuestionDetail: React.FC = () => {
       <div className="space-y-10">
         {relatedNotes.length === 0 ? (
           <div className="text-center py-10 opacity-60 text-subtle dark:text-subtle-dark">
-            <p className="text-sm">{t('no_thoughts_here')}</p>
+            <p className="text-body-sm-muted">{t('no_thoughts_here')}</p>
           </div>
         ) : (
           <>
@@ -359,7 +359,7 @@ const QuestionDetail: React.FC = () => {
       </div>
 
       <div className="mt-16 sm:mt-20 flex justify-center">
-        <Link to="/write" className="inline-flex items-center justify-center text-sm text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark border border-line dark:border-line-dark hover:border-accent/40 dark:hover:border-accent-dark/40 transition-all px-5 py-2.5 rounded-full bg-surface/60 dark:bg-surface-dark/40 min-h-[44px]">
+        <Link to="/write" className="inline-flex items-center justify-center text-body-sm-muted hover:text-accent dark:hover:text-accent-dark border border-line dark:border-line-dark hover:border-accent/40 dark:hover:border-accent-dark/40 transition-all px-5 py-2.5 rounded-full bg-surface/60 dark:bg-surface-dark/40 min-h-[44px]">
           {t('add_thought_stream')}
         </Link>
       </div>

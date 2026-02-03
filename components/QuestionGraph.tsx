@@ -243,14 +243,14 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
       </svg>
 
       {notes.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center text-xs text-subtle dark:text-subtle-dark">
+        <div className="absolute inset-0 flex items-center justify-center text-caption">
           {t('no_thoughts_here')}
         </div>
       )}
 
       {hoveredNode && (
         <div
-          className="absolute z-10 max-w-xs rounded-lg border border-line dark:border-line-dark bg-surface dark:bg-surface-dark shadow-lg p-3 text-xs text-ink dark:text-ink-dark"
+          className="absolute z-10 max-w-xs rounded-lg border border-line dark:border-line-dark bg-surface dark:bg-surface-dark shadow-lg p-3 text-caption-ink"
           style={{
             left: clamp(hoverPosition.x + 12, 8, Math.max(8, size.width - 260)),
             top: clamp(hoverPosition.y + 12, 8, Math.max(8, size.height - 120))

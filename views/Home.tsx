@@ -21,7 +21,7 @@ const ConfirmDialog: React.FC<{
         <div className="flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-sm text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark transition-colors"
+            className="px-4 py-2 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors"
           >
             Cancel
           </button>
@@ -171,7 +171,7 @@ const Home: React.FC = () => {
                   </button>
                 )}
               </div>
-              <p className="mt-2 text-xs text-subtle dark:text-subtle-dark">{t('recall_hint')}</p>
+              <p className="mt-2 text-caption">{t('recall_hint')}</p>
             </>
           )}
         </div>
@@ -183,7 +183,7 @@ const Home: React.FC = () => {
                 <p className="text-ink dark:text-ink-dark font-serif mb-2 text-lg">
                   {t('no_recall_results')}
                 </p>
-                <p className="text-subtle dark:text-subtle-dark text-sm">
+                <p className="text-body-sm-muted">
                   {t('recall_hint')}
                 </p>
               </>
@@ -192,7 +192,7 @@ const Home: React.FC = () => {
                 <p className="text-ink dark:text-ink-dark font-serif mb-2 text-lg">
                   {hasNotes ? t('no_question_yet') : t('space_empty')}
                 </p>
-                <p className="text-subtle dark:text-subtle-dark text-sm">
+                <p className="text-body-sm-muted">
                   {t('just_write')}
                 </p>
               </>

@@ -52,7 +52,7 @@ const QuestionStatsPanel: React.FC<QuestionStatsPanelProps> = ({ stats, relation
         <p className="muted-label">
           {t('stats_last_updated')}
         </p>
-        <p className="text-sm text-ink dark:text-ink-dark mt-2">
+        <p className="text-body-sm mt-2">
           {formatDateTime(stats?.lastUpdatedAt ?? null)}
         </p>
       </div>
@@ -61,7 +61,7 @@ const QuestionStatsPanel: React.FC<QuestionStatsPanelProps> = ({ stats, relation
         <p className="muted-label">
           {t('stats_relation_density')}
         </p>
-        <p className="text-sm text-ink dark:text-ink-dark mt-2">
+        <p className="text-body-sm mt-2">
           {formatPercent(relationDensity)}
         </p>
       </div>
