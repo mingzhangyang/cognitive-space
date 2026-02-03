@@ -24,7 +24,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           <div className="flex items-center gap-2 rounded-full border border-line/70 dark:border-line-strong-dark/70 bg-surface/70 dark:bg-surface-dark/60 backdrop-blur px-2 py-1.5 sm:p-0 sm:border-transparent sm:bg-transparent sm:backdrop-blur-0">
             <button
               onClick={() => setLanguage(language === 'en' ? 'zh' : 'en')}
-              className="h-11 w-11 sm:h-9 sm:w-9 grid place-items-center rounded-full text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover/80 dark:hover:bg-surface-hover-dark/80 transition-colors"
+              className="h-11 w-11 sm:h-9 sm:w-9 btn-icon text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover/80 dark:hover:bg-surface-hover-dark/80"
               aria-label={language === 'en' ? 'Switch language to Chinese' : 'Switch language to English'}
               title={language === 'en' ? 'Switch language to Chinese' : 'Switch language to English'}
             >
@@ -37,7 +37,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             </button>
             <button
               onClick={toggleTheme}
-              className="h-11 w-11 sm:h-9 sm:w-9 grid place-items-center rounded-full text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover/80 dark:hover:bg-surface-hover-dark/80 transition-colors"
+              className="h-11 w-11 sm:h-9 sm:w-9 btn-icon text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover/80 dark:hover:bg-surface-hover-dark/80"
               aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
               title={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
             >

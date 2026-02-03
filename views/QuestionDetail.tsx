@@ -12,27 +12,9 @@ import {
 import { Note, NoteType } from '../types';
 import { useAppContext } from '../contexts/AppContext';
 import { TrashIcon, EditIcon, CheckIcon, XIcon, EyeIcon, EyeOffIcon } from '../components/Icons';
+import TypeBadge from '../components/TypeBadge';
 import QuestionGraph from '../components/QuestionGraph';
 import QuestionStatsPanel from '../components/QuestionStatsPanel';
-
-const TypeBadge: React.FC<{ type: NoteType; subType?: string }> = ({ type, subType }) => {
-  const { t } = useAppContext();
-
-  const colors = {
-    [NoteType.CLAIM]: 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-100 dark:border-blue-800',
-    [NoteType.EVIDENCE]: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-800',
-    [NoteType.TRIGGER]: 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-100 dark:border-purple-800',
-    [NoteType.QUESTION]: 'bg-surface-hover dark:bg-surface-hover-dark text-muted-600 dark:text-muted-400',
-    [NoteType.UNCATEGORIZED]: 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
-  };
-
-  return (
-    <span className={`badge-base ${colors[type] || colors[NoteType.UNCATEGORIZED]}`}>
-      {t(`type_${type}` as any)}
-      {subType && <span className="font-normal opacity-70 ml-1 normal-case tracking-normal">· {subType}</span>}
-    </span>
-  );
-};
 
 const ConfirmDialog: React.FC<{
   isOpen: boolean;
@@ -55,7 +37,7 @@ const ConfirmDialog: React.FC<{
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+            className="px-4 py-2 text-sm rounded-md btn-danger"
           >
             Delete
           </button>
@@ -177,14 +159,14 @@ const QuestionDetail: React.FC = () => {
             <>
               <button
                 onClick={() => handleEdit(note)}
-                className="h-11 w-11 sm:h-9 sm:w-9 grid place-items-center text-muted-500 hover:text-accent dark:text-muted-500 dark:hover:text-accent-dark transition-colors rounded-full hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                className="h-11 w-11 sm:h-9 sm:w-9 btn-icon text-muted-500 hover:text-accent dark:text-muted-500 dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
                 title="Edit"
               >
                 <EditIcon className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => handleDelete(note.id, false)}
-                className="h-11 w-11 sm:h-9 sm:w-9 grid place-items-center text-muted-500 hover:text-red-500 dark:text-muted-500 dark:hover:text-red-400 transition-colors rounded-full hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                className="h-11 w-11 sm:h-9 sm:w-9 btn-icon text-muted-500 hover:text-red-500 dark:text-muted-500 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
                 title="Delete"
               >
                 <TrashIcon className="w-3.5 h-3.5" />
@@ -197,7 +179,7 @@ const QuestionDetail: React.FC = () => {
       {editingId === note.id ? (
         <div className="space-y-2">
           <textarea
-            className="w-full bg-surface dark:bg-surface-dark border border-line dark:border-line-dark rounded-md p-3 text-ink dark:text-ink-dark leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-accent/30 dark:focus:ring-accent-dark/30"
+            className="textarea-base"
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
             rows={3}
@@ -260,7 +242,7 @@ const QuestionDetail: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setVisualizationOpen((prev) => !prev)}
-              className="h-10 w-10 sm:h-auto sm:w-auto sm:px-3 sm:py-2 text-[11px] muted-label border border-line dark:border-line-dark rounded-full hover:text-ink dark:hover:text-ink-dark hover:border-line-muted dark:hover:border-muted-600 transition-colors grid place-items-center"
+              className="h-10 w-10 sm:h-auto sm:w-auto sm:px-3 sm:py-2 text-[11px] muted-label border border-line dark:border-line-dark hover:text-ink dark:hover:text-ink-dark hover:border-line-muted dark:hover:border-muted-600 btn-icon"
               aria-label={visualizationOpen ? t('hide_visualization') : t('visualize')}
               title={visualizationOpen ? t('hide_visualization') : t('visualize')}
             >
@@ -273,7 +255,7 @@ const QuestionDetail: React.FC = () => {
             </button>
             <button
               onClick={() => handleDelete(question.id, true)}
-              className="h-11 w-11 sm:h-10 sm:w-10 grid place-items-center text-muted-500 hover:text-red-500 dark:text-muted-500 dark:hover:text-red-400 transition-colors rounded-full hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+              className="h-11 w-11 sm:h-10 sm:w-10 btn-icon text-muted-500 hover:text-red-500 dark:text-muted-500 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
               title="Delete question"
             >
               <TrashIcon className="w-4 h-4" />
@@ -313,7 +295,7 @@ const QuestionDetail: React.FC = () => {
                       <TypeBadge type={selectedGraphNote.type} subType={selectedGraphNote.subType} />
                       <button
                         onClick={() => setSelectedGraphNote(null)}
-                        className="h-8 w-8 grid place-items-center text-muted-400 hover:text-ink dark:text-muted-500 dark:hover:text-ink-dark transition-colors rounded-full"
+                        className="h-8 w-8 btn-icon text-muted-400 hover:text-ink dark:text-muted-500 dark:hover:text-ink-dark"
                         aria-label="Close detail"
                       >
                         <XIcon className="w-3.5 h-3.5" />

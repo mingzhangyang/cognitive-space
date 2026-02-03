@@ -145,6 +145,30 @@ html.dark ::-webkit-scrollbar-thumb {
     @apply bg-surface dark:bg-surface-hover-dark rounded-lg p-6 mx-4 shadow-xl;
   }
 
+  .btn-pill {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-3 min-h-[44px] transition-colors;
+  }
+
+  .btn-outline {
+    @apply border border-line dark:border-line-dark bg-surface/70 dark:bg-surface-dark/50 text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark hover:border-line-muted dark:hover:border-muted-600;
+  }
+
+  .btn-icon {
+    @apply grid place-items-center rounded-full transition-colors;
+  }
+
+  .btn-danger {
+    @apply bg-red-500 text-white hover:bg-red-600 transition-colors;
+  }
+
+  .input-pill {
+    @apply w-full rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 text-base sm:text-sm text-ink dark:text-ink-dark px-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-accent/30 dark:focus:ring-accent-dark/30 placeholder:text-muted-500 dark:placeholder:text-muted-600 shadow-sm;
+  }
+
+  .textarea-base {
+    @apply w-full rounded-md border border-line dark:border-line-dark bg-surface dark:bg-surface-dark p-3 text-ink dark:text-ink-dark leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-accent/30 dark:focus:ring-accent-dark/30;
+  }
+
   .badge-base {
     @apply text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded border;
   }

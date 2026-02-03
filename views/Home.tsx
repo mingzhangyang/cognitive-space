@@ -27,7 +27,7 @@ const ConfirmDialog: React.FC<{
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+            className="px-4 py-2 text-sm rounded-md btn-danger"
           >
             Delete
           </button>
@@ -114,7 +114,7 @@ const Home: React.FC = () => {
               <button
                 type="button"
                 onClick={openRecall}
-                className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-4 py-3 rounded-full border border-line dark:border-line-dark text-[11px] sm:text-xs muted-label bg-surface/70 dark:bg-surface-dark/50 hover:text-ink dark:hover:text-ink-dark hover:border-line-muted dark:hover:border-muted-600 transition-colors min-h-[44px]"
+                className="btn-pill btn-outline text-[11px] sm:text-xs muted-label w-full sm:w-auto"
                 aria-label={t('recall_label')}
                 title={t('recall_label')}
               >
@@ -125,7 +125,7 @@ const Home: React.FC = () => {
             {darkMatterCount > 0 && (
               <Link
                 to="/dark-matter"
-                className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-4 py-3 rounded-full border border-line dark:border-line-dark text-[11px] sm:text-xs muted-label bg-surface/70 dark:bg-surface-dark/50 hover:text-ink dark:hover:text-ink-dark hover:border-line-muted dark:hover:border-muted-600 transition-colors min-h-[44px]"
+                className="btn-pill btn-outline text-[11px] sm:text-xs muted-label w-full sm:w-auto"
               >
                 <span className="text-sm">🌑</span>
                 <span>{t('dark_matter')}</span>
@@ -155,7 +155,7 @@ const Home: React.FC = () => {
                     }
                   }}
                   placeholder={t('recall_placeholder')}
-                  className="w-full rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 text-base sm:text-sm text-ink dark:text-ink-dark px-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-accent/30 dark:focus:ring-accent-dark/30 placeholder:text-muted-500 dark:placeholder:text-muted-600 shadow-sm"
+                  className="input-pill"
                   aria-label={t('recall_label')}
                   autoFocus
                 />
@@ -163,7 +163,7 @@ const Home: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 h-11 w-11 sm:h-9 sm:w-9 grid place-items-center rounded-full text-muted-500 hover:text-ink dark:text-muted-500 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 h-11 w-11 sm:h-9 sm:w-9 btn-icon text-muted-500 hover:text-ink dark:text-muted-500 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
                     aria-label={t('clear_recall')}
                     title={t('clear_recall')}
                   >
@@ -212,7 +212,7 @@ const Home: React.FC = () => {
                 <div className="flex items-center gap-2 ml-4">
                   <button
                     onClick={(e) => handleDelete(e, q.id)}
-                    className="h-11 w-11 sm:h-10 sm:w-10 grid place-items-center text-muted-400 dark:text-muted-600 hover:text-red-500 dark:hover:text-red-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full hover:bg-surface-hover dark:hover:bg-surface-hover-strong-dark"
+                    className="h-11 w-11 sm:h-10 sm:w-10 btn-icon text-muted-400 dark:text-muted-600 hover:text-red-500 dark:hover:text-red-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-strong-dark"
                     title="Delete question"
                   >
                     <TrashIcon className="w-4 h-4" />

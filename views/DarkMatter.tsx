@@ -4,25 +4,7 @@ import { getDarkMatter, getQuestions, updateNoteMeta, deleteNote } from '../serv
 import { Note, NoteType } from '../types';
 import { useAppContext } from '../contexts/AppContext';
 import { TrashIcon, XIcon } from '../components/Icons';
-
-const TypeBadge: React.FC<{ type: NoteType; subType?: string }> = ({ type, subType }) => {
-  const { t } = useAppContext();
-
-  const colors = {
-    [NoteType.CLAIM]: 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-100 dark:border-blue-800',
-    [NoteType.EVIDENCE]: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-800',
-    [NoteType.TRIGGER]: 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-100 dark:border-purple-800',
-    [NoteType.QUESTION]: 'bg-surface-hover dark:bg-surface-hover-dark text-muted-600 dark:text-muted-400',
-    [NoteType.UNCATEGORIZED]: 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
-  };
-
-  return (
-    <span className={`badge-base ${colors[type] || colors[NoteType.UNCATEGORIZED]}`}>
-      {t(`type_${type}` as any)}
-      {subType && <span className="font-normal opacity-70 ml-1 normal-case tracking-normal">· {subType}</span>}
-    </span>
-  );
-};
+import TypeBadge from '../components/TypeBadge';
 
 const ConfirmDialog: React.FC<{
   isOpen: boolean;
@@ -45,7 +27,7 @@ const ConfirmDialog: React.FC<{
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+            className="px-4 py-2 text-sm rounded-md btn-danger"
           >
             Delete
           </button>
@@ -225,7 +207,7 @@ const DarkMatter: React.FC = () => {
                 </div>
                 <button
                   onClick={() => handleDelete(note.id)}
-                  className="h-9 w-9 grid place-items-center text-muted-400 dark:text-muted-600 hover:text-red-500 dark:hover:text-red-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full hover:bg-surface-hover dark:hover:bg-surface-hover-strong-dark"
+                  className="h-9 w-9 btn-icon text-muted-400 dark:text-muted-600 hover:text-red-500 dark:hover:text-red-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-strong-dark"
                   title="Delete"
                 >
                   <TrashIcon className="w-4 h-4" />
