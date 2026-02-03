@@ -1,10 +1,14 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
-
 # Run and deploy the Cloudflare Worker app
 
 This project serves the React UI as static assets and exposes a Worker API at `/api/analyze`.
+
+## Guide
+
+1. Open the app and use `Just write` to drop a thought without worrying about structure.
+2. Create a new Question by tagging or promoting a thought when the theme becomes clear.
+3. Add supporting notes as Claims, Evidence, or Triggers to build context over time.
+4. Use `Visualize` to explore related questions and spot emerging clusters.
+5. Visit `Dark Matter` to rescue orphaned fragments and link them to a question.
 
 ## Prerequisites
 
