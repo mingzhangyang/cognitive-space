@@ -159,7 +159,7 @@ const Write: React.FC = () => {
       <div className="flex-1 flex flex-col pt-2">
         <textarea
           ref={textareaRef}
-          className="w-full bg-transparent text-[18px] sm:text-xl leading-relaxed text-ink dark:text-ink-dark resize-none focus:outline-none placeholder:text-muted-500 dark:placeholder:text-muted-600 font-serif"
+          className="w-full bg-transparent text-[18px] sm:text-xl leading-relaxed text-ink dark:text-ink-dark resize-none focus:outline-none placeholder:text-muted-500 dark:placeholder:text-muted-500 font-serif"
           placeholder={t('write_placeholder')}
           value={content}
           onChange={(e) => {
@@ -178,7 +178,7 @@ const Write: React.FC = () => {
         />
       </div>
 
-      <div className="min-h-[4.5rem] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-line-soft dark:border-line-strong-dark mt-4 pt-4">
+      <div className="min-h-[4.5rem] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-line-soft dark:border-line-dark mt-4 pt-4">
         <div className="text-sm text-subtle dark:text-subtle-dark flex items-center gap-2 w-full sm:w-auto">
            {isProcessing && !linkHint && !mergeCandidate && (
              <>
@@ -201,7 +201,7 @@ const Write: React.FC = () => {
            {mergeCandidate && (
              <div className="animate-fade-in text-ink dark:text-muted-200 bg-surface-hover dark:bg-surface-hover-dark px-3 py-1.5 rounded-md text-xs space-y-2">
                <div>{t('merge_prompt')} "{truncate(mergeCandidate.relatedTitle, 20)}"</div>
-               <div className="flex flex-wrap items-center gap-2 text-[11px] text-subtle dark:text-subtle-dark">
+               <div className="flex flex-wrap items-center gap-2 text-mini text-subtle dark:text-subtle-dark">
                  <button
                    type="button"
                    onClick={handleMerge}
@@ -227,7 +227,7 @@ const Write: React.FC = () => {
           className={`w-full sm:w-auto px-6 py-3 min-h-[44px] rounded-full font-medium transition-all ${
             content.trim() && !isProcessing
               ? 'bg-action dark:bg-action text-white hover:bg-action-hover dark:hover:bg-action-hover-dark shadow-md'
-              : 'bg-line dark:bg-surface-hover-dark text-muted-400 dark:text-muted-600 cursor-not-allowed'
+              : 'bg-line dark:bg-surface-hover-dark text-muted-400 dark:text-muted-500 cursor-not-allowed'
           }`}
         >
           {isProcessing ? t('saving') : t('cast')}

@@ -145,12 +145,12 @@ const QuestionDetail: React.FC = () => {
     <div
       key={note.id}
       id={`note-${note.id}`}
-      className="group relative pl-4 sm:pl-6 border-l-2 border-line-soft dark:border-line-strong-dark hover:border-line-muted dark:hover:border-muted-600 transition-colors"
+      className="group relative pl-4 sm:pl-6 border-l-2 border-line-soft dark:border-line-dark hover:border-line-muted dark:hover:border-muted-600 transition-colors"
     >
       <div className="mb-2 flex items-center justify-between">
         <div>
           <TypeBadge type={note.type} subType={note.subType} />
-          <span className="text-[10px] text-muted-300 dark:text-muted-600 ml-2">
+          <span className="text-micro text-muted-300 dark:text-muted-400 ml-2">
             {new Date(note.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
@@ -159,14 +159,14 @@ const QuestionDetail: React.FC = () => {
             <>
               <button
                 onClick={() => handleEdit(note)}
-                className="h-11 w-11 sm:h-9 sm:w-9 btn-icon text-muted-500 hover:text-accent dark:text-muted-500 dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                className="h-11 w-11 sm:h-9 sm:w-9 btn-icon text-muted-500 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
                 title="Edit"
               >
                 <EditIcon className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => handleDelete(note.id, false)}
-                className="h-11 w-11 sm:h-9 sm:w-9 btn-icon text-muted-500 hover:text-red-500 dark:text-muted-500 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                className="h-11 w-11 sm:h-9 sm:w-9 btn-icon text-muted-500 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
                 title="Delete"
               >
                 <TrashIcon className="w-3.5 h-3.5" />
@@ -242,7 +242,7 @@ const QuestionDetail: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setVisualizationOpen((prev) => !prev)}
-              className="h-10 w-10 sm:h-auto sm:w-auto sm:px-3 sm:py-2 text-[11px] muted-label border border-line dark:border-line-dark hover:text-ink dark:hover:text-ink-dark hover:border-line-muted dark:hover:border-muted-600 btn-icon"
+              className="h-10 w-10 sm:h-auto sm:w-auto sm:px-3 sm:py-2 muted-label border border-line dark:border-line-dark hover:text-ink dark:hover:text-ink-dark hover:border-line-muted dark:hover:border-muted-600 btn-icon"
               aria-label={visualizationOpen ? t('hide_visualization') : t('visualize')}
               title={visualizationOpen ? t('hide_visualization') : t('visualize')}
             >
@@ -255,7 +255,7 @@ const QuestionDetail: React.FC = () => {
             </button>
             <button
               onClick={() => handleDelete(question.id, true)}
-              className="h-11 w-11 sm:h-10 sm:w-10 btn-icon text-muted-500 hover:text-red-500 dark:text-muted-500 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+              className="h-11 w-11 sm:h-10 sm:w-10 btn-icon text-muted-500 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
               title="Delete question"
             >
               <TrashIcon className="w-4 h-4" />
@@ -295,7 +295,7 @@ const QuestionDetail: React.FC = () => {
                       <TypeBadge type={selectedGraphNote.type} subType={selectedGraphNote.subType} />
                       <button
                         onClick={() => setSelectedGraphNote(null)}
-                        className="h-8 w-8 btn-icon text-muted-400 hover:text-ink dark:text-muted-500 dark:hover:text-ink-dark"
+                        className="h-8 w-8 btn-icon text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark"
                         aria-label="Close detail"
                       >
                         <XIcon className="w-3.5 h-3.5" />

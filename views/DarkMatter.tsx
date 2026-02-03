@@ -174,7 +174,7 @@ const DarkMatter: React.FC = () => {
           {t('dark_matter_desc')}
         </p>
         {darkMatter.length > 0 && (
-          <p className="mt-2 text-xs text-muted-400 dark:text-muted-500 uppercase tracking-wider">
+          <p className="mt-2 text-xs text-muted-400 dark:text-muted-400 uppercase tracking-wider">
             {darkMatter.length} {t('dark_matter_count')}
           </p>
         )}
@@ -207,7 +207,7 @@ const DarkMatter: React.FC = () => {
                 </div>
                 <button
                   onClick={() => handleDelete(note.id)}
-                  className="h-9 w-9 btn-icon text-muted-400 dark:text-muted-600 hover:text-red-500 dark:hover:text-red-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-strong-dark"
+                  className="h-9 w-9 btn-icon text-muted-400 dark:text-muted-400 hover:text-red-500 dark:hover:text-red-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-strong-dark"
                   title="Delete"
                 >
                   <TrashIcon className="w-4 h-4" />
@@ -220,7 +220,7 @@ const DarkMatter: React.FC = () => {
               </p>
 
               {/* Actions */}
-              <div className="flex flex-wrap gap-2 pt-3 border-t border-line-soft dark:border-line-strong-dark">
+              <div className="flex flex-wrap gap-2 pt-3 border-t border-line-soft dark:border-line-dark">
                 <button
                   onClick={() => handleLinkToQuestion(note.id)}
                   className="chip-outline hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"

@@ -23,7 +23,7 @@ const QuestionStatsPanel: React.FC<QuestionStatsPanelProps> = ({ stats, relation
   return (
     <div className="surface-panel p-5 space-y-5">
       <div>
-        <p className="text-[11px] muted-label">
+        <p className="muted-label">
           {t('stats_related_notes')}
         </p>
         <p className="text-2xl font-serif text-ink dark:text-ink-dark mt-2">
@@ -32,7 +32,7 @@ const QuestionStatsPanel: React.FC<QuestionStatsPanelProps> = ({ stats, relation
       </div>
 
       <div>
-        <p className="text-[11px] muted-label">
+        <p className="muted-label">
           {t('stats_type_distribution')}
         </p>
         <div className="mt-2 flex flex-wrap gap-2 text-xs text-ink dark:text-ink-dark">
@@ -49,7 +49,7 @@ const QuestionStatsPanel: React.FC<QuestionStatsPanelProps> = ({ stats, relation
       </div>
 
       <div>
-        <p className="text-[11px] muted-label">
+        <p className="muted-label">
           {t('stats_last_updated')}
         </p>
         <p className="text-sm text-ink dark:text-ink-dark mt-2">
@@ -58,7 +58,7 @@ const QuestionStatsPanel: React.FC<QuestionStatsPanelProps> = ({ stats, relation
       </div>
 
       <div>
-        <p className="text-[11px] muted-label">
+        <p className="muted-label">
           {t('stats_relation_density')}
         </p>
         <p className="text-sm text-ink dark:text-ink-dark mt-2">

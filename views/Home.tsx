@@ -114,7 +114,7 @@ const Home: React.FC = () => {
               <button
                 type="button"
                 onClick={openRecall}
-                className="btn-pill btn-outline text-[11px] sm:text-xs muted-label w-full sm:w-auto"
+                className="btn-pill btn-outline muted-label w-full sm:w-auto"
                 aria-label={t('recall_label')}
                 title={t('recall_label')}
               >
@@ -125,11 +125,11 @@ const Home: React.FC = () => {
             {darkMatterCount > 0 && (
               <Link
                 to="/dark-matter"
-                className="btn-pill btn-outline text-[11px] sm:text-xs muted-label w-full sm:w-auto"
+                className="btn-pill btn-outline muted-label w-full sm:w-auto"
               >
                 <span className="text-sm">🌑</span>
                 <span>{t('dark_matter')}</span>
-                <span className="ml-1 px-1.5 py-0.5 bg-line dark:bg-line-dark rounded-full text-[10px]">
+                <span className="ml-1 px-1.5 py-0.5 bg-line dark:bg-line-dark rounded-full text-micro">
                   {darkMatterCount}
                 </span>
               </Link>
@@ -137,11 +137,11 @@ const Home: React.FC = () => {
           </div>
           {isRecallOpen && (
             <>
-              <label htmlFor="recall" className="text-[11px] muted-label">
+              <label htmlFor="recall" className="muted-label">
                 {t('recall_label')}
               </label>
               <div className="mt-3 relative">
-                <SearchIcon className="w-4 h-4 text-muted-500 dark:text-muted-500 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <SearchIcon className="w-4 h-4 text-muted-500 dark:text-muted-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   id="recall"
                   type="text"
@@ -163,7 +163,7 @@ const Home: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 h-11 w-11 sm:h-9 sm:w-9 btn-icon text-muted-500 hover:text-ink dark:text-muted-500 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 h-11 w-11 sm:h-9 sm:w-9 btn-icon text-muted-500 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
                     aria-label={t('clear_recall')}
                     title={t('clear_recall')}
                   >
@@ -212,12 +212,12 @@ const Home: React.FC = () => {
                 <div className="flex items-center gap-2 ml-4">
                   <button
                     onClick={(e) => handleDelete(e, q.id)}
-                    className="h-11 w-11 sm:h-10 sm:w-10 btn-icon text-muted-400 dark:text-muted-600 hover:text-red-500 dark:hover:text-red-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-strong-dark"
+                    className="h-11 w-11 sm:h-10 sm:w-10 btn-icon text-muted-400 dark:text-muted-400 hover:text-red-500 dark:hover:text-red-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-strong-dark"
                     title="Delete question"
                   >
                     <TrashIcon className="w-4 h-4" />
                   </button>
-                  <ArrowRightIcon className="text-muted-400 dark:text-muted-600 group-hover:text-accent dark:group-hover:text-accent-dark w-5 h-5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all" />
+                  <ArrowRightIcon className="text-muted-400 dark:text-muted-400 group-hover:text-accent dark:group-hover:text-accent-dark w-5 h-5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all" />
                 </div>
               </div>
               <div className="mt-3 flex items-center gap-2 section-kicker">

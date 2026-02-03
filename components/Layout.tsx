@@ -9,13 +9,21 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { t, language, setLanguage, theme, toggleTheme } = useAppContext();
   const year = new Date().getFullYear();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
+  const menuItemRefs = useRef<Array<HTMLButtonElement | HTMLAnchorElement | null>>([]);
+
+  const focusMenuItem = (index: number) => {
+    const itemCount = 3;
+    const nextIndex = ((index % itemCount) + itemCount) % itemCount;
+    setActiveIndex(nextIndex);
+  };
 
   useEffect(() => {
     if (!menuOpen) return;
 
-    const handleOutsideClick = (event: MouseEvent) => {
+    const handleOutsideClick = (event: Event) => {
       const target = event.target as Node;
       if (menuRef.current?.contains(target) || menuButtonRef.current?.contains(target)) return;
       setMenuOpen(false);
@@ -26,12 +34,83 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     };
 
     document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('touchstart', handleOutsideClick);
     document.addEventListener('keydown', handleEscape);
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
       document.removeEventListener('keydown', handleEscape);
     };
   }, [menuOpen]);
+
+  useEffect(() => {
+    if (!menuOpen) {
+      menuButtonRef.current?.focus();
+      return;
+    }
+
+    setActiveIndex(0);
+    requestAnimationFrame(() => {
+      menuItemRefs.current[0]?.focus();
+    });
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    menuItemRefs.current[activeIndex]?.focus();
+  }, [activeIndex, menuOpen]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const { body, documentElement } = document;
+    const previousOverflow = body.style.overflow;
+    const previousPadding = body.style.paddingRight;
+    const scrollbarWidth = window.innerWidth - documentElement.clientWidth;
+
+    body.style.overflow = 'hidden';
+    if (scrollbarWidth > 0) {
+      body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
+    return () => {
+      body.style.overflow = previousOverflow;
+      body.style.paddingRight = previousPadding;
+    };
+  }, [menuOpen]);
+
+  const handleMenuKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!menuOpen) return;
+
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        focusMenuItem(activeIndex + 1);
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        focusMenuItem(activeIndex - 1);
+        break;
+      case 'Home':
+        event.preventDefault();
+        focusMenuItem(0);
+        break;
+      case 'End':
+        event.preventDefault();
+        focusMenuItem(2);
+        break;
+      case 'Escape':
+        event.preventDefault();
+        setMenuOpen(false);
+        break;
+      case 'Tab':
+        event.preventDefault();
+        focusMenuItem(activeIndex + (event.shiftKey ? -1 : 1));
+        break;
+      default:
+        break;
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col max-w-3xl mx-auto w-full px-5 sm:px-6 pt-6 sm:pt-9 pb-10 sm:pb-12 relative transition-colors duration-300">
@@ -43,7 +122,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           {!isHome && (
             <Link
               to="/"
-              className="h-11 w-11 sm:h-9 sm:w-9 btn-icon text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover/80 dark:hover:bg-surface-hover-dark/80 border border-line/70 dark:border-line-strong-dark/70 bg-surface/70 dark:bg-surface-dark/60 backdrop-blur"
+              className="btn-icon btn-glass-icon"
               aria-label={t('back_problems')}
               title={t('back_problems')}
             >
@@ -54,7 +133,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <button
               ref={menuButtonRef}
               onClick={() => setMenuOpen(prev => !prev)}
-              className="h-11 w-11 sm:h-9 sm:w-9 btn-icon text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover/80 dark:hover:bg-surface-hover-dark/80 border border-line/70 dark:border-line-strong-dark/70 bg-surface/70 dark:bg-surface-dark/60 backdrop-blur"
+              className="btn-icon btn-glass-icon"
               aria-label={menuOpen ? t('menu_close') : t('menu_open')}
               title={menuOpen ? t('menu_close') : t('menu_open')}
               aria-haspopup="menu"
@@ -67,15 +146,26 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <div
                 id="app-menu"
                 role="menu"
-                className="absolute right-0 mt-3 w-64 rounded-2xl border border-line/70 dark:border-line-strong-dark/70 bg-surface/90 dark:bg-surface-dark/80 backdrop-blur shadow-lg shadow-ink/5 dark:shadow-black/40 p-2 animate-fade-in"
+                className="menu-popover animate-fade-in motion-reduce:animate-none"
+                onKeyDown={handleMenuKeyDown}
               >
+                <span
+                  aria-hidden="true"
+                  className="menu-caret"
+                />
                 <button
                   role="menuitem"
+                  ref={(el) => {
+                    menuItemRefs.current[0] = el;
+                  }}
                   onClick={() => {
                     setLanguage(language === 'en' ? 'zh' : 'en');
                     setMenuOpen(false);
                   }}
-                  className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-surface-hover/80 dark:hover:bg-surface-hover-dark/80 transition-colors"
+                  className="menu-item"
+                  tabIndex={activeIndex === 0 ? 0 : -1}
+                  onMouseEnter={() => setActiveIndex(0)}
+                  onFocus={() => setActiveIndex(0)}
                 >
                   <span className="h-9 w-9 rounded-full border border-line/60 dark:border-line-dark/60 bg-surface/80 dark:bg-surface-dark/80 grid place-items-center text-subtle dark:text-subtle-dark">
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -87,21 +177,27 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   </span>
                   <span className="flex-1">
                     <span className="block text-sm font-medium text-ink dark:text-ink-dark">{t('menu_language_label')}</span>
-                    <span className="block text-[11px] text-subtle dark:text-subtle-dark">
+                    <span className="block text-mini text-subtle dark:text-subtle-dark">
                       {language === 'en' ? t('menu_language_action_en') : t('menu_language_action_zh')}
                     </span>
                   </span>
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-muted-400 dark:text-muted-500">
+                  <span className="text-micro uppercase tracking-[0.2em] text-muted-400 dark:text-muted-400">
                     {language === 'en' ? 'EN' : '中文'}
                   </span>
                 </button>
                 <button
                   role="menuitem"
+                  ref={(el) => {
+                    menuItemRefs.current[1] = el;
+                  }}
                   onClick={() => {
                     toggleTheme();
                     setMenuOpen(false);
                   }}
-                  className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-surface-hover/80 dark:hover:bg-surface-hover-dark/80 transition-colors"
+                  className="menu-item"
+                  tabIndex={activeIndex === 1 ? 0 : -1}
+                  onMouseEnter={() => setActiveIndex(1)}
+                  onFocus={() => setActiveIndex(1)}
                 >
                   <span className="h-9 w-9 rounded-full border border-line/60 dark:border-line-dark/60 bg-surface/80 dark:bg-surface-dark/80 grid place-items-center text-subtle dark:text-subtle-dark">
                     {theme === 'light' ? (
@@ -124,25 +220,31 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   </span>
                   <span className="flex-1">
                     <span className="block text-sm font-medium text-ink dark:text-ink-dark">{t('menu_theme_label')}</span>
-                    <span className="block text-[11px] text-subtle dark:text-subtle-dark">
+                    <span className="block text-mini text-subtle dark:text-subtle-dark">
                       {theme === 'light' ? t('menu_theme_action_light') : t('menu_theme_action_dark')}
                     </span>
                   </span>
                 </button>
                 <a
                   role="menuitem"
+                  ref={(el) => {
+                    menuItemRefs.current[2] = el;
+                  }}
                   href="https://github.com/mingzhangyang/cognitive-space#guide"
-                  className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-surface-hover/80 dark:hover:bg-surface-hover-dark/80 transition-colors"
+                  className="menu-item"
                   target="_blank"
                   rel="noreferrer"
                   onClick={() => setMenuOpen(false)}
+                  tabIndex={activeIndex === 2 ? 0 : -1}
+                  onMouseEnter={() => setActiveIndex(2)}
+                  onFocus={() => setActiveIndex(2)}
                 >
                   <span className="h-9 w-9 rounded-full border border-line/60 dark:border-line-dark/60 bg-surface/80 dark:bg-surface-dark/80 grid place-items-center text-subtle dark:text-subtle-dark">
                     <HelpIcon className="w-4 h-4" />
                   </span>
                   <span className="flex-1">
                     <span className="block text-sm font-medium text-ink dark:text-ink-dark">{t('help')}</span>
-                    <span className="block text-[11px] text-subtle dark:text-subtle-dark">
+                    <span className="block text-mini text-subtle dark:text-subtle-dark">
                       {t('menu_help_action')}
                     </span>
                   </span>
@@ -157,7 +259,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         {children}
       </main>
 
-      <footer className="relative mt-16 sm:mt-20 py-6 text-center text-[11px] sm:text-xs text-subtle dark:text-subtle-dark before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-line/80 dark:before:bg-line-strong-dark">
+      <footer className="relative mt-16 sm:mt-20 py-6 text-center text-mini-up text-subtle dark:text-subtle-dark before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-line/80 dark:before:bg-line-dark">
         <p>{t('footer_philosophy')}</p>
         <p className="mt-1 flex items-center justify-center gap-2">
           <span>@{year} Orangely.xyz</span>

@@ -114,11 +114,11 @@ html.dark ::-webkit-scrollbar-thumb {
   }
 
   .muted-label {
-    @apply uppercase tracking-[0.2em] text-subtle dark:text-subtle-dark;
+    @apply text-[11px] sm:text-xs uppercase tracking-[0.2em] text-subtle dark:text-subtle-dark;
   }
 
   .muted-caption {
-    @apply text-[10px] text-muted-400 dark:text-muted-500;
+    @apply text-[10px] text-muted-400 dark:text-muted-400;
   }
 
   .section-title {
@@ -126,7 +126,7 @@ html.dark ::-webkit-scrollbar-thumb {
   }
 
   .section-meta {
-    @apply text-[10px] uppercase tracking-[0.2em] text-muted-400 dark:text-muted-500;
+    @apply text-[10px] uppercase tracking-[0.2em] text-muted-400 dark:text-muted-400;
   }
 
   .section-kicker {
@@ -134,7 +134,7 @@ html.dark ::-webkit-scrollbar-thumb {
   }
 
   .section-divider {
-    @apply border-b border-line-soft dark:border-line-strong-dark;
+    @apply border-b border-line-soft dark:border-line-dark;
   }
 
   .modal-backdrop {
@@ -146,7 +146,7 @@ html.dark ::-webkit-scrollbar-thumb {
   }
 
   .btn-pill {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-3 min-h-[44px] transition-colors;
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-3 min-h-[44px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 dark:focus-visible:ring-accent-dark/30;
   }
 
   .btn-outline {
@@ -154,7 +154,35 @@ html.dark ::-webkit-scrollbar-thumb {
   }
 
   .btn-icon {
-    @apply grid place-items-center rounded-full transition-colors;
+    @apply grid place-items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 dark:focus-visible:ring-accent-dark/30;
+  }
+
+  .text-mini {
+    @apply text-[11px];
+  }
+
+  .text-mini-up {
+    @apply text-[11px] sm:text-xs;
+  }
+
+  .text-micro {
+    @apply text-[10px];
+  }
+
+  .btn-glass-icon {
+    @apply h-11 w-11 sm:h-9 sm:w-9 text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover/80 dark:hover:bg-surface-hover-dark/80 border border-line/70 dark:border-line-dark/70 bg-surface/70 dark:bg-surface-dark/60 backdrop-blur;
+  }
+
+  .menu-popover {
+    @apply absolute right-0 mt-3 w-64 rounded-2xl border border-line/70 dark:border-line-dark/70 bg-surface/90 dark:bg-surface-dark/80 backdrop-blur shadow-lg shadow-ink/5 dark:shadow-black/40 p-2;
+  }
+
+  .menu-caret {
+    @apply absolute right-4 -top-2 h-3 w-3 rotate-45 border border-line/70 dark:border-line-dark/70 bg-surface/90 dark:bg-surface-dark/80;
+  }
+
+  .menu-item {
+    @apply w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-surface-hover/80 dark:hover:bg-surface-hover-dark/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 dark:focus-visible:ring-accent-dark/20;
   }
 
   .btn-danger {
@@ -162,7 +190,7 @@ html.dark ::-webkit-scrollbar-thumb {
   }
 
   .input-pill {
-    @apply w-full rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 text-base sm:text-sm text-ink dark:text-ink-dark px-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-accent/30 dark:focus:ring-accent-dark/30 placeholder:text-muted-500 dark:placeholder:text-muted-600 shadow-sm;
+    @apply w-full rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 text-base sm:text-sm text-ink dark:text-ink-dark px-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-accent/30 dark:focus:ring-accent-dark/30 placeholder:text-muted-500 dark:placeholder:text-muted-500 shadow-sm;
   }
 
   .textarea-base {
@@ -174,7 +202,7 @@ html.dark ::-webkit-scrollbar-thumb {
   }
 
   .chip-outline {
-    @apply inline-flex items-center gap-2 px-3 py-1.5 text-xs rounded-full border border-line dark:border-line-dark text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark transition-colors;
+    @apply inline-flex items-center gap-2 px-3 py-1.5 text-xs rounded-full border border-line dark:border-line-dark text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/25 dark:focus-visible:ring-accent-dark/25;
   }
 }
 
