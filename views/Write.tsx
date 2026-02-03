@@ -15,12 +15,16 @@ const Write: React.FC = () => {
   const navigate = useNavigate();
   const feedbackTimerRef = useRef<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const castIdRef = useRef<number>(0); // Track current cast to ignore stale AI results
+  const isMountedRef = useRef<boolean>(true); // Track mount state for cleanup
 
   // Auto-focus logic or simple textarea
   const truncate = (text: string, max = 24) => (text.length > max ? `${text.slice(0, max)}...` : text);
 
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
+      isMountedRef.current = false;
       if (feedbackTimerRef.current) {
         window.clearTimeout(feedbackTimerRef.current);
       }
@@ -92,6 +96,9 @@ const Write: React.FC = () => {
   const handleSave = async () => {
     if (!content.trim()) return;
 
+    // Increment castId to invalidate any pending AI results from previous casts
+    const currentCastId = ++castIdRef.current;
+
     setIsProcessing(true);
     setLinkHint(null);
     setMergeCandidate(null);
@@ -99,59 +106,101 @@ const Write: React.FC = () => {
       window.clearTimeout(feedbackTimerRef.current);
       feedbackTimerRef.current = null;
     }
+    // Note: Each cast's 2s delay runs independently (not canceled by newer casts)
+    // so every async chain completes and updateNoteMeta runs for all notes.
 
+    // 1. Create and save the note immediately with default type
+    const newNote = createNoteObject(content.trim());
+    const savedContent = content.trim();
+    
     try {
-      // 1. Create the note object locally first
-      const newNote = createNoteObject(content.trim());
-      
-      // 2. Get existing questions for context
-      const existingQuestions = await getQuestions();
-
-      // 3. AI Analysis
-      const analysis = await analyzeText(newNote.content, existingQuestions, language);
-
-      // 4. Update note with AI results
-      newNote.type = analysis.classification;
-      newNote.subType = analysis.subType;
-      newNote.confidence = analysis.confidence;
-
-      const isQuestion = analysis.classification === NoteType.QUESTION;
-      const relatedQuestionId = analysis.relatedQuestionId || undefined;
-      const linkedQuestion = relatedQuestionId
-        ? existingQuestions.find(q => q.id === relatedQuestionId)
-        : undefined;
-
-      if (!isQuestion && relatedQuestionId) {
-        newNote.parentId = relatedQuestionId;
-      }
-
-      // 5. Save to storage
+      // Save immediately with default values
       await saveNote(newNote);
-
-      if (isQuestion && linkedQuestion) {
-        setMergeCandidate({
-          noteId: newNote.id,
-          relatedQuestionId: linkedQuestion.id,
-          relatedTitle: linkedQuestion.content
-        });
-      } else if (!isQuestion && linkedQuestion) {
-        setLinkHint({
-          questionId: linkedQuestion.id,
-          title: linkedQuestion.content
-        });
-        feedbackTimerRef.current = window.setTimeout(() => {
-          setLinkHint(null);
-          feedbackTimerRef.current = null;
-        }, 4000);
-      }
-
-      // Clear input but keep feedback visible for a moment
-      setContent('');
     } catch (error) {
       console.error("Error saving note:", error);
-    } finally {
+      if (isMountedRef.current) {
+        setIsProcessing(false);
+      }
+      return;
+    }
+
+    // 2. Show "Absorbing" for minimum 2 seconds, then clear input
+    const minDelayPromise = new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // 3. Start AI analysis in parallel
+    const aiAnalysisPromise = (async () => {
+      try {
+        const existingQuestions = await getQuestions();
+        const analysis = await analyzeText(savedContent, existingQuestions, language);
+        return { analysis, existingQuestions };
+      } catch (error) {
+        console.error("AI analysis failed:", error);
+        return null;
+      }
+    })();
+
+    // Wait for minimum delay before clearing input
+    await minDelayPromise;
+    
+    // UI updates: only if component is still mounted and this is the current cast
+    if (isMountedRef.current && castIdRef.current === currentCastId) {
+      setContent('');
       setIsProcessing(false);
     }
+
+    // 4. Process AI results in background when they arrive
+    const aiResult = await aiAnalysisPromise;
+    
+    if (!aiResult) return;
+
+    const { analysis, existingQuestions } = aiResult;
+
+    // 5. Update note with AI results (always update, regardless of newer casts)
+    const isQuestion = analysis.classification === NoteType.QUESTION;
+    const relatedQuestionId = analysis.relatedQuestionId || undefined;
+    const linkedQuestion = relatedQuestionId
+      ? existingQuestions.find(q => q.id === relatedQuestionId)
+      : undefined;
+
+    try {
+      await updateNoteMeta(newNote.id, {
+        type: analysis.classification,
+        subType: analysis.subType,
+        confidence: analysis.confidence,
+        parentId: (!isQuestion && relatedQuestionId) ? relatedQuestionId : undefined
+      });
+    } catch (error) {
+      console.error("Error updating note metadata:", error);
+    }
+
+    // Guard: final check before showing prompts
+    if (!isMountedRef.current || castIdRef.current !== currentCastId) return;
+
+    // 6. Only show prompts if this is still the current cast and user hasn't started typing
+    setContent(currentContent => {
+      if (currentContent.trim() === '' && castIdRef.current === currentCastId) {
+        // User hasn't started typing and no newer cast, safe to show prompts
+        if (isQuestion && linkedQuestion) {
+          setMergeCandidate({
+            noteId: newNote.id,
+            relatedQuestionId: linkedQuestion.id,
+            relatedTitle: linkedQuestion.content
+          });
+        } else if (!isQuestion && linkedQuestion) {
+          setLinkHint({
+            questionId: linkedQuestion.id,
+            title: linkedQuestion.content
+          });
+          feedbackTimerRef.current = window.setTimeout(() => {
+            if (isMountedRef.current) {
+              setLinkHint(null);
+              feedbackTimerRef.current = null;
+            }
+          }, 4000);
+        }
+      }
+      return currentContent; // Don't change the content
+    });
   };
 
   return (

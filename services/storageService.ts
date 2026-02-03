@@ -356,7 +356,7 @@ export const updateNoteContent = async (noteId: string, newContent: string): Pro
 
 export const updateNoteMeta = async (
   noteId: string,
-  updates: Pick<Partial<Note>, 'parentId' | 'type' | 'subType'>
+  updates: Pick<Partial<Note>, 'parentId' | 'type' | 'subType' | 'confidence'>
 ): Promise<void> => {
   await withDb<void>(
     undefined,
@@ -374,6 +374,7 @@ export const updateNoteMeta = async (
         if (typeof updates.parentId !== 'undefined') note.parentId = updates.parentId;
         if (typeof updates.type !== 'undefined') note.type = updates.type;
         if (typeof updates.subType !== 'undefined') note.subType = updates.subType;
+        if (typeof updates.confidence !== 'undefined') note.confidence = updates.confidence;
         note.updatedAt = updatedAt;
         await db.put(STORE_NOTES, note);
         const newParentId =
