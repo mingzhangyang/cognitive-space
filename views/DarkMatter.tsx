@@ -166,13 +166,9 @@ const DarkMatter: React.FC = () => {
           <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
             <span className="text-gray-500 dark:text-gray-400 text-sm">🌑</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-serif font-medium text-ink dark:text-ink-dark leading-tight">
-            {t('dark_matter')}
-          </h1>
+          <h1 className="page-title">{t('dark_matter')}</h1>
         </div>
-        <p className="text-subtle dark:text-subtle-dark text-sm sm:text-base">
-          {t('dark_matter_desc')}
-        </p>
+        <p className="page-subtitle">{t('dark_matter_desc')}</p>
         {darkMatter.length > 0 && (
           <p className="mt-2 text-xs text-muted-400 dark:text-muted-400 uppercase tracking-wider">
             {darkMatter.length} {t('dark_matter_count')}
@@ -195,7 +191,7 @@ const DarkMatter: React.FC = () => {
           darkMatter.map((note) => (
             <div
               key={note.id}
-              className="group surface-card p-4 sm:p-5 hover:shadow-md transition-all duration-300"
+              className="group surface-card p-4 sm:p-5 card-interactive"
             >
               {/* Note header */}
               <div className="flex items-start justify-between gap-3 mb-3">

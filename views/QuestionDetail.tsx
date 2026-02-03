@@ -262,7 +262,7 @@ const QuestionDetail: React.FC = () => {
             </button>
           </div>
         </div>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-medium text-ink dark:text-ink-dark leading-tight">
+        <h1 className="page-title-lg">
           {question.content}
         </h1>
         <div className="mt-4 text-xs text-subtle dark:text-subtle-dark">

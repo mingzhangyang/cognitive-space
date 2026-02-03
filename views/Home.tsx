@@ -103,11 +103,11 @@ const Home: React.FC = () => {
       />
 
       <div className="mb-7 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-serif font-medium text-ink dark:text-ink-dark mb-2 leading-tight">{t('living_questions')}</h1>
-        <p className="text-subtle dark:text-subtle-dark text-sm sm:text-base">{t('problems_mind')}</p>
+        <h1 className="page-title mb-2">{t('living_questions')}</h1>
+        <p className="page-subtitle">{t('problems_mind')}</p>
       </div>
 
-      <div className="space-y-5 pb-28 sm:pb-24">
+      <div className="space-y-4 sm:space-y-5 pb-28 sm:pb-24">
         <div className="mb-6">
           <div className="flex flex-wrap gap-3">
             {!isRecallOpen ? (
@@ -203,7 +203,7 @@ const Home: React.FC = () => {
             <Link
               key={q.id}
               to={`/question/${q.id}`}
-              className="block group surface-card p-4 sm:p-6 hover:shadow-md transition-all duration-300 hover:border-accent/30 dark:hover:border-accent-dark/30"
+              className="block group surface-card p-4 sm:p-5 card-interactive hover:border-accent/30 dark:hover:border-accent-dark/30"
             >
               <div className="flex justify-between items-start">
                 <h3 className="text-lg font-medium text-ink dark:text-ink-dark group-hover:text-accent dark:group-hover:text-accent-dark transition-colors leading-relaxed flex-1 pr-2">

@@ -102,15 +102,27 @@ html.dark ::-webkit-scrollbar-thumb {
 
 @layer components {
   .surface-card {
-    @apply rounded-2xl border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60;
+    @apply rounded-2xl border border-line dark:border-line-dark bg-surface/90 dark:bg-surface-dark/70 shadow-[0_1px_0_rgba(12,10,9,0.04)] dark:shadow-[0_1px_0_rgba(0,0,0,0.35)];
   }
 
   .surface-panel {
-    @apply rounded-2xl border border-line dark:border-line-dark bg-surface/70 dark:bg-surface-dark/40;
+    @apply rounded-2xl border border-line dark:border-line-dark bg-surface/85 dark:bg-surface-dark/60 shadow-[0_1px_0_rgba(12,10,9,0.03)] dark:shadow-[0_1px_0_rgba(0,0,0,0.3)];
   }
 
   .surface-empty {
-    @apply rounded-2xl border border-dashed border-line-muted dark:border-line-dark bg-surface/60 dark:bg-surface-dark/40;
+    @apply rounded-2xl border border-dashed border-line-muted dark:border-line-dark bg-surface/70 dark:bg-surface-dark/55 shadow-[0_1px_0_rgba(12,10,9,0.02)] dark:shadow-[0_1px_0_rgba(0,0,0,0.25)];
+  }
+
+  .page-title {
+    @apply text-2xl sm:text-3xl font-serif font-medium text-ink dark:text-ink-dark leading-tight;
+  }
+
+  .page-title-lg {
+    @apply text-2xl sm:text-3xl md:text-4xl font-serif font-medium text-ink dark:text-ink-dark leading-tight;
+  }
+
+  .page-subtitle {
+    @apply text-subtle dark:text-subtle-dark text-sm sm:text-base;
   }
 
   .muted-label {
@@ -183,6 +195,10 @@ html.dark ::-webkit-scrollbar-thumb {
 
   .menu-item {
     @apply w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-surface-hover/80 dark:hover:bg-surface-hover-dark/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20 dark:focus-visible:ring-accent-dark/20;
+  }
+
+  .card-interactive {
+    @apply transition-all duration-300 ease-out hover:shadow-md hover:-translate-y-0.5;
   }
 
   .btn-danger {
