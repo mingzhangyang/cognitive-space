@@ -1,6 +1,16 @@
-# Run and deploy the Cloudflare Worker app
+# Cognitive Space
 
-This project serves the React UI as static assets and exposes a Worker API at `/api/analyze`.
+Cognitive Space is a web application designed to help users organize and explore their thoughts, questions, and ideas. It allows you to drop unstructured thoughts, promote them into structured questions, and build context with claims, evidence, and triggers. Visualize connections between questions to uncover emerging patterns.
+
+Built with React for the frontend and deployed as a Cloudflare Worker for the backend API.
+
+## Features
+
+- **Thought Capture**: Quickly jot down ideas without structure.
+- **Question Organization**: Promote thoughts into questions and add supporting elements.
+- **Visualization**: Explore relationships between questions graphically.
+- **Dark Matter Recovery**: Rescue orphaned thoughts and link them back.
+- **PWA Support**: Installable as a progressive web app.
 
 ## Guide
 
@@ -10,30 +20,71 @@ This project serves the React UI as static assets and exposes a Worker API at `/
 4. Use `Visualize` to explore related questions and spot emerging clusters.
 5. Visit `Dark Matter` to rescue orphaned fragments and link them to a question.
 
+For more details, see [Product Design](docs/product_design.md) and [Visualization Proposal](docs/visualization_proposal.md).
+
 ## Prerequisites
 
-- Node.js
-- Cloudflare Wrangler (`npm install`)
+- Node.js (version 16 or higher)
+- Cloudflare Wrangler CLI (`npm install -g wrangler`)
 
-## Local development
+## Installation
 
-1. Install dependencies:
-   `npm install`
-2. Set `BIGMODEL_API_KEY` using Wrangler:
-   `wrangler secret put BIGMODEL_API_KEY`
-3. Run the Worker locally (builds assets first):
-   `npm run dev`
-4. Optional UI-only dev server (no Worker API):
-   `npm run dev:ui`
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd cognitive-space
+   ```
 
-## Deploy
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+## Local Development
+
+1. Set the `BIGMODEL_API_KEY` secret using Wrangler:
+   ```bash
+   wrangler secret put BIGMODEL_API_KEY
+   ```
+
+2. Run the Worker locally (builds assets first):
+   ```bash
+   npm run dev
+   ```
+
+3. Optional: Run UI-only dev server (no Worker API):
+   ```bash
+   npm run dev:ui
+   ```
+
+## Deployment
 
 1. Build the static assets:
-   `npm run build`
+   ```bash
+   npm run build
+   ```
+
 2. Deploy the Worker:
-   `npm run deploy`
+   ```bash
+   npm run deploy
+   ```
 
 ## Configuration
 
-- `BIGMODEL_API_KEY` is required.
-- `BIGMODEL_MODEL` is optional (default: `glm-4.5-flash`).
+- `BIGMODEL_API_KEY`: Required. Your API key for the AI model.
+- `BIGMODEL_MODEL`: Optional. Defaults to `glm-4.5-flash`. Specify a different model if needed.
+
+## Scripts
+
+- `npm run build`: Builds the static assets.
+- `npm run dev`: Runs the Worker locally.
+- `npm run dev:ui`: Runs the UI dev server.
+- `npm run deploy`: Deploys to Cloudflare.
+
+## Contributing
+
+Contributions are welcome! Please read the contributing guidelines (if any) before submitting a pull request.
+
+## License
+
+This project is licensed under the MIT License.
