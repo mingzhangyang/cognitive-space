@@ -20,10 +20,37 @@ type AnalyzeResponse = {
   reasoning: string;
 };
 
+type DarkMatterAnalyzeRequest = {
+  language?: 'en' | 'zh';
+  notes?: Array<{
+    id: string;
+    content: string;
+    type?: 'claim' | 'evidence' | 'trigger' | 'uncategorized';
+    createdAt?: number;
+  }>;
+  existingQuestions?: Array<{ id: string; content: string }>;
+  maxClusters?: number;
+};
+
+type DarkMatterSuggestion = {
+  id: string;
+  kind: 'new_question' | 'existing_question';
+  title: string;
+  existingQuestionId?: string;
+  noteIds: string[];
+  confidence: number;
+  reasoning: string;
+};
+
+type DarkMatterAnalyzeResponse = {
+  suggestions: DarkMatterSuggestion[];
+};
+
 const BIGMODEL_BASE_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
 const DEFAULT_BIGMODEL_MODEL = 'glm-4.5-flash';
 const API_TIMEOUT_MS = 15000; // 15 second timeout for AI requests
 const CACHE_TTL_SECONDS = 3600; // Cache responses for 1 hour
+const DARK_MATTER_MAX_CLUSTERS = 6;
 const CLASSIFICATIONS = new Set<AnalyzeResponse['classification']>([
   'question',
   'claim',
@@ -41,6 +68,35 @@ function getCacheKey(text: string, language: string, questionIds: string[]): str
   // Simple hash-like key (for Cloudflare Cache API)
   const raw = `analyze:${language}:${sortedIds}:${text}`;
   return raw;
+}
+
+function hashString(input: string): string {
+  let hash = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16);
+}
+
+function getDarkMatterCacheKey(
+  language: string,
+  maxClusters: number,
+  notes: Array<{ id: string; content: string }>,
+  existingQuestions: Array<{ id: string; content: string }>
+): string {
+  const sortedNotes = [...notes].sort((a, b) => a.id.localeCompare(b.id));
+  const sortedQuestions = [...existingQuestions].sort((a, b) => a.id.localeCompare(b.id));
+
+  const noteDigest = sortedNotes
+    .map((note) => `${note.id}:${note.content.length}:${hashString(note.content)}`)
+    .join('|');
+  const questionDigest = sortedQuestions
+    .map((q) => `${q.id}:${q.content.length}:${hashString(q.content)}`)
+    .join('|');
+
+  const raw = `dark-matter:${language}:${maxClusters}:notes:${noteDigest}:questions:${questionDigest}`;
+  return `dm:${hashString(raw)}`;
 }
 
 /**
@@ -77,6 +133,16 @@ export default {
         return jsonResponse({ error: 'Method not allowed' }, 405);
       }
       return handleAnalyze(request, env);
+    }
+
+    if (url.pathname === '/api/dark-matter/analyze') {
+      if (request.method === 'OPTIONS') {
+        return new Response(null, { status: 204 });
+      }
+      if (request.method !== 'POST') {
+        return jsonResponse({ error: 'Method not allowed' }, 405);
+      }
+      return handleDarkMatterAnalyze(request, env);
     }
 
     if (env.ASSETS) {
@@ -179,6 +245,132 @@ async function handleAnalyze(request: Request, env: Env): Promise<Response> {
   }
 }
 
+async function handleDarkMatterAnalyze(request: Request, env: Env): Promise<Response> {
+  if (!env.BIGMODEL_API_KEY) {
+    return jsonResponse({ error: 'BIGMODEL_API_KEY is not configured' }, 500);
+  }
+
+  let body: DarkMatterAnalyzeRequest;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonResponse({ error: 'Invalid JSON body' }, 400);
+  }
+
+  const language = body.language === 'zh' ? 'zh' : 'en';
+  const maxClustersRaw = typeof body.maxClusters === 'number' ? body.maxClusters : 5;
+  const maxClusters = Math.max(1, Math.min(DARK_MATTER_MAX_CLUSTERS, Math.round(maxClustersRaw)));
+
+  const rawNotes = Array.isArray(body.notes) ? body.notes : [];
+  const noteMap = new Map<string, { id: string; content: string; type?: string; createdAt?: number }>();
+  for (const note of rawNotes) {
+    if (!note || typeof note.id !== 'string' || typeof note.content !== 'string') continue;
+    const content = note.content.trim();
+    if (!content) continue;
+    if (!noteMap.has(note.id)) {
+      noteMap.set(note.id, {
+        id: note.id,
+        content,
+        type: typeof note.type === 'string' ? note.type : undefined,
+        createdAt: typeof note.createdAt === 'number' ? note.createdAt : undefined
+      });
+    }
+  }
+  const notes = Array.from(noteMap.values());
+  if (notes.length < 2) {
+    return jsonResponse({ suggestions: [] }, 200);
+  }
+
+  const existingQuestions = Array.isArray(body.existingQuestions) ? body.existingQuestions : [];
+  const questionIds = existingQuestions
+    .map((q) => (q && typeof q.id === 'string' ? q.id : ''))
+    .filter(Boolean);
+  const questionTitleById = new Map<string, string>();
+  for (const q of existingQuestions) {
+    if (!q || typeof q.id !== 'string' || typeof q.content !== 'string') continue;
+    if (!questionTitleById.has(q.id)) {
+      questionTitleById.set(q.id, q.content.trim());
+    }
+  }
+
+  // Check cache first
+  const cacheKey = getDarkMatterCacheKey(
+    language,
+    maxClusters,
+    notes,
+    existingQuestions.filter(
+      (q): q is { id: string; content: string } => typeof q?.id === 'string' && typeof q?.content === 'string'
+    )
+  );
+  const cache = (caches as unknown as { default: Cache }).default;
+  const cacheUrl = new URL(request.url);
+  cacheUrl.pathname = `/cache/${encodeURIComponent(cacheKey)}`;
+  const cacheRequest = new Request(cacheUrl.toString());
+
+  const cachedResponse = await cache.match(cacheRequest);
+  if (cachedResponse) {
+    const response = new Response(cachedResponse.body, cachedResponse);
+    response.headers.set('X-Cache', 'HIT');
+    return response;
+  }
+
+  const prompt = buildDarkMatterPrompt(notes, existingQuestions, language, maxClusters);
+  const model = env.BIGMODEL_MODEL || env.MODEL_ID || DEFAULT_BIGMODEL_MODEL;
+  const baseUrl = env.BIGMODEL_BASE_URL || BIGMODEL_BASE_URL;
+  const validNoteIds = new Set(notes.map((note) => note.id));
+  const validQuestionIds = new Set(questionIds);
+
+  try {
+    const response = await fetchWithTimeout(
+      baseUrl,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${env.BIGMODEL_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: 'user', content: prompt }],
+          stream: false,
+          temperature: 0.2,
+          response_format: { type: 'json_object' },
+        }),
+      },
+      API_TIMEOUT_MS
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return jsonResponse({ error: 'GLM request failed', details: errorText }, 502);
+    }
+
+    const data = (await response.json()) as BigModelResponse;
+    const rawText = extractBigModelText(data);
+    const parsed = safeParseJson(rawText);
+    const normalized = normalizeDarkMatterResult(
+      parsed,
+      validNoteIds,
+      validQuestionIds,
+      questionTitleById,
+      maxClusters
+    );
+
+    const jsonRes = jsonResponse(normalized, 200);
+    jsonRes.headers.set('X-Cache', 'MISS');
+    jsonRes.headers.set('Cache-Control', `public, max-age=${CACHE_TTL_SECONDS}`);
+
+    const responseToCache = jsonRes.clone();
+    cache.put(cacheRequest, responseToCache).catch(() => {
+      // Ignore cache put errors
+    });
+
+    return jsonRes;
+  } catch (error) {
+    return jsonResponse({ suggestions: [] }, 200);
+  }
+}
+
 function buildPrompt(
   text: string,
   existingQuestions: Array<{ id: string; content: string }>,
@@ -233,6 +425,67 @@ ${langInstruction}
 
 Return JSON only with keys: classification, subType, confidence, relatedQuestionId, reasoning.
 Classification must be one of: 'question', 'claim', 'evidence', 'trigger'.
+`.trim();
+}
+
+function buildDarkMatterPrompt(
+  notes: Array<{ id: string; content: string; type?: string; createdAt?: number }>,
+  existingQuestions: Array<{ id: string; content: string }>,
+  language: 'en' | 'zh',
+  maxClusters: number
+): string {
+  const noteContext = notes
+    .map((note) => {
+      const type = note.type ? `type:${note.type}` : 'type:unknown';
+      const preview = note.content.replace(/\s+/g, ' ').slice(0, 200);
+      return `ID:${note.id} | ${type} | "${preview}"`;
+    })
+    .join('\n');
+
+  const questionsContext = existingQuestions
+    .map((q) => `ID:${q.id} | "${q.content.substring(0, 120)}..."`)
+    .join('\n');
+
+  const langInstruction =
+    language === 'zh'
+      ? "Return 'title' and 'reasoning' in Chinese (Simplified)."
+      : "Return 'title' and 'reasoning' in English.";
+
+  return `
+You are a cognitive assistant. These are "dark matter" notes: they are unlinked fragments.
+
+Your task: suggest gentle groupings only when semantic overlap is clear. If there are no strong groupings, return an empty list.
+
+Constraints:
+- Each note ID appears in at most one suggestion.
+- Only include suggestions with 2 or more notes.
+- Maximum suggestions: ${maxClusters}.
+- If a suggestion matches an existing question, set kind="existing_question" and include existingQuestionId.
+- If it's a new question proposal, set kind="new_question".
+- Use only provided note IDs and question IDs.
+
+Dark Matter Notes:
+${noteContext}
+
+Existing Questions:
+${questionsContext || 'No existing questions.'}
+
+${langInstruction}
+
+Return JSON only with this shape:
+{
+  "suggestions": [
+    {
+      "id": "s1",
+      "kind": "new_question" | "existing_question",
+      "title": "string",
+      "existingQuestionId": "optional string when kind is existing_question",
+      "noteIds": ["note-id-1", "note-id-2"],
+      "confidence": 0.0-1.0,
+      "reasoning": "short"
+    }
+  ]
+}
 `.trim();
 }
 
@@ -374,6 +627,84 @@ function normalizeResult(input: any, validQuestionIds: Set<string>): AnalyzeResp
     relatedQuestionId,
     reasoning
   };
+}
+
+export function normalizeDarkMatterResult(
+  input: any,
+  validNoteIds: Set<string>,
+  validQuestionIds: Set<string>,
+  questionTitleById: Map<string, string>,
+  maxClusters: number
+): DarkMatterAnalyzeResponse {
+  const rawSuggestions = Array.isArray(input?.suggestions) ? input.suggestions : [];
+  const suggestions: DarkMatterSuggestion[] = [];
+  const usedNoteIds = new Set<string>();
+
+  for (let i = 0; i < rawSuggestions.length; i++) {
+    if (suggestions.length >= maxClusters) break;
+    const suggestion = rawSuggestions[i];
+    if (!suggestion) continue;
+
+    const kindRaw = typeof suggestion.kind === 'string' ? suggestion.kind : '';
+    const kind =
+      kindRaw === 'new_question' || kindRaw === 'existing_question'
+        ? (kindRaw as DarkMatterSuggestion['kind'])
+        : null;
+    if (!kind) continue;
+
+    let existingQuestionId: string | undefined;
+    if (kind === 'existing_question') {
+      if (typeof suggestion.existingQuestionId === 'string' && validQuestionIds.has(suggestion.existingQuestionId)) {
+        existingQuestionId = suggestion.existingQuestionId;
+      } else {
+        continue;
+      }
+    }
+
+    const titleRaw = typeof suggestion.title === 'string' ? suggestion.title.trim() : '';
+    const title = titleRaw || (existingQuestionId ? questionTitleById.get(existingQuestionId) || '' : '');
+    if (!title) continue;
+
+    const noteIdsRaw = Array.isArray(suggestion.noteIds) ? suggestion.noteIds : [];
+    const uniqueNoteIds: string[] = [];
+    const seenNoteIds = new Set<string>();
+    for (const id of noteIdsRaw) {
+      if (typeof id !== 'string') continue;
+      if (seenNoteIds.has(id)) continue;
+      seenNoteIds.add(id);
+      uniqueNoteIds.push(id);
+    }
+    const filteredNoteIds = uniqueNoteIds.filter(
+      (id) => validNoteIds.has(id) && !usedNoteIds.has(id)
+    );
+    if (filteredNoteIds.length < 2) continue;
+
+    filteredNoteIds.forEach((id) => usedNoteIds.add(id));
+
+    const confidenceRaw = typeof suggestion.confidence === 'number' ? suggestion.confidence : 0.5;
+    const confidence = Math.max(0, Math.min(1, confidenceRaw));
+    const reasoning =
+      typeof suggestion.reasoning === 'string' && suggestion.reasoning.trim()
+        ? suggestion.reasoning.trim()
+        : 'Suggested by analysis.';
+
+    const id =
+      typeof suggestion.id === 'string' && suggestion.id.trim()
+        ? suggestion.id.trim()
+        : `s${suggestions.length + 1}`;
+
+    suggestions.push({
+      id,
+      kind,
+      title,
+      existingQuestionId,
+      noteIds: filteredNoteIds,
+      confidence,
+      reasoning
+    });
+  }
+
+  return { suggestions };
 }
 
 function jsonResponse(body: unknown, status = 200): Response {

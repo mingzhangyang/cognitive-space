@@ -1,4 +1,4 @@
-import { Note, NoteType, AnalysisResult } from "../types";
+import { Note, NoteType, AnalysisResult, DarkMatterAnalysisResult } from "../types";
 
 export const analyzeText = async (
   text: string, 
@@ -53,5 +53,44 @@ export const analyzeText = async (
       reasoning: "Analysis failed, defaulted to Trigger.",
       confidence: 0
     };
+  }
+};
+
+export const analyzeDarkMatter = async (
+  notes: Note[],
+  existingQuestions: Note[],
+  language: 'en' | 'zh' = 'en',
+  maxClusters = 5
+): Promise<DarkMatterAnalysisResult> => {
+  try {
+    const response = await fetch('/api/dark-matter/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        language,
+        maxClusters,
+        notes: notes.map((note) => ({
+          id: note.id,
+          content: note.content,
+          type: note.type,
+          createdAt: note.createdAt
+        })),
+        existingQuestions: existingQuestions.map((q) => ({
+          id: q.id,
+          content: q.content
+        }))
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Dark matter analyze request failed: ${response.status}`);
+    }
+
+    const result = (await response.json()) as DarkMatterAnalysisResult;
+    const suggestions = Array.isArray(result?.suggestions) ? result.suggestions : [];
+    return { suggestions };
+  } catch (error) {
+    console.error("Dark matter AI analysis failed:", error);
+    return { suggestions: [] };
   }
 };

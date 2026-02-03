@@ -1,5 +1,5 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
-import { Note, NoteEvent, NoteType } from '../types';
+import { Note, NoteEvent, NoteType, AppEvent, TelemetryEvent, DarkMatterSuggestionKind } from '../types';
 
 const DB_NAME = 'cognitive_space_db';
 const DB_VERSION = 2;
@@ -8,6 +8,13 @@ const STORE_EVENTS = 'events';
 const STORE_META = 'meta';
 const META_LAST_EVENT_AT = 'lastEventAt';
 const META_LAST_PROJECTION_AT = 'lastProjectionAt';
+const NOTE_EVENT_TYPES = new Set<NoteEvent['type']>([
+  'NOTE_CREATED',
+  'NOTE_UPDATED',
+  'NOTE_META_UPDATED',
+  'NOTE_DELETED',
+  'NOTE_TOUCHED'
+]);
 
 interface CognitiveSpaceDB extends DBSchema {
   notes: {
@@ -21,7 +28,7 @@ interface CognitiveSpaceDB extends DBSchema {
   };
   events: {
     key: string;
-    value: NoteEvent;
+    value: AppEvent;
     indexes: {
       'by-created': number;
     };
@@ -54,11 +61,17 @@ const setMetaValue = async (
   await db.put(STORE_META, { key, value });
 };
 
-const appendEvent = async (db: IDBPDatabase<CognitiveSpaceDB>, event: NoteEvent): Promise<void> => {
+const isNoteEvent = (event: AppEvent): event is NoteEvent => {
+  return NOTE_EVENT_TYPES.has(event.type as NoteEvent['type']);
+};
+
+const appendEvent = async (db: IDBPDatabase<CognitiveSpaceDB>, event: AppEvent): Promise<void> => {
   await db.put(STORE_EVENTS, event);
-  const lastEventAt = await getMetaValue(db, META_LAST_EVENT_AT);
-  const nextValue = Math.max(lastEventAt, event.createdAt);
-  await setMetaValue(db, META_LAST_EVENT_AT, nextValue);
+  if (isNoteEvent(event)) {
+    const lastEventAt = await getMetaValue(db, META_LAST_EVENT_AT);
+    const nextValue = Math.max(lastEventAt, event.createdAt);
+    await setMetaValue(db, META_LAST_EVENT_AT, nextValue);
+  }
 };
 
 const markProjectionUpToDate = async (db: IDBPDatabase<CognitiveSpaceDB>): Promise<void> => {
@@ -86,7 +99,7 @@ const touchNoteUpdatedAt = async (
   await db.put(STORE_NOTES, note);
 };
 
-const applyEvent = (state: Map<string, Note>, event: NoteEvent): void => {
+const applyEvent = (state: Map<string, Note>, event: AppEvent): void => {
   switch (event.type) {
     case 'NOTE_CREATED': {
       state.set(event.payload.note.id, { ...event.payload.note });
@@ -119,6 +132,9 @@ const applyEvent = (state: Map<string, Note>, event: NoteEvent): void => {
       state.delete(event.payload.id);
       return;
     }
+    case 'AI_DARK_MATTER_ANALYSIS_REQUESTED':
+    case 'AI_DARK_MATTER_SUGGESTION_APPLIED':
+    case 'AI_DARK_MATTER_SUGGESTION_DISMISSED':
     default:
       return;
   }
@@ -139,8 +155,8 @@ const rebuildProjectionFromEvents = async (db: IDBPDatabase<CognitiveSpaceDB>): 
 };
 
 const ensureEventLog = async (db: IDBPDatabase<CognitiveSpaceDB>): Promise<void> => {
-  const eventCount = await db.count(STORE_EVENTS);
-  if (eventCount > 0) return;
+  const lastEventAt = await getMetaValue(db, META_LAST_EVENT_AT);
+  if (lastEventAt > 0) return;
   const existingNotes = await db.getAll(STORE_NOTES);
   if (existingNotes.length === 0) return;
   for (const note of existingNotes) {
@@ -387,6 +403,53 @@ export const updateNoteMeta = async (
     },
     'Failed to update note metadata'
   );
+};
+
+const logTelemetryEvent = async (event: TelemetryEvent): Promise<void> => {
+  await withDb<void>(
+    undefined,
+    async (db) => {
+      await appendEvent(db, event);
+    },
+    'Failed to record telemetry event'
+  );
+};
+
+export const recordDarkMatterAnalysisRequested = async (
+  noteCount: number,
+  questionCount: number
+): Promise<void> => {
+  const createdAt = Date.now();
+  await logTelemetryEvent({
+    id: crypto.randomUUID(),
+    type: 'AI_DARK_MATTER_ANALYSIS_REQUESTED',
+    createdAt,
+    payload: { noteCount, questionCount }
+  });
+};
+
+export const recordDarkMatterSuggestionApplied = async (
+  kind: DarkMatterSuggestionKind,
+  noteCount: number,
+  suggestionId?: string
+): Promise<void> => {
+  const createdAt = Date.now();
+  await logTelemetryEvent({
+    id: crypto.randomUUID(),
+    type: 'AI_DARK_MATTER_SUGGESTION_APPLIED',
+    createdAt,
+    payload: { kind, noteCount, suggestionId }
+  });
+};
+
+export const recordDarkMatterSuggestionDismissed = async (suggestionId?: string): Promise<void> => {
+  const createdAt = Date.now();
+  await logTelemetryEvent({
+    id: crypto.randomUUID(),
+    type: 'AI_DARK_MATTER_SUGGESTION_DISMISSED',
+    createdAt,
+    payload: { suggestionId }
+  });
 };
 
 /**
