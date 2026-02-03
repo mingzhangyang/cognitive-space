@@ -67,7 +67,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         {children}
       </main>
 
-      <footer className="relative mt-16 sm:mt-20 py-6 text-center text-[11px] sm:text-xs text-subtle dark:text-subtle-dark before:absolute before:top-0 before:left-0 before:right-20 sm:before:right-0 before:h-px before:bg-stone-200/80 dark:before:bg-stone-800">
+      <footer className="relative mt-16 sm:mt-20 py-6 text-center text-[11px] sm:text-xs text-subtle dark:text-subtle-dark before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-stone-200/80 dark:before:bg-stone-800">
         <p>{t('footer_philosophy')}</p>
         <p className="mt-1 flex items-center justify-center gap-2">
           <span>@{year} Orangely.xyz</span>
