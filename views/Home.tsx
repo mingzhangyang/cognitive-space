@@ -232,7 +232,7 @@ const Home: React.FC = () => {
       {fabContainer && createPortal(
         <Link
           to="/write"
-          className="fixed bottom-20 right-4 sm:bottom-24 sm:right-8 bg-amber-500 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-transform hover:bg-amber-600 focus:outline-none focus:ring-4 focus:ring-amber-200 dark:bg-amber-400 dark:hover:bg-amber-300 dark:focus:ring-amber-500/40 z-50"
+          className="fixed bottom-20 right-4 sm:bottom-24 sm:right-8 bg-[#1abc9c] text-white w-14 h-14 rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-transform hover:bg-[#16a085] focus:outline-none focus:ring-4 focus:ring-[#9ee7d8] dark:bg-[#1abc9c] dark:hover:bg-[#25d0b2] dark:focus:ring-[#9ee7d8]/50 z-50"
           aria-label="Write"
         >
           <PlusIcon className="w-6 h-6" />
