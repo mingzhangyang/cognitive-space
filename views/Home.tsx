@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router-dom';
-import { getQuestions, getNotes, deleteNote, getDarkMatterCount } from '../services/storageService';
+import { getQuestions, getNotes, deleteNote, getDarkMatterCount, updateNoteContent } from '../services/storageService';
 import { Note } from '../types';
-import { PlusIcon, ArrowRightIcon, TrashIcon, SearchIcon, XIcon, MoreIcon } from '../components/Icons';
+import { PlusIcon, TrashIcon, SearchIcon, XIcon, MoreIcon, EditIcon, CheckIcon, LoadingSpinner } from '../components/Icons';
 import { useAppContext } from '../contexts/AppContext';
 
 const ConfirmDialog: React.FC<{
@@ -43,6 +43,9 @@ const Home: React.FC = () => {
   const [darkMatterCount, setDarkMatterCount] = useState(0);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [mobileQuestionActionsId, setMobileQuestionActionsId] = useState<string | null>(null);
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [query, setQuery] = useState('');
   const [isRecallOpen, setIsRecallOpen] = useState(false);
   const [fabContainer, setFabContainer] = useState<HTMLElement | null>(null);
@@ -106,12 +109,50 @@ const Home: React.FC = () => {
     setDeleteTarget(questionId);
   };
 
+  const handleStartEdit = (e: React.MouseEvent, question: Note) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isSavingEdit) return;
+    setMobileQuestionActionsId(null);
+    setEditingQuestionId(question.id);
+    setEditContent(question.content);
+  };
+
+  const handleSaveEdit = async () => {
+    const trimmed = editContent.trim();
+    if (!editingQuestionId || !trimmed || isSavingEdit) return;
+    setIsSavingEdit(true);
+    const optimisticUpdatedAt = Date.now();
+    setQuestions((prev) =>
+      [...prev.map((q) =>
+        q.id === editingQuestionId ? { ...q, content: trimmed, updatedAt: optimisticUpdatedAt } : q
+      )].sort((a, b) => b.updatedAt - a.updatedAt)
+    );
+    try {
+      await updateNoteContent(editingQuestionId, trimmed);
+      setEditingQuestionId(null);
+      setEditContent('');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    if (isSavingEdit) return;
+    setEditingQuestionId(null);
+    setEditContent('');
+  };
+
   const confirmDelete = async () => {
     if (deleteTarget) {
       await deleteNote(deleteTarget);
       void loadData();
       setDeleteTarget(null);
       setMobileQuestionActionsId(null);
+      if (editingQuestionId === deleteTarget) {
+        setEditingQuestionId(null);
+        setEditContent('');
+      }
     }
   };
 
@@ -223,58 +264,130 @@ const Home: React.FC = () => {
         ) : (
           filteredQuestions.map((q) => {
             const isMobileActionsOpen = mobileQuestionActionsId === q.id;
+            const isEditing = editingQuestionId === q.id;
 
-            return (
+            const cardBody = (
+              <>
+                <div className="flex justify-between items-start">
+                  {isEditing ? (
+                    <div className="flex-1 pr-2 space-y-3">
+                      <textarea
+                        className="textarea-base"
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') {
+                            e.preventDefault();
+                            handleCancelEdit();
+                          }
+                          if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                            e.preventDefault();
+                            void handleSaveEdit();
+                          }
+                        }}
+                        rows={2}
+                        autoFocus
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleSaveEdit}
+                          disabled={isSavingEdit || !editContent.trim()}
+                          className={`flex items-center gap-1 px-3 py-1.5 text-sm bg-accent dark:bg-accent-dark text-white rounded-md hover:opacity-90 transition-opacity ${
+                            isSavingEdit || !editContent.trim() ? 'opacity-60 cursor-not-allowed' : ''
+                          }`}
+                        >
+                          {isSavingEdit ? <LoadingSpinner className="w-3.5 h-3.5 text-white" /> : <CheckIcon className="w-3.5 h-3.5" />}
+                          {isSavingEdit ? t('saving') : t('save')}
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          disabled={isSavingEdit}
+                          className={`flex items-center gap-1 px-3 py-1.5 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors ${
+                            isSavingEdit ? 'opacity-60 cursor-not-allowed' : ''
+                          }`}
+                        >
+                          <XIcon className="w-3.5 h-3.5" />
+                          {t('cancel')}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <h3 className="text-lg font-medium text-ink dark:text-ink-dark group-hover:text-accent dark:group-hover:text-accent-dark transition-colors leading-relaxed flex-1 pr-2">
+                      {q.content}
+                    </h3>
+                  )}
+                  {!isEditing && (
+                    <div className="flex items-center gap-2 ml-4">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setMobileQuestionActionsId((prev) => (prev === q.id ? null : q.id));
+                        }}
+                        className="sm:hidden h-10 w-10 btn-icon text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                        aria-label={isMobileActionsOpen ? 'Hide actions' : 'Show actions'}
+                        aria-expanded={isMobileActionsOpen}
+                        aria-controls={`question-actions-${q.id}`}
+                        data-mobile-actions-toggle
+                      >
+                        {isMobileActionsOpen ? <XIcon className="w-4 h-4" /> : <MoreIcon className="w-4 h-4" />}
+                      </button>
+                      <div className={`${isMobileActionsOpen ? 'flex' : 'hidden'} sm:hidden items-center gap-2`} id={`question-actions-${q.id}`} data-mobile-actions>
+                        <button
+                          onClick={(e) => handleStartEdit(e, q)}
+                          className="h-10 w-10 btn-icon text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                          title="Edit question"
+                        >
+                          <EditIcon className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => handleDelete(e, q.id)}
+                          className="h-10 w-10 btn-icon text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                          title="Delete question"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="hidden sm:flex items-center gap-2">
+                        <button
+                          onClick={(e) => handleStartEdit(e, q)}
+                          className="h-10 w-10 btn-icon text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                          title="Edit question"
+                        >
+                          <EditIcon className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => handleDelete(e, q.id)}
+                          className="h-10 w-10 btn-icon text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                          title="Delete question"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-3 flex items-center gap-2 section-kicker">
+                  <span>{t('last_active')} {new Date(q.updatedAt).toLocaleDateString()}</span>
+                </div>
+              </>
+            );
+
+            return isEditing ? (
+              <div
+                key={q.id}
+                className="block group surface-card p-4 sm:p-5 card-interactive hover:border-accent/30 dark:hover:border-accent-dark/30"
+              >
+                {cardBody}
+              </div>
+            ) : (
               <Link
                 key={q.id}
                 to={`/question/${q.id}`}
                 className="block group surface-card p-4 sm:p-5 card-interactive hover:border-accent/30 dark:hover:border-accent-dark/30"
               >
-                <div className="flex justify-between items-start">
-                  <h3 className="text-lg font-medium text-ink dark:text-ink-dark group-hover:text-accent dark:group-hover:text-accent-dark transition-colors leading-relaxed flex-1 pr-2">
-                    {q.content}
-                  </h3>
-                  <div className="flex items-center gap-2 ml-4">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setMobileQuestionActionsId((prev) => (prev === q.id ? null : q.id));
-                      }}
-                      className="sm:hidden h-10 w-10 btn-icon text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                      aria-label={isMobileActionsOpen ? 'Hide actions' : 'Show actions'}
-                      aria-expanded={isMobileActionsOpen}
-                      aria-controls={`question-actions-${q.id}`}
-                      data-mobile-actions-toggle
-                    >
-                      {isMobileActionsOpen ? <XIcon className="w-4 h-4" /> : <MoreIcon className="w-4 h-4" />}
-                    </button>
-                    <div className={`${isMobileActionsOpen ? 'flex' : 'hidden'} sm:hidden items-center gap-2`} id={`question-actions-${q.id}`} data-mobile-actions>
-                      <button
-                        onClick={(e) => handleDelete(e, q.id)}
-                        className="h-10 w-10 btn-icon text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                        title="Delete question"
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <div className="hidden sm:flex items-center gap-2">
-                      <button
-                        onClick={(e) => handleDelete(e, q.id)}
-                        className="h-10 w-10 btn-icon text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                        title="Delete question"
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                      </button>
-                      <ArrowRightIcon className="text-muted-400 group-hover:text-accent dark:group-hover:text-accent-dark w-5 h-5 opacity-0 sm:group-hover:opacity-100 transition-all" />
-                    </div>
-                    <ArrowRightIcon className="sm:hidden text-muted-400 w-5 h-5" />
-                  </div>
-                </div>
-                <div className="mt-3 flex items-center gap-2 section-kicker">
-                  <span>{t('last_active')} {new Date(q.updatedAt).toLocaleDateString()}</span>
-                </div>
+                {cardBody}
               </Link>
             );
           })
