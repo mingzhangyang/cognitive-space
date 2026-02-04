@@ -44,6 +44,35 @@ interface CognitiveSpaceDB extends DBSchema {
 
 let dbPromise: Promise<IDBPDatabase<CognitiveSpaceDB>> | null = null;
 
+export type NoteStoreEventKind =
+  | 'created'
+  | 'updated'
+  | 'meta_updated'
+  | 'deleted'
+  | 'touched';
+
+export interface NoteStoreEventDetail {
+  id: string;
+  kind: NoteStoreEventKind;
+}
+
+const noteEventTarget = typeof EventTarget !== 'undefined' ? new EventTarget() : null;
+
+export const subscribeToNoteEvents = (handler: (detail: NoteStoreEventDetail) => void): (() => void) => {
+  if (!noteEventTarget) return () => {};
+  const listener = (event: Event) => {
+    const detail = (event as CustomEvent<NoteStoreEventDetail>).detail;
+    if (detail) handler(detail);
+  };
+  noteEventTarget.addEventListener('note', listener);
+  return () => noteEventTarget.removeEventListener('note', listener);
+};
+
+const emitNoteEvent = (detail: NoteStoreEventDetail): void => {
+  if (!noteEventTarget) return;
+  noteEventTarget.dispatchEvent(new CustomEvent('note', { detail }));
+};
+
 const logDbError = (message: string, error: unknown) => {
   console.error(message, error);
 };
@@ -97,6 +126,7 @@ const touchNoteUpdatedAt = async (
   await appendEvent(db, event);
   note.updatedAt = updatedAt;
   await db.put(STORE_NOTES, note);
+  emitNoteEvent({ id: noteId, kind: 'touched' });
 };
 
 const applyEvent = (state: Map<string, Note>, event: AppEvent): void => {
@@ -264,6 +294,7 @@ export const saveNote = async (note: Note): Promise<void> => {
         await touchNoteUpdatedAt(db, note.parentId);
       }
       await markProjectionUpToDate(db);
+      emitNoteEvent({ id: note.id, kind: 'created' });
     },
     'Failed to save note'
   );
@@ -338,6 +369,9 @@ export const deleteNote = async (noteId: string): Promise<void> => {
       }
       await tx.done;
       await markProjectionUpToDate(db);
+      for (const id of idsToDelete) {
+        emitNoteEvent({ id, kind: 'deleted' });
+      }
     },
     'Failed to delete note'
   );
@@ -364,6 +398,7 @@ export const updateNoteContent = async (noteId: string, newContent: string): Pro
           await touchNoteUpdatedAt(db, note.parentId);
         }
         await markProjectionUpToDate(db);
+        emitNoteEvent({ id: noteId, kind: 'updated' });
       }
     },
     'Failed to update note content'
@@ -399,6 +434,7 @@ export const updateNoteMeta = async (
           await touchNoteUpdatedAt(db, newParentId);
         }
         await markProjectionUpToDate(db);
+        emitNoteEvent({ id: noteId, kind: 'meta_updated' });
       }
     },
     'Failed to update note metadata'

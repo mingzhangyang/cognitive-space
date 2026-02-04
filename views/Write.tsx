@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { createNoteObject, saveNote, getQuestions, updateNoteMeta } from '../services/storageService';
 import { analyzeText } from '../services/aiService';
 import { NoteType } from '../types';
@@ -13,10 +13,17 @@ const Write: React.FC = () => {
   const [mergeCandidate, setMergeCandidate] = useState<{ noteId: string; relatedQuestionId: string; relatedTitle: string } | null>(null);
   const { t, language } = useAppContext();
   const navigate = useNavigate();
+  const location = useLocation();
   const feedbackTimerRef = useRef<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const castIdRef = useRef<number>(0); // Track current cast to ignore stale AI results
   const isMountedRef = useRef<boolean>(true); // Track mount state for cleanup
+  const streamQuestionId = (() => {
+    const searchParams = new URLSearchParams(location.search);
+    const fromSearch = searchParams.get('questionId') || undefined;
+    const fromState = (location.state as { questionId?: string } | null)?.questionId;
+    return fromState || fromSearch;
+  })();
 
   // Auto-focus logic or simple textarea
   const truncate = (text: string, max = 24) => (text.length > max ? `${text.slice(0, max)}...` : text);
@@ -111,6 +118,9 @@ const Write: React.FC = () => {
 
     // 1. Create and save the note immediately with default type
     const newNote = createNoteObject(content.trim());
+    if (streamQuestionId) {
+      newNote.parentId = streamQuestionId;
+    }
     const savedContent = content.trim();
     
     try {
@@ -141,9 +151,10 @@ const Write: React.FC = () => {
 
     // Wait for minimum delay before clearing input
     await minDelayPromise;
-    
-    // UI updates: only if component is still mounted and this is the current cast
-    if (isMountedRef.current && castIdRef.current === currentCastId) {
+    if (streamQuestionId) {
+      navigate(`/question/${streamQuestionId}`, { state: { pendingNoteId: newNote.id }, replace: true });
+    } else if (isMountedRef.current && castIdRef.current === currentCastId) {
+      // UI updates: only if component is still mounted and this is the current cast
       setContent('');
       setIsProcessing(false);
     }
@@ -161,13 +172,14 @@ const Write: React.FC = () => {
     const linkedQuestion = relatedQuestionId
       ? existingQuestions.find(q => q.id === relatedQuestionId)
       : undefined;
+    const parentIdForUpdate = streamQuestionId || ((!isQuestion && relatedQuestionId) ? relatedQuestionId : undefined);
 
     try {
       await updateNoteMeta(newNote.id, {
         type: analysis.classification,
         subType: analysis.subType,
         confidence: analysis.confidence,
-        parentId: (!isQuestion && relatedQuestionId) ? relatedQuestionId : undefined
+        parentId: parentIdForUpdate
       });
     } catch (error) {
       console.error("Error updating note metadata:", error);
@@ -175,6 +187,7 @@ const Write: React.FC = () => {
 
     // Guard: final check before showing prompts
     if (!isMountedRef.current || castIdRef.current !== currentCastId) return;
+    if (streamQuestionId) return;
 
     // 6. Only show prompts if this is still the current cast and user hasn't started typing
     setContent(currentContent => {

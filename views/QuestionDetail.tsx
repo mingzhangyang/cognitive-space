@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   getNoteById,
@@ -7,7 +7,8 @@ import {
   deleteNote,
   updateNoteContent,
   getQuestionConstellationStats,
-  QuestionConstellationStats
+  QuestionConstellationStats,
+  subscribeToNoteEvents
 } from '../services/storageService';
 import { Note, NoteType } from '../types';
 import { useAppContext } from '../contexts/AppContext';
@@ -61,6 +62,7 @@ const QuestionDetail: React.FC = () => {
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; isQuestion: boolean } | null>(null);
   const [mobileNoteActionsId, setMobileNoteActionsId] = useState<string | null>(null);
+  const [pendingNoteId, setPendingNoteId] = useState<string | null>(null);
   const location = useLocation();
   const { t } = useAppContext();
 
@@ -82,7 +84,7 @@ const QuestionDetail: React.FC = () => {
     }
   }, [location.key]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (id) {
       const [related, q, statsResult, allNotes] = await Promise.all([
         getRelatedNotes(id),
@@ -104,11 +106,37 @@ const QuestionDetail: React.FC = () => {
         setRelationDensity(null);
       }
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     void loadData();
-  }, [id]);
+  }, [loadData]);
+
+  useEffect(() => {
+    const state = location.state as { pendingNoteId?: string } | null;
+    setPendingNoteId(state?.pendingNoteId ?? null);
+  }, [location.key]);
+
+  useEffect(() => {
+    if (!pendingNoteId) return;
+    const pendingNote = relatedNotes.find((note) => note.id === pendingNoteId);
+    if (!pendingNote) return;
+    if (pendingNote.type !== NoteType.UNCATEGORIZED) {
+      setPendingNoteId(null);
+    }
+  }, [pendingNoteId, relatedNotes]);
+
+  useEffect(() => {
+    if (!pendingNoteId) return undefined;
+    return subscribeToNoteEvents((event) => {
+      if (event.id !== pendingNoteId) return;
+      if (event.kind === 'deleted') {
+        setPendingNoteId(null);
+        return;
+      }
+      void loadData();
+    });
+  }, [pendingNoteId, loadData]);
 
   const handleEdit = (note: Note) => {
     if (isSavingEdit) return;
@@ -188,6 +216,7 @@ const QuestionDetail: React.FC = () => {
 
   const renderNote = (note: Note) => {
     const isMobileActionsOpen = mobileNoteActionsId === note.id;
+    const isAnalyzing = pendingNoteId === note.id && note.type === NoteType.UNCATEGORIZED;
     const actionButtons = (
       <>
         <button
@@ -222,6 +251,12 @@ const QuestionDetail: React.FC = () => {
             <span className="text-micro text-muted-300 dark:text-muted-400 ml-2">
               {new Date(note.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
+            {isAnalyzing && (
+              <span className="ml-2 inline-flex items-center gap-1 text-micro text-muted-400 dark:text-muted-500">
+                <LoadingSpinner className="w-3 h-3 text-muted-400 dark:text-muted-500" />
+                {t('analyzing')}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-1">
             {editingId !== note.id && (
@@ -511,7 +546,7 @@ const QuestionDetail: React.FC = () => {
       </div>
 
       <div className="mt-16 sm:mt-20 flex justify-center">
-        <Link to="/write" className="btn-pill btn-outline">
+        <Link to={`/write?questionId=${question.id}`} className="btn-pill btn-outline">
           {t('add_thought_stream')}
         </Link>
       </div>
