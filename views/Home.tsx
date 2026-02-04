@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { getQuestions, getNotes, deleteNote, getDarkMatterCount } from '../services/storageService';
 import { Note } from '../types';
-import { PlusIcon, ArrowRightIcon, TrashIcon, SearchIcon, XIcon } from '../components/Icons';
+import { PlusIcon, ArrowRightIcon, TrashIcon, SearchIcon, XIcon, MoreIcon } from '../components/Icons';
 import { useAppContext } from '../contexts/AppContext';
 
 const ConfirmDialog: React.FC<{
@@ -42,10 +42,30 @@ const Home: React.FC = () => {
   const [hasNotes, setHasNotes] = useState(false);
   const [darkMatterCount, setDarkMatterCount] = useState(0);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [mobileQuestionActionsId, setMobileQuestionActionsId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [isRecallOpen, setIsRecallOpen] = useState(false);
   const [fabContainer, setFabContainer] = useState<HTMLElement | null>(null);
+  const location = useLocation();
   const { t } = useAppContext();
+
+  useEffect(() => {
+    if (!mobileQuestionActionsId) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      if (target.closest('[data-mobile-actions]') || target.closest('[data-mobile-actions-toggle]')) return;
+      setMobileQuestionActionsId(null);
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [mobileQuestionActionsId]);
+
+  useEffect(() => {
+    if (mobileQuestionActionsId) {
+      setMobileQuestionActionsId(null);
+    }
+  }, [location.key]);
 
   const loadData = async () => {
     const allNotes = await getNotes();
@@ -82,6 +102,7 @@ const Home: React.FC = () => {
   const handleDelete = (e: React.MouseEvent, questionId: string) => {
     e.preventDefault();
     e.stopPropagation();
+    setMobileQuestionActionsId(null);
     setDeleteTarget(questionId);
   };
 
@@ -90,6 +111,7 @@ const Home: React.FC = () => {
       await deleteNote(deleteTarget);
       void loadData();
       setDeleteTarget(null);
+      setMobileQuestionActionsId(null);
     }
   };
 
@@ -199,32 +221,63 @@ const Home: React.FC = () => {
             )}
           </div>
         ) : (
-          filteredQuestions.map((q) => (
-            <Link
-              key={q.id}
-              to={`/question/${q.id}`}
-              className="block group surface-card p-4 sm:p-5 card-interactive hover:border-accent/30 dark:hover:border-accent-dark/30"
-            >
-              <div className="flex justify-between items-start">
-                <h3 className="text-lg font-medium text-ink dark:text-ink-dark group-hover:text-accent dark:group-hover:text-accent-dark transition-colors leading-relaxed flex-1 pr-2">
-                  {q.content}
-                </h3>
-                <div className="flex items-center gap-2 ml-4">
-                  <button
-                    onClick={(e) => handleDelete(e, q.id)}
-                    className="h-10 w-10 btn-icon text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                    title="Delete question"
-                  >
-                    <TrashIcon className="w-4 h-4" />
-                  </button>
-                  <ArrowRightIcon className="text-muted-400 group-hover:text-accent dark:group-hover:text-accent-dark w-5 h-5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all" />
+          filteredQuestions.map((q) => {
+            const isMobileActionsOpen = mobileQuestionActionsId === q.id;
+
+            return (
+              <Link
+                key={q.id}
+                to={`/question/${q.id}`}
+                className="block group surface-card p-4 sm:p-5 card-interactive hover:border-accent/30 dark:hover:border-accent-dark/30"
+              >
+                <div className="flex justify-between items-start">
+                  <h3 className="text-lg font-medium text-ink dark:text-ink-dark group-hover:text-accent dark:group-hover:text-accent-dark transition-colors leading-relaxed flex-1 pr-2">
+                    {q.content}
+                  </h3>
+                  <div className="flex items-center gap-2 ml-4">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setMobileQuestionActionsId((prev) => (prev === q.id ? null : q.id));
+                      }}
+                      className="sm:hidden h-10 w-10 btn-icon text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                      aria-label={isMobileActionsOpen ? 'Hide actions' : 'Show actions'}
+                      aria-expanded={isMobileActionsOpen}
+                      aria-controls={`question-actions-${q.id}`}
+                      data-mobile-actions-toggle
+                    >
+                      {isMobileActionsOpen ? <XIcon className="w-4 h-4" /> : <MoreIcon className="w-4 h-4" />}
+                    </button>
+                    <div className={`${isMobileActionsOpen ? 'flex' : 'hidden'} sm:hidden items-center gap-2`} id={`question-actions-${q.id}`} data-mobile-actions>
+                      <button
+                        onClick={(e) => handleDelete(e, q.id)}
+                        className="h-10 w-10 btn-icon text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                        title="Delete question"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="hidden sm:flex items-center gap-2">
+                      <button
+                        onClick={(e) => handleDelete(e, q.id)}
+                        className="h-10 w-10 btn-icon text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                        title="Delete question"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
+                      <ArrowRightIcon className="text-muted-400 group-hover:text-accent dark:group-hover:text-accent-dark w-5 h-5 opacity-0 sm:group-hover:opacity-100 transition-all" />
+                    </div>
+                    <ArrowRightIcon className="sm:hidden text-muted-400 w-5 h-5" />
+                  </div>
                 </div>
-              </div>
-              <div className="mt-3 flex items-center gap-2 section-kicker">
-                <span>{t('last_active')} {new Date(q.updatedAt).toLocaleDateString()}</span>
-              </div>
-            </Link>
-          ))
+                <div className="mt-3 flex items-center gap-2 section-kicker">
+                  <span>{t('last_active')} {new Date(q.updatedAt).toLocaleDateString()}</span>
+                </div>
+              </Link>
+            );
+          })
         )}
       </div>
 

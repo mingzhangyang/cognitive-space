@@ -104,3 +104,11 @@ export const MenuIcon = ({ className }: { className?: string }) => (
     <line x1="4" y1="17" x2="20" y2="17" />
   </svg>
 );
+
+export const MoreIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <circle cx="5" cy="12" r="1.8" />
+    <circle cx="12" cy="12" r="1.8" />
+    <circle cx="19" cy="12" r="1.8" />
+  </svg>
+);

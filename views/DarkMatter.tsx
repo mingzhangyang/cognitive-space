@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   getDarkMatter,
   getDarkMatterCount,
@@ -15,7 +16,7 @@ import {
 } from '../services/storageService';
 import { Note, NoteType, DarkMatterSuggestion } from '../types';
 import { useAppContext } from '../contexts/AppContext';
-import { LoadingSpinner, TrashIcon, EditIcon, CheckIcon, XIcon } from '../components/Icons';
+import { LoadingSpinner, TrashIcon, EditIcon, CheckIcon, XIcon, MoreIcon } from '../components/Icons';
 import TypeBadge from '../components/TypeBadge';
 import { analyzeDarkMatter } from '../services/aiService';
 
@@ -111,6 +112,7 @@ const DarkMatter: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [mobileNoteActionsId, setMobileNoteActionsId] = useState<string | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [nextCursor, setNextCursor] = useState<number | null>(null);
@@ -122,9 +124,28 @@ const DarkMatter: React.FC = () => {
     type: 'create' | 'link';
     suggestion: DarkMatterSuggestion;
   } | null>(null);
+  const location = useLocation();
   const { t, language } = useAppContext();
   const aiRevealThreshold = 4;
   const pageSize = 25;
+
+  useEffect(() => {
+    if (!mobileNoteActionsId) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      if (target.closest('[data-mobile-actions]') || target.closest('[data-mobile-actions-toggle]')) return;
+      setMobileNoteActionsId(null);
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [mobileNoteActionsId]);
+
+  useEffect(() => {
+    if (mobileNoteActionsId) {
+      setMobileNoteActionsId(null);
+    }
+  }, [location.key]);
 
   const noteById = useMemo(() => {
     const map = new Map<string, Note>();
@@ -203,6 +224,7 @@ const DarkMatter: React.FC = () => {
   }, [darkMatter, analysisNotes]);
 
   const handleDelete = (noteId: string) => {
+    setMobileNoteActionsId(null);
     setDeleteTarget(noteId);
   };
 
@@ -240,6 +262,7 @@ const DarkMatter: React.FC = () => {
 
   const handleEdit = (note: Note) => {
     if (isSavingEdit) return;
+    setMobileNoteActionsId(null);
     setEditingId(note.id);
     setEditContent(note.content);
   };
@@ -537,11 +560,35 @@ const DarkMatter: React.FC = () => {
           </div>
         ) : (
           <>
-            {darkMatter.map((note) => (
-              <div
-                key={note.id}
-                className="group surface-card p-4 sm:p-5 card-interactive"
-              >
+            {darkMatter.map((note) => {
+              const isMobileActionsOpen = mobileNoteActionsId === note.id;
+              const actionButtons = (
+                <>
+                  <button
+                    onClick={() => handleEdit(note)}
+                    disabled={isSavingEdit}
+                    className={`h-10 w-10 btn-icon text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark ${
+                      isSavingEdit ? 'opacity-60 cursor-not-allowed' : ''
+                    }`}
+                    title="Edit"
+                  >
+                    <EditIcon className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(note.id)}
+                    className="h-10 w-10 btn-icon text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                    title="Delete"
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                  </button>
+                </>
+              );
+
+              return (
+                <div
+                  key={note.id}
+                  className="group surface-card p-4 sm:p-5 card-interactive"
+                >
               {/* Note header */}
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="flex items-center gap-2">
@@ -550,26 +597,30 @@ const DarkMatter: React.FC = () => {
                     {formatRelativeTime(note.createdAt)}
                   </span>
                 </div>
-                <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1">
                   {editingId !== note.id && (
                     <>
                       <button
-                        onClick={() => handleEdit(note)}
-                        disabled={isSavingEdit}
-                        className={`h-10 w-10 btn-icon text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark ${
-                          isSavingEdit ? 'opacity-60 cursor-not-allowed' : ''
-                        }`}
-                        title="Edit"
+                        type="button"
+                        onClick={() => setMobileNoteActionsId((prev) => (prev === note.id ? null : note.id))}
+                        className="sm:hidden h-10 w-10 btn-icon text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                        aria-label={isMobileActionsOpen ? 'Hide actions' : 'Show actions'}
+                        aria-expanded={isMobileActionsOpen}
+                        aria-controls={`note-actions-${note.id}`}
+                        data-mobile-actions-toggle
                       >
-                        <EditIcon className="w-4 h-4" />
+                        {isMobileActionsOpen ? <XIcon className="w-4 h-4" /> : <MoreIcon className="w-4 h-4" />}
                       </button>
-                      <button
-                        onClick={() => handleDelete(note.id)}
-                        className="h-10 w-10 btn-icon text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                        title="Delete"
+                      <div className="hidden sm:flex gap-1 opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                        {actionButtons}
+                      </div>
+                      <div
+                        id={`note-actions-${note.id}`}
+                        className={`${isMobileActionsOpen ? 'flex' : 'hidden'} sm:hidden gap-1`}
+                        data-mobile-actions
                       >
-                        <TrashIcon className="w-4 h-4" />
-                      </button>
+                        {actionButtons}
+                      </div>
                     </>
                   )}
                 </div>
@@ -642,7 +693,8 @@ const DarkMatter: React.FC = () => {
                 </div>
               )}
             </div>
-            ))}
+              );
+            })}
             {hasMore && (
               <div className="flex justify-center">
                 <button

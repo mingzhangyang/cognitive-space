@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   getNoteById,
   getNotes,
@@ -11,7 +11,7 @@ import {
 } from '../services/storageService';
 import { Note, NoteType } from '../types';
 import { useAppContext } from '../contexts/AppContext';
-import { TrashIcon, EditIcon, CheckIcon, XIcon, EyeIcon, EyeOffIcon, LoadingSpinner } from '../components/Icons';
+import { TrashIcon, EditIcon, CheckIcon, XIcon, EyeIcon, EyeOffIcon, LoadingSpinner, MoreIcon } from '../components/Icons';
 import TypeBadge from '../components/TypeBadge';
 import QuestionGraph from '../components/QuestionGraph';
 import QuestionStatsPanel from '../components/QuestionStatsPanel';
@@ -60,7 +60,27 @@ const QuestionDetail: React.FC = () => {
   const [editContent, setEditContent] = useState('');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; isQuestion: boolean } | null>(null);
+  const [mobileNoteActionsId, setMobileNoteActionsId] = useState<string | null>(null);
+  const location = useLocation();
   const { t } = useAppContext();
+
+  useEffect(() => {
+    if (!mobileNoteActionsId) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      if (target.closest('[data-mobile-actions]') || target.closest('[data-mobile-actions-toggle]')) return;
+      setMobileNoteActionsId(null);
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [mobileNoteActionsId]);
+
+  useEffect(() => {
+    if (mobileNoteActionsId) {
+      setMobileNoteActionsId(null);
+    }
+  }, [location.key]);
 
   const loadData = async () => {
     if (id) {
@@ -92,6 +112,7 @@ const QuestionDetail: React.FC = () => {
 
   const handleEdit = (note: Note) => {
     if (isSavingEdit) return;
+    setMobileNoteActionsId(null);
     setEditingId(note.id);
     setEditContent(note.content);
   };
@@ -132,6 +153,7 @@ const QuestionDetail: React.FC = () => {
   };
 
   const handleDelete = (noteId: string, isQuestion: boolean) => {
+    setMobileNoteActionsId(null);
     setDeleteTarget({ id: noteId, isQuestion });
   };
 
@@ -164,43 +186,71 @@ const QuestionDetail: React.FC = () => {
     (note) => ![NoteType.CLAIM, NoteType.EVIDENCE, NoteType.TRIGGER].includes(note.type)
   );
 
-  const renderNote = (note: Note) => (
-    <div
-      key={note.id}
-      id={`note-${note.id}`}
-      className="group relative pl-4 sm:pl-6 border-l-2 border-line-soft dark:border-line-dark hover:border-line-muted dark:hover:border-muted-600 transition-colors"
-    >
-      <div className="mb-2 flex items-center justify-between">
-        <div>
-          <TypeBadge type={note.type} subType={note.subType} />
-          <span className="text-micro text-muted-300 dark:text-muted-400 ml-2">
-            {new Date(note.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </span>
+  const renderNote = (note: Note) => {
+    const isMobileActionsOpen = mobileNoteActionsId === note.id;
+    const actionButtons = (
+      <>
+        <button
+          onClick={() => handleEdit(note)}
+          disabled={isSavingEdit}
+          className={`h-10 w-10 btn-icon text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark ${
+            isSavingEdit ? 'opacity-60 cursor-not-allowed' : ''
+          }`}
+          title="Edit"
+        >
+          <EditIcon className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => handleDelete(note.id, false)}
+          className="h-10 w-10 btn-icon text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+          title="Delete"
+        >
+          <TrashIcon className="w-4 h-4" />
+        </button>
+      </>
+    );
+
+    return (
+      <div
+        key={note.id}
+        id={`note-${note.id}`}
+        className="group relative pl-4 sm:pl-6 border-l-2 border-line-soft dark:border-line-dark hover:border-line-muted dark:hover:border-muted-600 transition-colors"
+      >
+        <div className="mb-2 flex items-center justify-between">
+          <div>
+            <TypeBadge type={note.type} subType={note.subType} />
+            <span className="text-micro text-muted-300 dark:text-muted-400 ml-2">
+              {new Date(note.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            {editingId !== note.id && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setMobileNoteActionsId((prev) => (prev === note.id ? null : note.id))}
+                  className="sm:hidden h-10 w-10 btn-icon text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                  aria-label={isMobileActionsOpen ? 'Hide actions' : 'Show actions'}
+                  aria-expanded={isMobileActionsOpen}
+                  aria-controls={`note-actions-${note.id}`}
+                  data-mobile-actions-toggle
+                >
+                  {isMobileActionsOpen ? <XIcon className="w-4 h-4" /> : <MoreIcon className="w-4 h-4" />}
+                </button>
+                <div className="hidden sm:flex gap-1 opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                  {actionButtons}
+                </div>
+                <div
+                  id={`note-actions-${note.id}`}
+                  className={`${isMobileActionsOpen ? 'flex' : 'hidden'} sm:hidden gap-1`}
+                  data-mobile-actions
+                >
+                  {actionButtons}
+                </div>
+              </>
+            )}
+          </div>
         </div>
-        <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-          {editingId !== note.id && (
-            <>
-              <button
-                onClick={() => handleEdit(note)}
-                disabled={isSavingEdit}
-                className={`h-10 w-10 btn-icon text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark ${
-                  isSavingEdit ? 'opacity-60 cursor-not-allowed' : ''
-                }`}
-                title="Edit"
-              >
-                <EditIcon className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => handleDelete(note.id, false)}
-                className="h-10 w-10 btn-icon text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                title="Delete"
-              >
-                <TrashIcon className="w-4 h-4" />
-              </button>
-            </>
-          )}
-        </div>
-      </div>
 
       {editingId === note.id ? (
         <div className="space-y-2">
@@ -250,7 +300,8 @@ const QuestionDetail: React.FC = () => {
         </p>
       )}
     </div>
-  );
+    );
+  };
 
   const renderSection = (title: string, emptyText: string, notes: Note[]) => (
     <section className="space-y-4">
