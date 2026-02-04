@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   getDarkMatter,
+  getDarkMatterCount,
+  getDarkMatterPage,
   getQuestions,
   updateNoteMeta,
   updateNoteContent,
@@ -101,12 +103,17 @@ const QuestionSelector: React.FC<{
 
 const DarkMatter: React.FC = () => {
   const [darkMatter, setDarkMatter] = useState<Note[]>([]);
+  const [darkMatterCount, setDarkMatterCount] = useState(0);
   const [questions, setQuestions] = useState<Note[]>([]);
+  const [analysisNotes, setAnalysisNotes] = useState<Note[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [linkTarget, setLinkTarget] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<number | null>(null);
   const [suggestions, setSuggestions] = useState<DarkMatterSuggestion[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
@@ -117,30 +124,75 @@ const DarkMatter: React.FC = () => {
   } | null>(null);
   const { t, language } = useAppContext();
   const aiRevealThreshold = 4;
+  const pageSize = 25;
 
   const noteById = useMemo(() => {
     const map = new Map<string, Note>();
     darkMatter.forEach((note) => map.set(note.id, note));
+    analysisNotes.forEach((note) => {
+      if (!map.has(note.id)) map.set(note.id, note);
+    });
     return map;
-  }, [darkMatter]);
+  }, [darkMatter, analysisNotes]);
 
-  const loadData = async () => {
-    const dm = await getDarkMatter();
-    setDarkMatter(dm.sort((a, b) => b.createdAt - a.createdAt));
-    const qs = await getQuestions();
-    setQuestions(qs.sort((a, b) => b.updatedAt - a.updatedAt));
+  const loadInitial = async () => {
+    setIsLoadingMore(true);
+    try {
+      const [page, qs, totalCount] = await Promise.all([
+        getDarkMatterPage(pageSize),
+        getQuestions(),
+        getDarkMatterCount()
+      ]);
+      setDarkMatter(page.notes);
+      setNextCursor(page.nextCursor);
+      setHasMore(page.hasMore);
+      setDarkMatterCount(totalCount);
+      setQuestions(qs.sort((a, b) => b.updatedAt - a.updatedAt));
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  const loadMore = async () => {
+    if (isLoadingMore || !hasMore || nextCursor === null) return;
+    setIsLoadingMore(true);
+    try {
+      const page = await getDarkMatterPage(pageSize, nextCursor);
+      setDarkMatter((prev) => {
+        const existingIds = new Set(prev.map((note) => note.id));
+        const merged = [...prev];
+        for (const note of page.notes) {
+          if (!existingIds.has(note.id)) merged.push(note);
+        }
+        return merged;
+      });
+      setNextCursor(page.nextCursor);
+      setHasMore(page.hasMore);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  const removeAnalysisNotes = (ids: string[]) => {
+    if (ids.length === 0) return;
+    setAnalysisNotes((prev) => {
+      if (prev.length === 0) return prev;
+      const idSet = new Set(ids);
+      return prev.filter((note) => !idSet.has(note.id));
+    });
   };
 
   useEffect(() => {
-    void loadData();
+    void loadInitial();
   }, []);
 
   useEffect(() => {
-    if (darkMatter.length === 0) {
+    const suggestionSource = analysisNotes.length > 0 ? analysisNotes : darkMatter;
+    if (suggestionSource.length === 0) {
       setSuggestions([]);
       return;
     }
-    const validIds = new Set(darkMatter.map(note => note.id));
+    const validIds = new Set(suggestionSource.map(note => note.id));
     setSuggestions(prev => prev
       .map(suggestion => ({
         ...suggestion,
@@ -148,7 +200,7 @@ const DarkMatter: React.FC = () => {
       }))
       .filter(suggestion => suggestion.noteIds.length >= 2)
     );
-  }, [darkMatter]);
+  }, [darkMatter, analysisNotes]);
 
   const handleDelete = (noteId: string) => {
     setDeleteTarget(noteId);
@@ -157,7 +209,8 @@ const DarkMatter: React.FC = () => {
   const confirmDelete = async () => {
     if (deleteTarget) {
       await deleteNote(deleteTarget);
-      void loadData();
+      removeAnalysisNotes([deleteTarget]);
+      void loadInitial();
       if (editingId === deleteTarget) {
         setEditingId(null);
         setEditContent('');
@@ -173,14 +226,16 @@ const DarkMatter: React.FC = () => {
   const confirmLink = async (questionId: string) => {
     if (linkTarget) {
       await updateNoteMeta(linkTarget, { parentId: questionId });
-      void loadData();
+      removeAnalysisNotes([linkTarget]);
+      void loadInitial();
       setLinkTarget(null);
     }
   };
 
   const handlePromoteToQuestion = async (noteId: string) => {
     await updateNoteMeta(noteId, { type: NoteType.QUESTION, parentId: null });
-    void loadData();
+    removeAnalysisNotes([noteId]);
+    void loadInitial();
   };
 
   const handleEdit = (note: Note) => {
@@ -203,7 +258,7 @@ const DarkMatter: React.FC = () => {
       await updateNoteContent(editingId, trimmed);
       setEditingId(null);
       setEditContent('');
-      await loadData();
+      await loadInitial();
     } finally {
       setIsSavingEdit(false);
     }
@@ -232,8 +287,14 @@ const DarkMatter: React.FC = () => {
     if (isAnalyzing) return;
     setIsAnalyzing(true);
     setHasAnalyzed(true);
-    void recordDarkMatterAnalysisRequested(darkMatter.length, questions.length);
-    const result = await analyzeDarkMatter(darkMatter, questions, language, 5);
+    const [allDarkMatter, allQuestions] = await Promise.all([
+      getDarkMatter(),
+      getQuestions()
+    ]);
+    setAnalysisNotes(allDarkMatter);
+    setQuestions(allQuestions.sort((a, b) => b.updatedAt - a.updatedAt));
+    void recordDarkMatterAnalysisRequested(allDarkMatter.length, allQuestions.length);
+    const result = await analyzeDarkMatter(allDarkMatter, allQuestions, language, 5);
     setSuggestions(result.suggestions);
     setIsAnalyzing(false);
   };
@@ -276,11 +337,12 @@ const DarkMatter: React.FC = () => {
         suggestion.noteIds.length,
         suggestion.id
       );
+      removeAnalysisNotes(suggestion.noteIds);
       setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
     } catch (error) {
       console.error('Failed to apply suggestion', error);
     } finally {
-      await loadData();
+      await loadInitial();
     }
   };
 
@@ -312,8 +374,8 @@ const DarkMatter: React.FC = () => {
   const confirmLabel = pendingAction
     ? (pendingAction.type === 'create' ? t('dark_matter_ai_action_create') : t('dark_matter_ai_action_link'))
     : t('confirm');
-  const shouldShowAiCard = darkMatter.length > 0
-    && (darkMatter.length >= aiRevealThreshold || isAiPanelOpen);
+  const shouldShowAiCard = darkMatterCount > 0
+    && (darkMatterCount >= aiRevealThreshold || isAiPanelOpen);
 
   return (
     <div className="flex flex-col h-full relative">
@@ -353,14 +415,14 @@ const DarkMatter: React.FC = () => {
           <h1 className="page-title">{t('dark_matter')}</h1>
         </div>
         <p className="page-subtitle">{t('dark_matter_desc')}</p>
-        {darkMatter.length > 0 && (
+        {darkMatterCount > 0 && (
           <p className="mt-2 text-caption-upper">
-            {darkMatter.length} {t('dark_matter_count')}
+            {darkMatterCount} {t('dark_matter_count')}
           </p>
         )}
       </div>
 
-      {darkMatter.length > 0 && darkMatter.length < aiRevealThreshold && !isAiPanelOpen && (
+      {darkMatterCount > 0 && darkMatterCount < aiRevealThreshold && !isAiPanelOpen && (
         <div className="mb-4">
           <button
             onClick={() => setIsAiPanelOpen(true)}
@@ -380,8 +442,8 @@ const DarkMatter: React.FC = () => {
             </div>
             <button
               onClick={handleAnalyze}
-              disabled={isAnalyzing || darkMatter.length < 2}
-              className={`btn-pill ${(isAnalyzing || darkMatter.length < 2)
+              disabled={isAnalyzing || darkMatterCount < 2}
+              className={`btn-pill ${(isAnalyzing || darkMatterCount < 2)
                 ? 'bg-line dark:bg-surface-hover-dark text-muted-400 cursor-not-allowed'
                 : 'bg-action dark:bg-action text-white hover:bg-action-hover dark:hover:bg-action-hover-dark shadow-md'
               }`}
@@ -466,7 +528,7 @@ const DarkMatter: React.FC = () => {
 
       {/* Content */}
       <div className="space-y-4 pb-8">
-        {darkMatter.length === 0 ? (
+        {darkMatter.length === 0 && !isLoadingMore ? (
           <div className="text-center py-14 px-5 surface-empty shadow-sm">
             <p className="text-ink dark:text-ink-dark font-serif mb-2 text-lg">
               ✨
@@ -474,11 +536,12 @@ const DarkMatter: React.FC = () => {
             <p className="text-body-sm-muted">{t('no_dark_matter')}</p>
           </div>
         ) : (
-          darkMatter.map((note) => (
-            <div
-              key={note.id}
-              className="group surface-card p-4 sm:p-5 card-interactive"
-            >
+          <>
+            {darkMatter.map((note) => (
+              <div
+                key={note.id}
+                className="group surface-card p-4 sm:p-5 card-interactive"
+              >
               {/* Note header */}
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="flex items-center gap-2">
@@ -579,7 +642,28 @@ const DarkMatter: React.FC = () => {
                 </div>
               )}
             </div>
-          ))
+            ))}
+            {hasMore && (
+              <div className="flex justify-center">
+                <button
+                  onClick={loadMore}
+                  disabled={isLoadingMore}
+                  className={`btn-pill btn-outline muted-label ${
+                    isLoadingMore ? 'opacity-60 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {isLoadingMore ? (
+                    <>
+                      <LoadingSpinner className="w-4 h-4 text-muted-500 dark:text-muted-400" />
+                      <span>{t('loading_more')}</span>
+                    </>
+                  ) : (
+                    t('load_more')
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

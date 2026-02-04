@@ -452,6 +452,82 @@ export const recordDarkMatterSuggestionDismissed = async (suggestionId?: string)
   });
 };
 
+export interface DarkMatterPage {
+  notes: Note[];
+  nextCursor: number | null;
+  hasMore: boolean;
+}
+
+export const getDarkMatterPage = async (
+  limit: number,
+  cursorUpdatedAt?: number
+): Promise<DarkMatterPage> => {
+  return await withDb(
+    { notes: [], nextCursor: null, hasMore: false },
+    async (db) => {
+      await ensureProjection(db);
+      const tx = db.transaction(STORE_NOTES, 'readonly');
+      const index = tx.store.index('by-updated');
+      const range = typeof cursorUpdatedAt === 'number'
+        ? IDBKeyRange.upperBound(cursorUpdatedAt)
+        : undefined;
+      let cursor = await index.openCursor(range, 'prev');
+      const notes: Note[] = [];
+      let lastIncludedUpdatedAt: number | null = null;
+      let hasMore = false;
+
+      const isDarkMatterNote = (note: Note) =>
+        note.type !== NoteType.QUESTION && (note.parentId === null || note.parentId === undefined);
+
+      while (cursor) {
+        if (isDarkMatterNote(cursor.value)) {
+          notes.push(cursor.value);
+          lastIncludedUpdatedAt = cursor.value.updatedAt;
+          if (notes.length >= limit) {
+            cursor = await cursor.continue();
+            while (cursor) {
+              if (isDarkMatterNote(cursor.value)) {
+                hasMore = true;
+                break;
+              }
+              cursor = await cursor.continue();
+            }
+            break;
+          }
+        }
+        cursor = await cursor.continue();
+      }
+
+      await tx.done;
+      return { notes, nextCursor: lastIncludedUpdatedAt, hasMore };
+    },
+    'Failed to load dark matter page'
+  );
+};
+
+export const getDarkMatterCount = async (): Promise<number> => {
+  return await withDb(
+    0,
+    async (db) => {
+      await ensureProjection(db);
+      const tx = db.transaction(STORE_NOTES, 'readonly');
+      const index = tx.store.index('by-updated');
+      let cursor = await index.openCursor(null, 'prev');
+      let count = 0;
+      while (cursor) {
+        const note = cursor.value;
+        if (note.type !== NoteType.QUESTION && (note.parentId === null || note.parentId === undefined)) {
+          count += 1;
+        }
+        cursor = await cursor.continue();
+      }
+      await tx.done;
+      return count;
+    },
+    'Failed to count dark matter'
+  );
+};
+
 /**
  * Get all "dark matter" notes - notes that are not questions and have no parent
  * These are isolated fragments not connected to any question

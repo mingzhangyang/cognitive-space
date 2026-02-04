@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
-import { getQuestions, getNotes, deleteNote, getDarkMatter } from '../services/storageService';
+import { getQuestions, getNotes, deleteNote, getDarkMatterCount } from '../services/storageService';
 import { Note } from '../types';
 import { PlusIcon, ArrowRightIcon, TrashIcon, SearchIcon, XIcon } from '../components/Icons';
 import { useAppContext } from '../contexts/AppContext';
@@ -52,8 +52,8 @@ const Home: React.FC = () => {
     setHasNotes(allNotes.length > 0);
     const questions = await getQuestions();
     setQuestions(questions.sort((a, b) => b.updatedAt - a.updatedAt));
-    const darkMatter = await getDarkMatter();
-    setDarkMatterCount(darkMatter.length);
+    const darkMatterTotal = await getDarkMatterCount();
+    setDarkMatterCount(darkMatterTotal);
   };
 
   useEffect(() => {

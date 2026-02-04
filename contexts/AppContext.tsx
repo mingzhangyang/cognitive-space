@@ -114,6 +114,8 @@ const translations = {
     dark_matter_ai_confidence_likely: "Likely",
     dark_matter_ai_confidence_possible: "Possible",
     dark_matter_ai_confidence_loose: "Loose",
+    load_more: "Load more",
+    loading_more: "Loading more...",
     dark_matter_confirm_create: "Create question \"{title}\" and link {count} fragments?",
     dark_matter_confirm_link: "Link {count} fragments to \"{title}\"?"
   },
@@ -219,6 +221,8 @@ const translations = {
     dark_matter_ai_confidence_likely: "较可能",
     dark_matter_ai_confidence_possible: "可能",
     dark_matter_ai_confidence_loose: "松散",
+    load_more: "加载更多",
+    loading_more: "正在加载...",
     dark_matter_confirm_create: "创建问题「{title}」并关联 {count} 条碎片？",
     dark_matter_confirm_link: "将 {count} 条碎片关联到「{title}」？"
   }
