@@ -596,6 +596,29 @@ const DarkMatter: React.FC = () => {
                   <span className="muted-caption">
                     {formatRelativeTime(note.createdAt)}
                   </span>
+                  {note.analysisPending && (
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full bg-surface-hover dark:bg-surface-hover-dark px-2 py-0.5 text-[10px] uppercase tracking-wider text-subtle dark:text-subtle-dark"
+                      aria-label={t('analyzing')}
+                      title={t('analyzing')}
+                    >
+                      <span className="flex items-center gap-1" aria-hidden="true">
+                        <span
+                          className="h-1.5 w-1.5 rounded-full bg-accent dark:bg-accent-dark animate-pulse motion-reduce:animate-none"
+                          style={{ animationDelay: '0ms' }}
+                        />
+                        <span
+                          className="h-1.5 w-1.5 rounded-full bg-accent dark:bg-accent-dark animate-pulse motion-reduce:animate-none"
+                          style={{ animationDelay: '150ms' }}
+                        />
+                        <span
+                          className="h-1.5 w-1.5 rounded-full bg-accent dark:bg-accent-dark animate-pulse motion-reduce:animate-none"
+                          style={{ animationDelay: '300ms' }}
+                        />
+                      </span>
+                      <span className="hidden sm:inline">{t('analyzing')}</span>
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-1">
                   {editingId !== note.id && (

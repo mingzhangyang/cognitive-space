@@ -149,6 +149,10 @@ const applyEvent = (state: Map<string, Note>, event: AppEvent): void => {
       if (typeof updates.parentId !== 'undefined') existing.parentId = updates.parentId;
       if (typeof updates.type !== 'undefined') existing.type = updates.type;
       if (typeof updates.subType !== 'undefined') existing.subType = updates.subType;
+      if (typeof updates.confidence !== 'undefined') existing.confidence = updates.confidence;
+      if (typeof updates.analysisPending !== 'undefined') {
+        existing.analysisPending = updates.analysisPending;
+      }
       existing.updatedAt = event.payload.updatedAt;
       return;
     }
@@ -339,6 +343,7 @@ export const createNoteObject = (content: string): Note => {
     id: crypto.randomUUID(),
     content,
     type: NoteType.UNCATEGORIZED, // Default, updated by AI later
+    analysisPending: false,
     createdAt: Date.now(),
     updatedAt: Date.now(),
     parentId: null
@@ -407,7 +412,7 @@ export const updateNoteContent = async (noteId: string, newContent: string): Pro
 
 export const updateNoteMeta = async (
   noteId: string,
-  updates: Pick<Partial<Note>, 'parentId' | 'type' | 'subType' | 'confidence'>
+  updates: Pick<Partial<Note>, 'parentId' | 'type' | 'subType' | 'confidence' | 'analysisPending'>
 ): Promise<void> => {
   await withDb<void>(
     undefined,
@@ -426,6 +431,7 @@ export const updateNoteMeta = async (
         if (typeof updates.type !== 'undefined') note.type = updates.type;
         if (typeof updates.subType !== 'undefined') note.subType = updates.subType;
         if (typeof updates.confidence !== 'undefined') note.confidence = updates.confidence;
+        if (typeof updates.analysisPending !== 'undefined') note.analysisPending = updates.analysisPending;
         note.updatedAt = updatedAt;
         await db.put(STORE_NOTES, note);
         const newParentId =

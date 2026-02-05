@@ -5,6 +5,7 @@ import { analyzeText } from '../services/aiService';
 import { NoteType } from '../types';
 import { LoadingSpinner } from '../components/Icons';
 import { useAppContext } from '../contexts/AppContext';
+import { useNotifications } from '../contexts/NotificationContext';
 
 const Write: React.FC = () => {
   const [content, setContent] = useState('');
@@ -12,6 +13,7 @@ const Write: React.FC = () => {
   const [linkHint, setLinkHint] = useState<{ questionId: string; title: string } | null>(null);
   const [mergeCandidate, setMergeCandidate] = useState<{ noteId: string; relatedQuestionId: string; relatedTitle: string } | null>(null);
   const { t, language } = useAppContext();
+  const { notify } = useNotifications();
   const navigate = useNavigate();
   const location = useLocation();
   const feedbackTimerRef = useRef<number | null>(null);
@@ -27,6 +29,12 @@ const Write: React.FC = () => {
 
   // Auto-focus logic or simple textarea
   const truncate = (text: string, max = 24) => (text.length > max ? `${text.slice(0, max)}...` : text);
+  const formatTemplate = (template: string, params: Record<string, string | number>) => {
+    return template.replace(/\{(\w+)\}/g, (match, key) => {
+      const value = params[key];
+      return value === undefined ? match : String(value);
+    });
+  };
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -118,6 +126,7 @@ const Write: React.FC = () => {
 
     // 1. Create and save the note immediately with default type
     const newNote = createNoteObject(content.trim());
+    newNote.analysisPending = true;
     if (streamQuestionId) {
       newNote.parentId = streamQuestionId;
     }
@@ -162,7 +171,14 @@ const Write: React.FC = () => {
     // 4. Process AI results in background when they arrive
     const aiResult = await aiAnalysisPromise;
     
-    if (!aiResult) return;
+    if (!aiResult) {
+      try {
+        await updateNoteMeta(newNote.id, { analysisPending: false });
+      } catch (error) {
+        console.error("Error clearing analysis pending state:", error);
+      }
+      return;
+    }
 
     const { analysis, existingQuestions } = aiResult;
 
@@ -179,8 +195,22 @@ const Write: React.FC = () => {
         type: analysis.classification,
         subType: analysis.subType,
         confidence: analysis.confidence,
-        parentId: parentIdForUpdate
+        parentId: parentIdForUpdate,
+        analysisPending: false
       });
+      const movesOutOfDarkMatter = !streamQuestionId && (isQuestion || Boolean(parentIdForUpdate));
+      if (movesOutOfDarkMatter) {
+        const message = isQuestion
+          ? t('analysis_notice_question')
+          : linkedQuestion
+            ? formatTemplate(t('analysis_notice_linked'), { title: truncate(linkedQuestion.content, 42) })
+            : t('analysis_notice_moved');
+        notify({
+          title: t('analysis_notice_title'),
+          message,
+          variant: 'info'
+        });
+      }
     } catch (error) {
       console.error("Error updating note metadata:", error);
     }

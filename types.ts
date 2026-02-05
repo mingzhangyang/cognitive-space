@@ -12,6 +12,7 @@ export interface Note {
   type: NoteType;
   subType?: string; // e.g., 'hypothesis', 'fact', 'opinion'
   confidence?: number; // 0.0 to 1.0
+  analysisPending?: boolean;
   createdAt: number;
   updatedAt: number;
   // If this note belongs to a "Question" (Gravity Center), this is the ID of that question.
@@ -62,7 +63,7 @@ export type NoteEvent =
       createdAt: number;
       payload: {
         id: string;
-        updates: Pick<Partial<Note>, 'parentId' | 'type' | 'subType'>;
+        updates: Pick<Partial<Note>, 'parentId' | 'type' | 'subType' | 'confidence' | 'analysisPending'>;
         updatedAt: number;
       };
     }
