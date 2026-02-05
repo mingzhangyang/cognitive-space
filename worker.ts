@@ -51,6 +51,9 @@ const DEFAULT_BIGMODEL_MODEL = 'glm-4.5-flash';
 const API_TIMEOUT_MS = 15000; // 15 second timeout for AI requests
 const CACHE_TTL_SECONDS = 3600; // Cache responses for 1 hour
 const DARK_MATTER_MAX_CLUSTERS = 6;
+const CLASSIFICATION_CONFIDENCE_THRESHOLD = 0.55;
+const RELATION_CONFIDENCE_THRESHOLD = 0.7;
+const DARK_MATTER_CONFIDENCE_THRESHOLD = 0.6;
 const CLASSIFICATIONS = new Set<AnalyzeResponse['classification']>([
   'question',
   'claim',
@@ -414,17 +417,20 @@ Your task is to analyze the cognitive role of this text.
      - Subtypes: 'fact' (verifiable), 'observation' (personal), 'anecdote' (story), 'citation' (reference).
    - trigger: Raw input, inspiration, fragments, or simple notes that don't fit above categories.
      - Subtypes: 'quote', 'feeling', 'idea', 'note'.
+   - uncategorized: Ambiguous, mixed, or not clear enough to classify.
+   Guardrail: Avoid forcing structure. If you are not confident, use 'uncategorized' with low confidence.
 
 2. Connect: Determine if this text strongly overlaps with one of the Living Questions.
-   - If yes, provide the ID (even if the text itself is a question - it might be a sub-question or rephrasing).
-   - If it's a new topic entirely, return null.
+   - Only provide an ID if the overlap is strong (confidence >= 0.7).
+   - Otherwise return null.
 
 3. Confidence: Assign a confidence score (0.0 to 1.0) based on how clear the intent is.
 
 ${langInstruction}
 
 Return JSON only with keys: classification, subType, confidence, relatedQuestionId, reasoning.
-Classification must be one of: 'question', 'claim', 'evidence', 'trigger'.
+Classification must be one of: 'question', 'claim', 'evidence', 'trigger', 'uncategorized'.
+Reasoning should be phrased as a suggestion so the user can decide whether to accept it.
 `.trim();
 }
 
@@ -463,6 +469,7 @@ Constraints:
 - If a suggestion matches an existing question, set kind="existing_question" and include existingQuestionId.
 - If it's a new question proposal, set kind="new_question".
 - Use only provided note IDs and question IDs.
+- If you're not confident, do not suggest a grouping.
 
 Dark Matter Notes:
 ${noteContext}
@@ -607,9 +614,18 @@ function normalizeResult(input: any, validQuestionIds: Set<string>): AnalyzeResp
   const confidenceRaw = typeof input?.confidence === 'number' ? input.confidence : 0.5;
   const confidence = Math.max(0, Math.min(1, confidenceRaw));
 
+  const shouldSuppressClassification = confidence < CLASSIFICATION_CONFIDENCE_THRESHOLD;
+  const finalClassification = shouldSuppressClassification ? 'uncategorized' : classification;
+
   // Validate relatedQuestionId - only accept if it exists in the provided questions
   let relatedQuestionId: string | null = null;
-  if (typeof input?.relatedQuestionId === 'string' && input.relatedQuestionId) {
+  if (
+    confidence >= RELATION_CONFIDENCE_THRESHOLD &&
+    finalClassification !== 'trigger' &&
+    finalClassification !== 'uncategorized' &&
+    typeof input?.relatedQuestionId === 'string' &&
+    input.relatedQuestionId
+  ) {
     if (validQuestionIds.has(input.relatedQuestionId)) {
       relatedQuestionId = input.relatedQuestionId;
     }
@@ -621,8 +637,13 @@ function normalizeResult(input: any, validQuestionIds: Set<string>): AnalyzeResp
     : 'Analyzed by GLM';
 
   return {
-    classification,
-    subType: typeof input?.subType === 'string' ? input.subType : undefined,
+    classification: finalClassification,
+    subType:
+      finalClassification === 'uncategorized'
+        ? undefined
+        : typeof input?.subType === 'string'
+          ? input.subType
+          : undefined,
     confidence,
     relatedQuestionId,
     reasoning
@@ -683,6 +704,7 @@ export function normalizeDarkMatterResult(
 
     const confidenceRaw = typeof suggestion.confidence === 'number' ? suggestion.confidence : 0.5;
     const confidence = Math.max(0, Math.min(1, confidenceRaw));
+    if (confidence < DARK_MATTER_CONFIDENCE_THRESHOLD) continue;
     const reasoning =
       typeof suggestion.reasoning === 'string' && suggestion.reasoning.trim()
         ? suggestion.reasoning.trim()

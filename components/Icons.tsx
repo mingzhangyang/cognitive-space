@@ -97,6 +97,13 @@ export const HelpIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+export const InboxIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M3 12.5l3.5-7h11L21 12.5v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    <path d="M3 12.5h6l2 3h2l2-3h6" />
+  </svg>
+);
+
 export const AlertIcon = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />

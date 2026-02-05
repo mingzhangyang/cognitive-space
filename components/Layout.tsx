@@ -1,15 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAppContext } from '../contexts/AppContext';
-import { HelpIcon, HomeIcon, MenuIcon } from './Icons';
+import { HelpIcon, HomeIcon, InboxIcon, MenuIcon } from './Icons';
 import { getSessionFooterLine } from '../services/footerLine';
+import MessageCenterPanel from './MessageCenterPanel';
+import { useAssistantInbox } from '../contexts/AssistantInboxContext';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const isHome = location.pathname === '/';
   const { t, language, setLanguage, theme, toggleTheme } = useAppContext();
+  const { hasMessages, messageCount } = useAssistantInbox();
   const year = new Date().getFullYear();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isInboxOpen, setIsInboxOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [footerLine, setFooterLine] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -44,6 +48,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       document.removeEventListener('keydown', handleEscape);
     };
   }, [menuOpen]);
+
+  useEffect(() => {
+    if (hasMessages) return;
+    if (isInboxOpen) setIsInboxOpen(false);
+  }, [hasMessages, isInboxOpen]);
 
   useEffect(() => {
     let isActive = true;
@@ -141,6 +150,19 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             >
               <HomeIcon className="w-4 h-4" />
             </Link>
+          )}
+          {hasMessages && (
+            <button
+              onClick={() => setIsInboxOpen(true)}
+              className="btn-icon btn-glass-icon relative"
+              aria-label={t('assistant_inbox_title')}
+              title={t('assistant_inbox_title')}
+            >
+              <InboxIcon className="w-4 h-4" />
+              {messageCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-accent shadow-sm" aria-hidden="true" />
+              )}
+            </button>
           )}
           <div className="relative" ref={menuRef}>
             <button
@@ -296,6 +318,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </a>
         </p>
       </footer>
+
+      <MessageCenterPanel
+        isOpen={isInboxOpen}
+        onClose={() => setIsInboxOpen(false)}
+      />
     </div>
   );
 };

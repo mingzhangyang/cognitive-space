@@ -16,6 +16,7 @@ import {
 } from '../services/storageService';
 import { Note, NoteType, DarkMatterSuggestion } from '../types';
 import { useAppContext } from '../contexts/AppContext';
+import { useAssistantInbox } from '../contexts/AssistantInboxContext';
 import { LoadingSpinner, TrashIcon, EditIcon, CheckIcon, XIcon, MoreIcon } from '../components/Icons';
 import TypeBadge from '../components/TypeBadge';
 import { analyzeDarkMatter } from '../services/aiService';
@@ -102,6 +103,30 @@ const QuestionSelector: React.FC<{
   );
 };
 
+const areSuggestionsEqual = (left: DarkMatterSuggestion[], right: DarkMatterSuggestion[]) => {
+  if (left === right) return true;
+  if (left.length !== right.length) return false;
+  for (let i = 0; i < left.length; i += 1) {
+    const a = left[i];
+    const b = right[i];
+    if (
+      a.id !== b.id
+      || a.kind !== b.kind
+      || a.title !== b.title
+      || (a.existingQuestionId ?? null) !== (b.existingQuestionId ?? null)
+      || a.confidence !== b.confidence
+      || a.reasoning !== b.reasoning
+      || a.noteIds.length !== b.noteIds.length
+    ) {
+      return false;
+    }
+    for (let j = 0; j < a.noteIds.length; j += 1) {
+      if (a.noteIds[j] !== b.noteIds[j]) return false;
+    }
+  }
+  return true;
+};
+
 const DarkMatter: React.FC = () => {
   const [darkMatter, setDarkMatter] = useState<Note[]>([]);
   const [darkMatterCount, setDarkMatterCount] = useState(0);
@@ -126,6 +151,15 @@ const DarkMatter: React.FC = () => {
   } | null>(null);
   const location = useLocation();
   const { t, language } = useAppContext();
+  const {
+    createJob,
+    removeJob,
+    addMessage,
+    dismissMessagesByKind,
+    setDarkMatterAnalysis,
+    updateDarkMatterSuggestions,
+    darkMatterAnalysis
+  } = useAssistantInbox();
   const aiRevealThreshold = 4;
   const pageSize = 25;
 
@@ -208,20 +242,50 @@ const DarkMatter: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (isAnalyzing) return;
+    if (!darkMatterAnalysis) return;
+    setHasAnalyzed(true);
+    setSuggestions(darkMatterAnalysis.suggestions);
+    if (darkMatterAnalysis.noteIds.length === 0) {
+      setAnalysisNotes([]);
+      return;
+    }
+    let isActive = true;
+    void getDarkMatter().then((allNotes) => {
+      if (!isActive) return;
+      const noteIdSet = new Set(darkMatterAnalysis.noteIds);
+      setAnalysisNotes(allNotes.filter((note) => noteIdSet.has(note.id)));
+    });
+    return () => {
+      isActive = false;
+    };
+  }, [darkMatterAnalysis, isAnalyzing]);
+
+  useEffect(() => {
     const suggestionSource = analysisNotes.length > 0 ? analysisNotes : darkMatter;
     if (suggestionSource.length === 0) {
-      setSuggestions([]);
+      setSuggestions((prev) => {
+        if (prev.length === 0) return prev;
+        updateDarkMatterSuggestions([]);
+        dismissMessagesByKind('dark_matter_ready');
+        return [];
+      });
       return;
     }
     const validIds = new Set(suggestionSource.map(note => note.id));
-    setSuggestions(prev => prev
-      .map(suggestion => ({
-        ...suggestion,
-        noteIds: suggestion.noteIds.filter(id => validIds.has(id))
-      }))
-      .filter(suggestion => suggestion.noteIds.length >= 2)
-    );
-  }, [darkMatter, analysisNotes]);
+    setSuggestions(prev => {
+      const next = prev
+        .map(suggestion => ({
+          ...suggestion,
+          noteIds: suggestion.noteIds.filter(id => validIds.has(id))
+        }))
+        .filter(suggestion => suggestion.noteIds.length >= 2);
+      if (areSuggestionsEqual(prev, next)) return prev;
+      updateDarkMatterSuggestions(next);
+      if (next.length === 0 && prev.length > 0) dismissMessagesByKind('dark_matter_ready');
+      return next;
+    });
+  }, [darkMatter, analysisNotes, updateDarkMatterSuggestions, dismissMessagesByKind]);
 
   const handleDelete = (noteId: string) => {
     setMobileNoteActionsId(null);
@@ -300,6 +364,13 @@ const DarkMatter: React.FC = () => {
     });
   };
 
+  const createMessageId = () => {
+    if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+      return crypto.randomUUID();
+    }
+    return `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  };
+
   const getConfidenceLabel = (confidence: number) => {
     if (confidence >= 0.7) return t('dark_matter_ai_confidence_likely');
     if (confidence >= 0.5) return t('dark_matter_ai_confidence_possible');
@@ -317,13 +388,35 @@ const DarkMatter: React.FC = () => {
     setAnalysisNotes(allDarkMatter);
     setQuestions(allQuestions.sort((a, b) => b.updatedAt - a.updatedAt));
     void recordDarkMatterAnalysisRequested(allDarkMatter.length, allQuestions.length);
+    const jobId = createJob('dark_matter_analysis', { noteCount: allDarkMatter.length });
     const result = await analyzeDarkMatter(allDarkMatter, allQuestions, language, 5);
     setSuggestions(result.suggestions);
     setIsAnalyzing(false);
+    removeJob(jobId);
+    setDarkMatterAnalysis({
+      suggestions: result.suggestions,
+      noteIds: allDarkMatter.map((note) => note.id),
+      createdAt: Date.now()
+    });
+    dismissMessagesByKind('dark_matter_ready');
+    if (result.suggestions.length > 0) {
+      addMessage({
+        id: createMessageId(),
+        kind: 'dark_matter_ready',
+        title: t('assistant_dark_matter_ready_title'),
+        createdAt: Date.now(),
+        payload: { suggestionCount: result.suggestions.length }
+      });
+    }
   };
 
   const dismissSuggestion = (id: string) => {
-    setSuggestions(prev => prev.filter(s => s.id !== id));
+    setSuggestions(prev => {
+      const next = prev.filter(s => s.id !== id);
+      updateDarkMatterSuggestions(next);
+      if (next.length === 0) dismissMessagesByKind('dark_matter_ready');
+      return next;
+    });
     void recordDarkMatterSuggestionDismissed(id);
   };
 
@@ -361,7 +454,12 @@ const DarkMatter: React.FC = () => {
         suggestion.id
       );
       removeAnalysisNotes(suggestion.noteIds);
-      setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
+      setSuggestions(prev => {
+        const next = prev.filter(s => s.id !== suggestion.id);
+        updateDarkMatterSuggestions(next);
+        if (next.length === 0) dismissMessagesByKind('dark_matter_ready');
+        return next;
+      });
     } catch (error) {
       console.error('Failed to apply suggestion', error);
     } finally {
