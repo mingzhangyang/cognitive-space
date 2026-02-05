@@ -65,12 +65,18 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     };
   }, [language]);
 
+  const menuWasOpen = useRef(false);
+
   useEffect(() => {
     if (!menuOpen) {
-      menuButtonRef.current?.focus();
+      if (menuWasOpen.current) {
+        menuButtonRef.current?.focus();
+      }
+      menuWasOpen.current = false;
       return;
     }
 
+    menuWasOpen.current = true;
     setActiveIndex(0);
     requestAnimationFrame(() => {
       menuItemRefs.current[0]?.focus();
