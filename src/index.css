@@ -222,7 +222,7 @@ html.dark ::-webkit-scrollbar-thumb {
   }
 
   .btn-glass-icon-borderless {
-    @apply border-transparent hover:border-line dark:border-transparent dark:hover:border-line-dark;
+    @apply border-none hover:border-line dark:border-none dark:hover:border-line-dark;
   }
 
   .menu-popover {
