@@ -168,7 +168,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <button
               ref={menuButtonRef}
               onClick={() => setMenuOpen(prev => !prev)}
-              className="btn-icon btn-glass-icon"
+              className="btn-icon btn-glass-icon btn-glass-icon-borderless"
               aria-label={menuOpen ? t('menu_close') : t('menu_open')}
               title={menuOpen ? t('menu_close') : t('menu_open')}
               aria-haspopup="menu"

@@ -221,6 +221,10 @@ html.dark ::-webkit-scrollbar-thumb {
     @apply h-11 w-11 sm:h-10 sm:w-10 text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 backdrop-blur-sm;
   }
 
+  .btn-glass-icon-borderless {
+    @apply border-transparent hover:border-line dark:border-transparent dark:hover:border-line-dark;
+  }
+
   .menu-popover {
     @apply absolute right-0 mt-3 w-64 rounded-2xl border border-line dark:border-line-dark bg-surface/95 dark:bg-surface-dark/90 backdrop-blur-sm p-2 z-30;
     box-shadow: var(--shadow-elev-2);
