@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { DarkMatterSuggestion, NoteType } from '../types';
 
 const STORAGE_KEY = 'cs_assistant_inbox_v1';
+const STALE_JOB_MS = 20 * 60 * 1000;
 
 export type AssistantJobKind = 'note_analysis' | 'dark_matter_analysis';
 
@@ -122,11 +123,26 @@ export const AssistantInboxProvider: React.FC<{ children: React.ReactNode }> = (
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      const persistedState: AssistantInboxState = {
+        jobs: [],
+        messages: state.messages,
+        darkMatterAnalysis: state.darkMatterAnalysis
+      };
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(persistedState));
     } catch {
       // Ignore persistence errors (e.g., storage disabled)
     }
   }, [state]);
+
+  useEffect(() => {
+    setState((prev) => {
+      if (prev.jobs.length === 0) return prev;
+      const cutoff = Date.now() - STALE_JOB_MS;
+      const active = prev.jobs.filter((job) => job.updatedAt >= cutoff);
+      if (active.length === prev.jobs.length) return prev;
+      return { ...prev, jobs: active };
+    });
+  }, []);
 
   const createJob = useCallback((kind: AssistantJobKind, meta?: AssistantJob['meta']) => {
     const id = createInboxId();

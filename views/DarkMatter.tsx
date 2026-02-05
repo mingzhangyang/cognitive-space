@@ -103,17 +103,25 @@ const QuestionSelector: React.FC<{
   );
 };
 
+const normalizeSuggestionForCompare = (suggestion: DarkMatterSuggestion) => ({
+  ...suggestion,
+  existingQuestionId: suggestion.existingQuestionId ?? null,
+  noteIds: [...suggestion.noteIds].sort()
+});
+
 const areSuggestionsEqual = (left: DarkMatterSuggestion[], right: DarkMatterSuggestion[]) => {
   if (left === right) return true;
   if (left.length !== right.length) return false;
-  for (let i = 0; i < left.length; i += 1) {
-    const a = left[i];
-    const b = right[i];
+  const normalizedLeft = left.map(normalizeSuggestionForCompare);
+  const normalizedRight = right.map(normalizeSuggestionForCompare);
+  for (let i = 0; i < normalizedLeft.length; i += 1) {
+    const a = normalizedLeft[i];
+    const b = normalizedRight[i];
     if (
       a.id !== b.id
       || a.kind !== b.kind
       || a.title !== b.title
-      || (a.existingQuestionId ?? null) !== (b.existingQuestionId ?? null)
+      || a.existingQuestionId !== b.existingQuestionId
       || a.confidence !== b.confidence
       || a.reasoning !== b.reasoning
       || a.noteIds.length !== b.noteIds.length
