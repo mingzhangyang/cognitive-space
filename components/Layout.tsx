@@ -163,7 +163,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             onClick={() => {
               setIsInboxOpen(true);
             }}
-            className="btn-icon btn-glass-icon relative"
+            className="btn-icon btn-glass-icon btn-glass-icon-borderless relative"
             aria-label={t('assistant_inbox_title')}
             title={t('assistant_inbox_title')}
           >
