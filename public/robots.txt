@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://cognitive-space.pages.dev/sitemap.xml

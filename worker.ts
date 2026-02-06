@@ -149,7 +149,16 @@ export default {
     }
 
     if (env.ASSETS) {
-      return env.ASSETS.fetch(request);
+      const assetResponse = await env.ASSETS.fetch(request);
+      if (assetResponse.status !== 404) return assetResponse;
+
+      const acceptsHtml = request.headers.get('Accept')?.includes('text/html');
+      if (request.method === 'GET' && acceptsHtml) {
+        const indexUrl = new URL('/index.html', url);
+        return env.ASSETS.fetch(new Request(indexUrl.toString(), request));
+      }
+
+      return assetResponse;
     }
 
     return new Response('Not Found', { status: 404 });

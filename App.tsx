@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './views/Home';
 import Write from './views/Write';
@@ -10,6 +10,7 @@ import { AppProvider } from './contexts/AppContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { AssistantInboxProvider } from './contexts/AssistantInboxContext';
 import NotificationToaster from './components/NotificationToaster';
+import SeoManager from './components/SeoManager';
 
 const App: React.FC = () => {
   return (
@@ -17,6 +18,7 @@ const App: React.FC = () => {
       <NotificationProvider>
         <AssistantInboxProvider>
           <Router>
+            <SeoManager />
             <NotificationToaster />
             <Layout>
               <Routes>
