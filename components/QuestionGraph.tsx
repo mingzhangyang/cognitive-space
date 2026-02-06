@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Note, NoteType } from '../types';
 import { useAppContext } from '../contexts/AppContext';
+import { CrosshairIcon, MinusIcon, PlusIcon } from './Icons';
 
 interface QuestionGraphProps {
   question: Note;
@@ -33,8 +34,22 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
   const [view, setView] = useState({ x: 0, y: 0, scale: 1 });
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
-  const isPanningRef = useRef(false);
-  const lastPointerRef = useRef({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const pointerStateRef = useRef({
+    isDown: false,
+    startX: 0,
+    startY: 0,
+    viewX: 0,
+    viewY: 0,
+    dragged: false,
+    startedOnNode: false
+  });
+  const pressedNodeIdRef = useRef<string | null>(null);
+
+  const idPrefix = useMemo(() => {
+    const sanitized = String(question.id ?? '').replace(/[^a-zA-Z0-9]/g, '');
+    return `qg-${sanitized.slice(0, 8) || 'graph'}`;
+  }, [question.id]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -56,8 +71,10 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
         claim: '#60a5fa',
         evidence: '#34d399',
         trigger: '#a78bfa',
-        other: '#6b7280',
-        line: '#374151'
+        other: '#94a3b8',
+        line: '#334155',
+        lineSoft: 'rgba(148, 163, 184, 0.25)',
+        lineStrong: '#64748b'
       };
     }
     return {
@@ -66,19 +83,21 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
       evidence: '#059669',
       trigger: '#7c3aed',
       other: '#9ca3af',
-      line: '#e5e7eb'
+      line: '#e5e7eb',
+      lineSoft: 'rgba(148, 163, 184, 0.2)',
+      lineStrong: '#cbd5e1'
     };
   }, [theme]);
 
-  const nodes = useMemo<GraphNode[]>(() => {
-    if (!size.width || !size.height) return [];
+  const layout = useMemo(() => {
+    if (!size.width || !size.height) return null;
 
     const centerX = size.width / 2;
     const centerY = size.height / 2;
     const minDim = Math.min(size.width, size.height);
     const baseRadius = Math.max(90, minDim * 0.22);
     const ringGap = Math.max(55, minDim * 0.12);
-    const maxRadius = minDim / 2 - 24;
+    const maxRadius = minDim / 2 - 28;
 
     const claimNotes = notes.filter((note) => note.type === NoteType.CLAIM);
     const evidenceNotes = notes.filter((note) => note.type === NoteType.EVIDENCE);
@@ -88,18 +107,45 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
         ![NoteType.CLAIM, NoteType.EVIDENCE, NoteType.TRIGGER].includes(note.type)
     );
 
-    const rings = [
-      { list: claimNotes, radius: baseRadius, color: palette.claim, size: 11 },
-      { list: evidenceNotes, radius: baseRadius + ringGap, color: palette.evidence, size: 9 },
-      { list: triggerNotes, radius: baseRadius + ringGap * 2, color: palette.trigger, size: 8 },
-      { list: otherNotes, radius: baseRadius + ringGap * 3, color: palette.other, size: 7 }
+    const ringConfigs = [
+      {
+        id: NoteType.CLAIM,
+        label: t('type_claim'),
+        list: claimNotes,
+        radius: Math.min(baseRadius, maxRadius),
+        color: palette.claim,
+        size: 12
+      },
+      {
+        id: NoteType.EVIDENCE,
+        label: t('type_evidence'),
+        list: evidenceNotes,
+        radius: Math.min(baseRadius + ringGap, maxRadius),
+        color: palette.evidence,
+        size: 10
+      },
+      {
+        id: NoteType.TRIGGER,
+        label: t('type_trigger'),
+        list: triggerNotes,
+        radius: Math.min(baseRadius + ringGap * 2, maxRadius),
+        color: palette.trigger,
+        size: 9
+      },
+      {
+        id: NoteType.UNCATEGORIZED,
+        label: t('type_uncategorized'),
+        list: otherNotes,
+        radius: Math.min(baseRadius + ringGap * 3, maxRadius),
+        color: palette.other,
+        size: 8
+      }
     ];
 
     const ringNodes: GraphNode[] = [];
-    rings.forEach((ring, ringIndex) => {
+    ringConfigs.forEach((ring, ringIndex) => {
       const count = ring.list.length;
       if (!count) return;
-      const radius = Math.min(ring.radius, maxRadius);
       const angleStep = (Math.PI * 2) / count;
       const startAngle = (Math.PI / 6) * ringIndex;
       ring.list.forEach((note, index) => {
@@ -107,8 +153,8 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
         ringNodes.push({
           id: note.id,
           note,
-          x: centerX + Math.cos(angle) * radius,
-          y: centerY + Math.sin(angle) * radius,
+          x: centerX + Math.cos(angle) * ring.radius,
+          y: centerY + Math.sin(angle) * ring.radius,
           radius: ring.size,
           color: ring.color,
           stroke: palette.line
@@ -121,43 +167,77 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
       note: question,
       x: centerX,
       y: centerY,
-      radius: 16,
+      radius: 18,
       color: palette.question,
       stroke: palette.line
     };
 
-    return [questionNode, ...ringNodes];
-  }, [notes, palette, question, size.height, size.width]);
+    return {
+      centerX,
+      centerY,
+      minDim,
+      baseRadius,
+      ringGap,
+      maxRadius,
+      nodes: [questionNode, ...ringNodes],
+      rings: ringConfigs
+    };
+  }, [notes, palette, question, size.height, size.width, t]);
 
   const handlePointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
-    const target = event.target as Element;
-    if (target.closest('[data-node]')) return;
-    isPanningRef.current = true;
-    lastPointerRef.current = { x: event.clientX, y: event.clientY };
-    event.currentTarget.setPointerCapture(event.pointerId);
+    const target = event.target as Element | null;
+    const startedOnNode = Boolean(target?.closest('[data-node]'));
+    pointerStateRef.current = {
+      isDown: true,
+      startX: event.clientX,
+      startY: event.clientY,
+      viewX: view.x,
+      viewY: view.y,
+      dragged: false,
+      startedOnNode
+    };
+    if (!startedOnNode) {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
   };
 
   const handlePointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
-    if (!isPanningRef.current) return;
-    const dx = event.clientX - lastPointerRef.current.x;
-    const dy = event.clientY - lastPointerRef.current.y;
-    lastPointerRef.current = { x: event.clientX, y: event.clientY };
-    setView((prev) => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
+    if (!pointerStateRef.current.isDown) return;
+    const dx = event.clientX - pointerStateRef.current.startX;
+    const dy = event.clientY - pointerStateRef.current.startY;
+    if (!pointerStateRef.current.dragged && Math.hypot(dx, dy) > 6) {
+      pointerStateRef.current.dragged = true;
+      pressedNodeIdRef.current = null;
+      setIsDragging(true);
+      if (pointerStateRef.current.startedOnNode) {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }
+    }
+    if (pointerStateRef.current.dragged) {
+      setView((prev) => ({
+        ...prev,
+        x: pointerStateRef.current.viewX + dx,
+        y: pointerStateRef.current.viewY + dy
+      }));
+    }
   };
 
   const handlePointerUp = (event: React.PointerEvent<SVGSVGElement>) => {
-    if (!isPanningRef.current) return;
-    isPanningRef.current = false;
+    if (!pointerStateRef.current.isDown) return;
+    pointerStateRef.current.isDown = false;
+    setIsDragging(false);
     event.currentTarget.releasePointerCapture(event.pointerId);
-  };
-
-  const handleWheel = (event: React.WheelEvent<SVGSVGElement>) => {
-    event.preventDefault();
-    const delta = event.deltaY * -0.0015;
-    setView((prev) => ({
-      ...prev,
-      scale: clamp(prev.scale + delta, 0.6, 2.4)
-    }));
+    const pressedId = pressedNodeIdRef.current;
+    if (pressedId && !pointerStateRef.current.dragged) {
+      const pressedNode = layout.nodes.find((node) => node.id === pressedId);
+      if (pressedNode && pressedNode.id !== question.id) {
+        onSelectNote?.(pressedNode.note);
+      }
+    }
+    pressedNodeIdRef.current = null;
+    window.setTimeout(() => {
+      pointerStateRef.current.dragged = false;
+    }, 0);
   };
 
   const handleNodeHover = (event: React.MouseEvent, node: GraphNode) => {
@@ -169,9 +249,21 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
 
   const clearHover = () => setHoveredNode(null);
 
-  if (!size.width || !size.height) {
+  if (!size.width || !size.height || !layout) {
     return <div ref={containerRef} className="h-80 sm:h-[420px]" />;
   }
+
+  const focusId = hoveredNode?.id ?? selectedNoteId ?? null;
+  const showLegend = notes.length > 0;
+  const legendItems = [
+    { id: 'question', label: t('type_question'), color: palette.question },
+    ...layout.rings
+      .filter((ring) => ring.list.length > 0)
+      .map((ring) => ({ id: ring.id, label: ring.label, color: ring.color }))
+  ];
+  const zoomIn = () => setView((prev) => ({ ...prev, scale: clamp(prev.scale + 0.15, 0.6, 2.4) }));
+  const zoomOut = () => setView((prev) => ({ ...prev, scale: clamp(prev.scale - 0.15, 0.6, 2.4) }));
+  const resetView = () => setView({ x: 0, y: 0, scale: 1 });
 
   return (
     <div
@@ -185,25 +277,71 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
-        onWheel={handleWheel}
-        className="touch-none"
+        className="touch-none cursor-move"
+        role="img"
+        aria-label={t('question_constellation')}
       >
-        <g transform={`translate(${view.x}, ${view.y}) scale(${view.scale})`}>
-          {nodes.length > 1 && nodes.slice(1).map((node) => (
-            <line
-              key={`line-${node.id}`}
-              x1={nodes[0]?.x ?? 0}
-              y1={nodes[0]?.y ?? 0}
-              x2={node.x}
-              y2={node.y}
-              stroke={palette.line}
-              strokeWidth={1}
-            />
-          ))}
+        <defs>
+          <filter
+            id={`${idPrefix}-glow`}
+            x="-60%"
+            y="-60%"
+            width="220%"
+            height="220%"
+            filterUnits="objectBoundingBox"
+          >
+            <feGaussianBlur stdDeviation="6" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+        <g transform={`translate(${view.x + layout.centerX * (1 - view.scale)}, ${view.y + layout.centerY * (1 - view.scale)}) scale(${view.scale})`}>
+          {layout.rings
+            .filter((ring) => ring.list.length > 0)
+            .map((ring) => (
+              <circle
+                key={`orbit-${ring.id}`}
+                cx={layout.centerX}
+                cy={layout.centerY}
+                r={ring.radius}
+                fill="none"
+                stroke={palette.lineSoft}
+                strokeWidth={1}
+                strokeDasharray="4 6"
+                opacity={0.65}
+                pointerEvents="none"
+              />
+            ))}
 
-          {nodes.map((node) => {
+          {layout.nodes.length > 1 &&
+            layout.nodes.slice(1).map((node) => {
+              const isFocused = focusId === node.id;
+              const isDimmed = focusId && focusId !== node.id;
+              return (
+                <line
+                  key={`line-${node.id}`}
+                  x1={layout.nodes[0]?.x ?? 0}
+                  y1={layout.nodes[0]?.y ?? 0}
+                  x2={node.x}
+                  y2={node.y}
+                  stroke={isFocused ? node.color : palette.line}
+                  strokeWidth={isFocused ? 1.6 : 1}
+                  strokeOpacity={isDimmed ? 0.2 : isFocused ? 0.75 : 0.45}
+                  strokeLinecap="round"
+                  pointerEvents="none"
+                />
+              );
+            })}
+
+          {layout.nodes.map((node) => {
             const isSelected = selectedNoteId === node.id;
+            const isHovered = hoveredNode?.id === node.id;
             const isQuestionNode = node.id === question.id;
+            const isFocused = focusId === node.id;
+            const isDimmed = focusId && !isFocused && !isQuestionNode;
+            const displayRadius = node.radius * (isQuestionNode ? 1.08 : isFocused ? 1.25 : 1);
             return (
               <g
                 key={node.id}
@@ -211,31 +349,52 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
                 onMouseEnter={(event) => handleNodeHover(event, node)}
                 onMouseMove={(event) => handleNodeHover(event, node)}
                 onMouseLeave={clearHover}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  if (!isQuestionNode) onSelectNote?.(node.note);
+                onPointerDown={() => {
+                  pressedNodeIdRef.current = node.id;
                 }}
                 className={isQuestionNode ? 'cursor-default' : 'cursor-pointer'}
               >
+                {(isSelected || isHovered || isQuestionNode) && (
+                  <circle
+                    cx={node.x}
+                    cy={node.y}
+                    r={displayRadius + (isQuestionNode ? 12 : 8)}
+                    fill={node.color}
+                    opacity={isQuestionNode ? 0.12 : 0.14}
+                    filter={isQuestionNode ? `url(#${idPrefix}-glow)` : undefined}
+                  />
+                )}
                 {isSelected && (
                   <circle
                     cx={node.x}
                     cy={node.y}
-                    r={node.radius + 6}
+                    r={displayRadius + 6}
                     fill="none"
-                    stroke={palette.line}
+                    stroke={palette.lineStrong}
                     strokeWidth={2}
-                    opacity={0.7}
+                    strokeDasharray="3 4"
+                    opacity={0.8}
                   />
                 )}
                 <circle
                   cx={node.x}
                   cy={node.y}
-                  r={node.radius}
+                  r={displayRadius}
                   fill={node.color}
                   stroke={node.stroke}
-                  strokeWidth={1}
+                  strokeWidth={isQuestionNode ? 1.5 : 1}
+                  opacity={isDimmed ? 0.45 : 1}
                 />
+                {isQuestionNode && (
+                  <circle
+                    cx={node.x}
+                    cy={node.y}
+                    r={displayRadius - 6}
+                    fill="rgba(255, 255, 255, 0.4)"
+                    opacity={theme === 'dark' ? 0.15 : 0.35}
+                    pointerEvents="none"
+                  />
+                )}
               </g>
             );
           })}
@@ -243,8 +402,70 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
       </svg>
 
       {notes.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center text-caption">
-          {t('no_thoughts_here')}
+        <div className="absolute inset-x-0 bottom-3 flex justify-center text-caption">
+          <span className="px-3 py-1 rounded-full border border-line/60 dark:border-line-dark/60 bg-surface/80 dark:bg-surface-dark/80 shadow-sm backdrop-blur-sm">
+            {t('no_thoughts_here')}
+          </span>
+        </div>
+      )}
+
+      <div className="absolute top-3 right-3 z-20 pointer-events-auto">
+        <div className="flex items-center gap-0.5 rounded-full border border-line/60 dark:border-line-dark/60 bg-surface/90 dark:bg-surface-dark/85 px-1 py-1 shadow-[var(--shadow-elev-1)] dark:shadow-[var(--shadow-elev-1-dark)] backdrop-blur-sm">
+          <div className="hidden sm:flex items-center gap-1 pl-2.5 pr-1.5">
+            <span className="text-[9px] uppercase tracking-[0.18em] font-medium text-muted-400 dark:text-muted-500 select-none">
+              {t('zoom_label')}
+            </span>
+            <span className="min-w-[2.5rem] text-center text-[11px] font-semibold tabular-nums text-subtle dark:text-subtle-dark">
+              {Math.round(view.scale * 100)}%
+            </span>
+          </div>
+          <span className="hidden sm:block h-4 w-px bg-line/50 dark:bg-line-dark/50 mx-0.5" />
+          <button
+            type="button"
+            onClick={zoomIn}
+            className="h-7 w-7 grid place-items-center rounded-full cursor-pointer text-muted-500 dark:text-muted-400 hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark active:scale-95 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 dark:focus-visible:ring-accent-dark/30"
+            aria-label={t('zoom_in')}
+          >
+            <PlusIcon className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={zoomOut}
+            className="h-7 w-7 grid place-items-center rounded-full cursor-pointer text-muted-500 dark:text-muted-400 hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark active:scale-95 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 dark:focus-visible:ring-accent-dark/30"
+            aria-label={t('zoom_out')}
+          >
+            <MinusIcon className="h-3.5 w-3.5" />
+          </button>
+          <span className="h-4 w-px bg-line/50 dark:bg-line-dark/50 mx-0.5" />
+          <button
+            type="button"
+            onClick={resetView}
+            className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-full cursor-pointer text-muted-500 dark:text-muted-400 hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark active:scale-95 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 dark:focus-visible:ring-accent-dark/30"
+            aria-label={t('center_view')}
+          >
+            <CrosshairIcon className="h-3.5 w-3.5" />
+            <span className="text-[11px] font-medium">{t('center_view')}</span>
+          </button>
+        </div>
+      </div>
+
+      {showLegend && (
+        <div className="absolute left-3 bottom-3 flex flex-wrap gap-2 text-micro text-muted-500 dark:text-muted-400 pointer-events-none">
+          {legendItems.map((item) => (
+            <div
+              key={`legend-${item.id}`}
+              className="flex items-center gap-1.5 rounded-full border border-line/60 dark:border-line-dark/60 bg-surface/70 dark:bg-surface-dark/70 px-2 py-1 shadow-sm backdrop-blur-sm"
+            >
+              <span
+                className="inline-flex h-2 w-2 rounded-full"
+                style={{
+                  backgroundColor: item.color,
+                  boxShadow: `0 0 8px ${item.color}55`
+                }}
+              />
+              <span>{item.label}</span>
+            </div>
+          ))}
         </div>
       )}
 

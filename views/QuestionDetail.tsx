@@ -738,8 +738,8 @@ const QuestionDetail: React.FC = () => {
                 selectedNoteId={selectedGraphNote?.id ?? null}
                 onSelectNote={(note) => setSelectedGraphNote(note)}
               />
-              <div className="surface-panel p-4">
-                {selectedGraphNote ? (
+              {selectedGraphNote && (
+                <div className="surface-panel p-4">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <TypeBadge type={selectedGraphNote.type} subType={selectedGraphNote.subType} />
@@ -784,12 +784,8 @@ const QuestionDetail: React.FC = () => {
                       </button>
                     </div>
                   </div>
-                ) : (
-                  <p className="text-caption">
-                    Click a node to preview its details.
-                  </p>
-                )}
-              </div>
+                </div>
+              )}
             </div>
             <QuestionStatsPanel stats={stats} relationDensity={relationDensity} />
           </div>
