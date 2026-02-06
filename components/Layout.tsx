@@ -146,10 +146,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     <div className="min-h-screen flex flex-col max-w-3xl mx-auto w-full px-5 sm:px-6 pt-6 sm:pt-9 pb-10 sm:pb-12 relative transition-colors duration-300">
       <header className="relative z-20 mb-8 sm:mb-10 flex flex-wrap items-center justify-between gap-3">
         <Link to="/" className="flex items-center gap-3 text-lg sm:text-xl font-serif font-bold tracking-tight text-ink dark:text-ink-dark hover:text-accent dark:hover:text-accent-dark transition-colors leading-tight cursor-pointer">
-          <picture className="h-16 w-16 shrink-0">
-            <source srcSet="/logo.webp" type="image/webp" />
-            <img src="/logo.png" alt={t('app_name')} className="h-16 w-16 object-contain" />
-          </picture>
           <span>{t('app_name')}</span>
         </Link>
         <div className="flex items-center gap-2">
