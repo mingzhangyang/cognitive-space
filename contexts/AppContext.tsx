@@ -13,6 +13,7 @@ interface AppContextProps {
 
 const translations = {
   en: {
+    app_name: "Cognitive Space",
     living_questions: "Living Questions",
     problems_mind: "Problems currently occupying your mind.",
     recall_label: "Recall a thread",
@@ -161,6 +162,7 @@ const translations = {
     dark_matter_confirm_link: "Link {count} fragments to \"{title}\"?"
   },
   zh: {
+    app_name: "认知空间",
     living_questions: "鲜活的问题",
     problems_mind: "此刻盘踞在你心头的问题。",
     recall_label: "回想一条线",
