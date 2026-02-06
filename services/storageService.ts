@@ -447,6 +447,15 @@ export const updateNoteMeta = async (
   );
 };
 
+export const demoteQuestion = async (questionId: string, targetType: NoteType): Promise<void> => {
+  if (targetType === NoteType.QUESTION) return;
+  const relatedNotes = await getRelatedNotes(questionId);
+  await updateNoteMeta(questionId, { type: targetType, parentId: null });
+  for (const note of relatedNotes) {
+    await updateNoteMeta(note.id, { parentId: null });
+  }
+};
+
 const logTelemetryEvent = async (event: TelemetryEvent): Promise<void> => {
   await withDb<void>(
     undefined,

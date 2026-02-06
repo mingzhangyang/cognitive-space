@@ -5,6 +5,7 @@ import {
   getNotes,
   getRelatedNotes,
   deleteNote,
+  demoteQuestion,
   updateNoteContent,
   getQuestionConstellationStats,
   QuestionConstellationStats,
@@ -12,10 +13,33 @@ import {
 } from '../services/storageService';
 import { Note, NoteType } from '../types';
 import { useAppContext } from '../contexts/AppContext';
-import { TrashIcon, EditIcon, CheckIcon, XIcon, EyeIcon, EyeOffIcon, LoadingSpinner, MoreIcon } from '../components/Icons';
+import { TrashIcon, EditIcon, CheckIcon, XIcon, EyeIcon, EyeOffIcon, LoadingSpinner, MoreIcon, ArrowDownIcon } from '../components/Icons';
 import TypeBadge from '../components/TypeBadge';
 import QuestionGraph from '../components/QuestionGraph';
 import QuestionStatsPanel from '../components/QuestionStatsPanel';
+
+const formatTemplate = (template: string, params: Record<string, string | number>) => {
+  return template.replace(/\{(\w+)\}/g, (match, key) => {
+    const value = params[key];
+    return value === undefined ? match : String(value);
+  });
+};
+
+const getTypeLabel = (type: NoteType, t: (key: string) => string) => {
+  switch (type) {
+    case NoteType.QUESTION:
+      return t('type_question');
+    case NoteType.CLAIM:
+      return t('type_claim');
+    case NoteType.EVIDENCE:
+      return t('type_evidence');
+    case NoteType.TRIGGER:
+      return t('type_trigger');
+    case NoteType.UNCATEGORIZED:
+    default:
+      return t('type_uncategorized');
+  }
+};
 
 const ConfirmDialog: React.FC<{
   isOpen: boolean;
@@ -48,6 +72,91 @@ const ConfirmDialog: React.FC<{
   );
 };
 
+const DowngradeDialog: React.FC<{
+  isOpen: boolean;
+  relatedCount: number;
+  selectedType: NoteType;
+  typeOptions: NoteType[];
+  isWorking: boolean;
+  onSelectType: (type: NoteType) => void;
+  onConfirm: () => void;
+  onCancel: () => void;
+  t: (key: string) => string;
+}> = ({
+  isOpen,
+  relatedCount,
+  selectedType,
+  typeOptions,
+  isWorking,
+  onSelectType,
+  onConfirm,
+  onCancel,
+  t
+}) => {
+  if (!isOpen) return null;
+
+  const typeLabel = getTypeLabel(selectedType, t);
+  const relatedLine = relatedCount > 0
+    ? formatTemplate(t('downgrade_question_related'), { count: relatedCount })
+    : t('downgrade_question_related_none');
+
+  return (
+    <div className="modal-backdrop" onClick={() => !isWorking && onCancel()}>
+      <div className="modal-card max-w-md" onClick={e => e.stopPropagation()}>
+        <div className="space-y-2 mb-5">
+          <p className="text-ink dark:text-ink-dark text-lg font-medium">{t('downgrade_question_title')}</p>
+          <p className="text-body-sm-muted">
+            {formatTemplate(t('downgrade_question_body'), { type: typeLabel })}
+          </p>
+          <p className="text-body-sm-muted">{relatedLine}</p>
+        </div>
+
+        <div className="space-y-2 mb-6">
+          <p className="text-mini-up text-subtle dark:text-subtle-dark">{t('downgrade_question_label')}</p>
+          <div className="flex flex-wrap gap-2">
+            {typeOptions.map((type) => {
+              const isSelected = type === selectedType;
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => onSelectType(type)}
+                  aria-pressed={isSelected}
+                  className={`chip-outline ${isSelected ? 'bg-ink text-white border-transparent dark:bg-muted-600 dark:text-white' : ''}`}
+                >
+                  {getTypeLabel(type, t)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onCancel}
+            disabled={isWorking}
+            className={`px-4 py-2 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors ${
+              isWorking ? 'opacity-60 cursor-not-allowed' : ''
+            }`}
+          >
+            {t('cancel')}
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isWorking}
+            className={`px-4 py-2 text-sm rounded-md bg-ink text-white dark:bg-muted-600 hover:opacity-90 transition-opacity inline-flex items-center gap-2 ${
+              isWorking ? 'opacity-60 cursor-not-allowed' : ''
+            }`}
+          >
+            {isWorking && <LoadingSpinner className="w-3.5 h-3.5 text-white" />}
+            {t('downgrade_question_action')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const QuestionDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -60,11 +169,15 @@ const QuestionDetail: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [isDowngrading, setIsDowngrading] = useState(false);
+  const [isDowngradeOpen, setIsDowngradeOpen] = useState(false);
+  const [downgradeType, setDowngradeType] = useState<NoteType>(NoteType.UNCATEGORIZED);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; isQuestion: boolean } | null>(null);
   const [mobileNoteActionsId, setMobileNoteActionsId] = useState<string | null>(null);
   const [pendingNoteId, setPendingNoteId] = useState<string | null>(null);
   const location = useLocation();
   const { t } = useAppContext();
+  const downgradeOptions = [NoteType.UNCATEGORIZED, NoteType.TRIGGER, NoteType.CLAIM, NoteType.EVIDENCE];
 
   useEffect(() => {
     if (!mobileNoteActionsId) return;
@@ -183,6 +296,23 @@ const QuestionDetail: React.FC = () => {
   const handleDelete = (noteId: string, isQuestion: boolean) => {
     setMobileNoteActionsId(null);
     setDeleteTarget({ id: noteId, isQuestion });
+  };
+
+  const openDowngrade = () => {
+    setDowngradeType(NoteType.UNCATEGORIZED);
+    setIsDowngradeOpen(true);
+  };
+
+  const handleConfirmDowngrade = async () => {
+    if (!question || isDowngrading) return;
+    setIsDowngrading(true);
+    try {
+      await demoteQuestion(question.id, downgradeType);
+      setIsDowngradeOpen(false);
+      navigate('/dark-matter');
+    } finally {
+      setIsDowngrading(false);
+    }
   };
 
   const confirmDelete = async () => {
@@ -363,6 +493,17 @@ const QuestionDetail: React.FC = () => {
         onConfirm={confirmDelete}
         onCancel={() => setDeleteTarget(null)}
       />
+      <DowngradeDialog
+        isOpen={isDowngradeOpen}
+        relatedCount={relatedNotes.length}
+        selectedType={downgradeType}
+        typeOptions={downgradeOptions}
+        isWorking={isDowngrading}
+        onSelectType={setDowngradeType}
+        onConfirm={handleConfirmDowngrade}
+        onCancel={() => !isDowngrading && setIsDowngradeOpen(false)}
+        t={t}
+      />
 
       <div className="mb-10 sm:mb-12 section-divider pb-8">
         <div className="flex justify-between items-start">
@@ -379,6 +520,22 @@ const QuestionDetail: React.FC = () => {
               </span>
               <span className="hidden sm:inline">
                 {visualizationOpen ? t('hide_visualization') : t('visualize')}
+              </span>
+            </button>
+            <button
+              onClick={openDowngrade}
+              disabled={isSavingEdit || editingId === question.id || isDowngrading}
+              className={`h-10 w-10 sm:h-auto sm:w-auto sm:px-3 sm:py-2 muted-label border border-line dark:border-line-dark hover:text-ink dark:hover:text-ink-dark hover:border-line-muted dark:hover:border-muted-600 btn-icon ${
+                isSavingEdit || editingId === question.id || isDowngrading ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
+              aria-label={t('downgrade_question_action')}
+              title={t('downgrade_question_action')}
+            >
+              <span className="sm:hidden">
+                <ArrowDownIcon className="w-4 h-4" />
+              </span>
+              <span className="hidden sm:inline">
+                {t('downgrade_question_action')}
               </span>
             </button>
             {editingId !== question.id && (
