@@ -135,6 +135,8 @@ const areSuggestionsEqual = (left: DarkMatterSuggestion[], right: DarkMatterSugg
   return true;
 };
 
+const containsCjk = (text: string) => /[\u4e00-\u9fff]/.test(text);
+
 const DarkMatter: React.FC = () => {
   const [darkMatter, setDarkMatter] = useState<Note[]>([]);
   const [darkMatterCount, setDarkMatterCount] = useState(0);
@@ -372,6 +374,15 @@ const DarkMatter: React.FC = () => {
     });
   };
 
+  const getSuggestionReasoning = (reasoning: string | undefined, title: string) => {
+    const raw = typeof reasoning === 'string' ? reasoning.trim() : '';
+    if (!raw || (language === 'zh' && !containsCjk(raw))) {
+      if (language !== 'zh') return raw;
+      return formatTemplate(t('dark_matter_suggestion_reasoning_fallback'), { title });
+    }
+    return raw;
+  };
+
   const createMessageId = () => {
     if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
       return crypto.randomUUID();
@@ -596,62 +607,67 @@ const DarkMatter: React.FC = () => {
       {suggestions.length > 0 && (
         <div className="mb-6 space-y-3">
           <p className="text-caption-upper">{t('dark_matter_ai_suggestions')}</p>
-          {suggestions.map((suggestion) => (
-            <div key={suggestion.id} className="surface-card p-4 sm:p-5">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                <div>
-                  <p className="text-ink dark:text-ink-dark text-base font-medium">
-                    {suggestion.title}
-                  </p>
-                  <p className="text-body-sm-muted">
-                    {suggestion.kind === 'new_question'
-                      ? t('dark_matter_ai_kind_new')
-                      : t('dark_matter_ai_kind_existing')}
-                  </p>
-                </div>
-                <span className="text-mini-up text-muted-500 dark:text-muted-400">
-                  {getConfidenceLabel(suggestion.confidence)}
-                </span>
-              </div>
-              <div className="mt-3 space-y-2">
-                {suggestion.noteIds.map((noteId) => {
-                  const note = noteById.get(noteId);
-                  if (!note) return null;
-                  return (
-                    <p key={note.id} className="text-body-sm text-ink dark:text-ink-dark line-clamp-2">
-                      “{note.content}”
+          {suggestions.map((suggestion) => {
+            const reasoning = getSuggestionReasoning(suggestion.reasoning, suggestion.title);
+            return (
+              <div key={suggestion.id} className="surface-card p-4 sm:p-5">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <div>
+                    <p className="text-ink dark:text-ink-dark text-base font-medium">
+                      {suggestion.title}
                     </p>
-                  );
-                })}
-              </div>
-              {suggestion.reasoning && (
-                <p className="mt-3 text-body-sm-muted">{suggestion.reasoning}</p>
-              )}
-              <div className="mt-4 flex flex-wrap gap-2">
-                {suggestion.kind === 'new_question' ? (
-                  <button
-                    onClick={() => requestApplySuggestion('create', suggestion)}
-                    className="chip-outline hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
-                  >
-                    {t('dark_matter_ai_action_create')}
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => requestApplySuggestion('link', suggestion)}
-                    className="chip-outline hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
-                  >
-                    {t('dark_matter_ai_action_link')}
-                  </button>
+                    <p className="text-body-sm-muted">
+                      {suggestion.kind === 'new_question'
+                        ? t('dark_matter_ai_kind_new')
+                        : t('dark_matter_ai_kind_existing')}
+                    </p>
+                  </div>
+                  <span className="text-mini-up text-muted-500 dark:text-muted-400">
+                    {getConfidenceLabel(suggestion.confidence)}
+                  </span>
+                </div>
+                <div className="mt-3 space-y-2">
+                  {suggestion.noteIds.map((noteId) => {
+                    const note = noteById.get(noteId);
+                    if (!note) return null;
+                    return (
+                      <p key={note.id} className="text-body-sm text-ink dark:text-ink-dark line-clamp-2">
+                        “{note.content}”
+                      </p>
+                    );
+                  })}
+                </div>
+                {reasoning && (
+                  <p className="mt-3 text-body-sm-muted">
+                    {reasoning}
+                  </p>
                 )}
-                <button
-                  onClick={() => dismissSuggestion(suggestion.id)}
-                  className="chip-outline hover:border-line-muted dark:hover:border-muted-600 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                >
-                  {t('dark_matter_ai_action_dismiss')}
-                </button>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {suggestion.kind === 'new_question' ? (
+                    <button
+                      onClick={() => requestApplySuggestion('create', suggestion)}
+                      className="chip-outline hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                    >
+                      {t('dark_matter_ai_action_create')}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => requestApplySuggestion('link', suggestion)}
+                      className="chip-outline hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                    >
+                      {t('dark_matter_ai_action_link')}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => dismissSuggestion(suggestion.id)}
+                    className="chip-outline hover:border-line-muted dark:hover:border-muted-600 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                  >
+                    {t('dark_matter_ai_action_dismiss')}
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

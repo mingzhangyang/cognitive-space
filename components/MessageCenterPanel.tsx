@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAssistantInbox, AssistantMessage, NoteSuggestionPayload } from '../contexts/AssistantInboxContext';
 import { useAppContext } from '../contexts/AppContext';
 import { LoadingSpinner, XIcon } from './Icons';
-import { updateNoteMeta } from '../services/storageService';
+import { getNoteById, updateNoteMeta } from '../services/storageService';
 import { NoteType } from '../types';
 
 const truncate = (text: string, max = 80) => (text.length > max ? `${text.slice(0, max)}...` : text);
@@ -52,9 +52,26 @@ const buildNoteSuggestionDetails = (payload: NoteSuggestionPayload, t: (key: str
   return details;
 };
 
+const containsCjk = (text: string) => /[\u4e00-\u9fff]/.test(text);
+
+const getSuggestionReasoning = (
+  payload: NoteSuggestionPayload,
+  t: (key: string) => string,
+  language: 'en' | 'zh'
+) => {
+  const raw = typeof payload.reasoning === 'string' ? payload.reasoning.trim() : '';
+  if (!raw || (language === 'zh' && !containsCjk(raw))) {
+    if (language !== 'zh') return raw;
+    return formatTemplate(t('assistant_suggestion_reasoning_fallback'), {
+      type: getTypeLabel(payload.classification, t)
+    });
+  }
+  return raw;
+};
+
 const MessageCenterPanel: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
-  const { t } = useAppContext();
+  const { t, language } = useAppContext();
   const translate = t as (key: string) => string;
   const { jobs, messages, dismissMessage } = useAssistantInbox();
 
@@ -70,6 +87,16 @@ const MessageCenterPanel: React.FC<{ isOpen: boolean; onClose: () => void }> = (
   if (!isOpen) return null;
 
   const runningJobs = jobs.filter((job) => job.status === 'running');
+  const clearAnalysisPending = async (noteId: string) => {
+    try {
+      const note = await getNoteById(noteId);
+      if (note?.analysisPending) {
+        await updateNoteMeta(noteId, { analysisPending: false });
+      }
+    } catch (error) {
+      console.error('Failed to clear analysis pending state', error);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-40">
@@ -119,6 +146,7 @@ const MessageCenterPanel: React.FC<{ isOpen: boolean; onClose: () => void }> = (
               {messages.map((message) => {
                 if (isNoteSuggestion(message)) {
                   const details = buildNoteSuggestionDetails(message.payload, translate);
+                  const reasoning = getSuggestionReasoning(message.payload, translate, language);
                   return (
                     <div key={message.id} className="surface-card p-4 space-y-3">
                       <div>
@@ -135,15 +163,18 @@ const MessageCenterPanel: React.FC<{ isOpen: boolean; onClose: () => void }> = (
                           </p>
                         ))}
                       </div>
-                      {message.payload.reasoning && (
-                        <p className="text-body-sm-muted">{message.payload.reasoning}</p>
+                      {reasoning && (
+                        <p className="text-body-sm-muted">{reasoning}</p>
                       )}
                       <div className="flex flex-wrap gap-2 pt-2">
                         <button
                           type="button"
                           onClick={async () => {
                             try {
-                              await updateNoteMeta(message.payload.noteId, message.payload.updates);
+                              await updateNoteMeta(message.payload.noteId, {
+                                ...message.payload.updates,
+                                analysisPending: false
+                              });
                               dismissMessage(message.id);
                             } catch (error) {
                               console.error('Failed to apply suggestion', error);
@@ -155,7 +186,10 @@ const MessageCenterPanel: React.FC<{ isOpen: boolean; onClose: () => void }> = (
                         </button>
                         <button
                           type="button"
-                          onClick={() => dismissMessage(message.id)}
+                          onClick={async () => {
+                            await clearAnalysisPending(message.payload.noteId);
+                            dismissMessage(message.id);
+                          }}
                           className="px-3 py-1.5 rounded-full border border-line-muted dark:border-muted-600 hover:border-muted-400 dark:hover:border-muted-500 transition-colors text-xs text-subtle dark:text-subtle-dark"
                         >
                           {translate('assistant_suggestion_dismiss')}
