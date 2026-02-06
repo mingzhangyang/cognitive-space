@@ -10,7 +10,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const isHome = location.pathname === '/';
   const { t, language, setLanguage, theme, toggleTheme } = useAppContext();
-  const { hasMessages, messageCount } = useAssistantInbox();
+  const { messageCount, jobs, messages } = useAssistantInbox();
   const year = new Date().getFullYear();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isInboxOpen, setIsInboxOpen] = useState(false);
@@ -50,11 +50,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   }, [menuOpen]);
 
   useEffect(() => {
-    if (hasMessages) return;
-    if (isInboxOpen) setIsInboxOpen(false);
-  }, [hasMessages, isInboxOpen]);
-
-  useEffect(() => {
     let isActive = true;
     void getSessionFooterLine(language).then((line) => {
       if (!isActive) return;
@@ -66,6 +61,13 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   }, [language]);
 
   const menuWasOpen = useRef(false);
+  const hasRunningJobs = jobs.length > 0;
+  const hasSuggestions = messages.length > 0;
+  const inboxDotClassName = hasRunningJobs
+    ? 'bg-amber-400 dark:bg-amber-300'
+    : hasSuggestions
+      ? 'bg-accent dark:bg-accent-dark'
+      : 'bg-line dark:bg-line-dark';
 
   useEffect(() => {
     if (!menuOpen) {
@@ -157,19 +159,22 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <HomeIcon className="w-4 h-4" />
             </Link>
           )}
-          {hasMessages && (
-            <button
-              onClick={() => setIsInboxOpen(true)}
-              className="btn-icon btn-glass-icon relative"
-              aria-label={t('assistant_inbox_title')}
-              title={t('assistant_inbox_title')}
-            >
-              <InboxIcon className="w-4 h-4" />
-              {messageCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-accent shadow-sm" aria-hidden="true" />
-              )}
-            </button>
-          )}
+          <button
+            onClick={() => {
+              setIsInboxOpen(true);
+            }}
+            className="btn-icon btn-glass-icon relative"
+            aria-label={t('assistant_inbox_title')}
+            title={t('assistant_inbox_title')}
+          >
+            <InboxIcon className="w-4 h-4" />
+            {messageCount > 0 && (
+              <span
+                className={`absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full shadow-sm ${inboxDotClassName}`}
+                aria-hidden="true"
+              />
+            )}
+          </button>
           <div className="relative" ref={menuRef}>
             <button
               ref={menuButtonRef}
@@ -327,7 +332,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
       <MessageCenterPanel
         isOpen={isInboxOpen}
-        onClose={() => setIsInboxOpen(false)}
+        onClose={() => {
+          setIsInboxOpen(false);
+        }}
       />
     </div>
   );
