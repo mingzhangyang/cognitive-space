@@ -447,12 +447,22 @@ export const updateNoteMeta = async (
   );
 };
 
-export const demoteQuestion = async (questionId: string, targetType: NoteType): Promise<void> => {
+export const demoteQuestion = async (
+  questionId: string,
+  targetType: NoteType,
+  options?: { relinkQuestionId?: string | null; includeSelf?: boolean }
+): Promise<void> => {
   if (targetType === NoteType.QUESTION) return;
   const relatedNotes = await getRelatedNotes(questionId);
-  await updateNoteMeta(questionId, { type: targetType, parentId: null });
+  const relinkQuestionId = options?.relinkQuestionId ?? null;
+  const includeSelf = options?.includeSelf ?? false;
+  const nextParentId = relinkQuestionId ?? null;
+  await updateNoteMeta(questionId, {
+    type: targetType,
+    parentId: includeSelf ? nextParentId : null
+  });
   for (const note of relatedNotes) {
-    await updateNoteMeta(note.id, { parentId: null });
+    await updateNoteMeta(note.id, { parentId: nextParentId });
   }
 };
 

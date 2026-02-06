@@ -4,6 +4,7 @@ import {
   getNoteById,
   getNotes,
   getRelatedNotes,
+  getQuestions,
   deleteNote,
   demoteQuestion,
   updateNoteContent,
@@ -77,8 +78,13 @@ const DowngradeDialog: React.FC<{
   relatedCount: number;
   selectedType: NoteType;
   typeOptions: NoteType[];
+  destination: 'release' | 'relink';
+  relinkTargets: Array<{ id: string; title: string }>;
+  relinkQuestionId: string | null;
   isWorking: boolean;
   onSelectType: (type: NoteType) => void;
+  onDestinationChange: (destination: 'release' | 'relink') => void;
+  onSelectRelinkQuestion: (questionId: string) => void;
   onConfirm: () => void;
   onCancel: () => void;
   t: (key: string) => string;
@@ -87,8 +93,13 @@ const DowngradeDialog: React.FC<{
   relatedCount,
   selectedType,
   typeOptions,
+  destination,
+  relinkTargets,
+  relinkQuestionId,
   isWorking,
   onSelectType,
+  onDestinationChange,
+  onSelectRelinkQuestion,
   onConfirm,
   onCancel,
   t
@@ -96,9 +107,16 @@ const DowngradeDialog: React.FC<{
   if (!isOpen) return null;
 
   const typeLabel = getTypeLabel(selectedType, t);
-  const relatedLine = relatedCount > 0
-    ? formatTemplate(t('downgrade_question_related'), { count: relatedCount })
-    : t('downgrade_question_related_none');
+  const canRelink = relinkTargets.length > 0;
+  const relinkTarget = relinkTargets.find((target) => target.id === relinkQuestionId) || null;
+  const isRelink = destination === 'relink';
+  const relatedLine = isRelink
+    ? (relinkTarget
+        ? formatTemplate(t('downgrade_question_relink'), { count: relatedCount, title: relinkTarget.title })
+        : t('downgrade_question_relink_none'))
+    : (relatedCount > 0
+        ? formatTemplate(t('downgrade_question_related'), { count: relatedCount })
+        : t('downgrade_question_related_none'));
 
   return (
     <div className="modal-backdrop" onClick={() => !isWorking && onCancel()}>
@@ -122,7 +140,11 @@ const DowngradeDialog: React.FC<{
                   type="button"
                   onClick={() => onSelectType(type)}
                   aria-pressed={isSelected}
-                  className={`chip-outline ${isSelected ? 'bg-ink text-white border-transparent dark:bg-muted-600 dark:text-white' : ''}`}
+                  className={`chip-outline ${
+                    isSelected
+                      ? 'bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:border-amber-700'
+                      : ''
+                  }`}
                 >
                   {getTypeLabel(type, t)}
                 </button>
@@ -131,11 +153,62 @@ const DowngradeDialog: React.FC<{
           </div>
         </div>
 
+        <div className="space-y-2 mb-6">
+          <p className="text-mini-up text-subtle dark:text-subtle-dark">{t('downgrade_question_destination_label')}</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => onDestinationChange('release')}
+              aria-pressed={destination === 'release'}
+              className={`chip-outline ${
+                destination === 'release'
+                  ? 'bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:border-amber-700'
+                  : ''
+              }`}
+            >
+              {t('downgrade_question_destination_release')}
+            </button>
+            <button
+              type="button"
+              onClick={() => onDestinationChange('relink')}
+              aria-pressed={destination === 'relink'}
+              disabled={!canRelink}
+              className={`chip-outline ${
+                destination === 'relink'
+                  ? 'bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:border-amber-700'
+                  : ''
+              } ${
+                !canRelink ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
+            >
+              {t('downgrade_question_destination_relink')}
+            </button>
+          </div>
+          {isRelink && (
+            canRelink ? (
+              <select
+                className="input-pill text-sm"
+                value={relinkQuestionId ?? ''}
+                onChange={(event) => onSelectRelinkQuestion(event.target.value)}
+                aria-label={t('downgrade_question_select_question')}
+              >
+                {relinkTargets.map((target) => (
+                  <option key={target.id} value={target.id}>
+                    {target.title}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="text-body-sm-muted">{t('downgrade_question_relink_none')}</p>
+            )
+          )}
+        </div>
+
         <div className="flex justify-end gap-3">
           <button
             onClick={onCancel}
             disabled={isWorking}
-            className={`px-4 py-2 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors ${
+            className={`px-4 py-2 rounded-md text-body-sm-muted hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark transition-colors ${
               isWorking ? 'opacity-60 cursor-not-allowed' : ''
             }`}
           >
@@ -143,9 +216,9 @@ const DowngradeDialog: React.FC<{
           </button>
           <button
             onClick={onConfirm}
-            disabled={isWorking}
-            className={`px-4 py-2 text-sm rounded-md bg-ink text-white dark:bg-muted-600 hover:opacity-90 transition-opacity inline-flex items-center gap-2 ${
-              isWorking ? 'opacity-60 cursor-not-allowed' : ''
+            disabled={isWorking || (isRelink && !relinkTarget)}
+            className={`px-4 py-2 text-sm rounded-md bg-amber-500 text-white hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-500 transition-colors inline-flex items-center gap-2 ${
+              isWorking || (isRelink && !relinkTarget) ? 'opacity-60 cursor-not-allowed' : ''
             }`}
           >
             {isWorking && <LoadingSpinner className="w-3.5 h-3.5 text-white" />}
@@ -172,6 +245,9 @@ const QuestionDetail: React.FC = () => {
   const [isDowngrading, setIsDowngrading] = useState(false);
   const [isDowngradeOpen, setIsDowngradeOpen] = useState(false);
   const [downgradeType, setDowngradeType] = useState<NoteType>(NoteType.UNCATEGORIZED);
+  const [downgradeDestination, setDowngradeDestination] = useState<'release' | 'relink'>('release');
+  const [availableQuestions, setAvailableQuestions] = useState<Note[]>([]);
+  const [relinkQuestionId, setRelinkQuestionId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; isQuestion: boolean } | null>(null);
   const [mobileNoteActionsId, setMobileNoteActionsId] = useState<string | null>(null);
   const [pendingNoteId, setPendingNoteId] = useState<string | null>(null);
@@ -199,11 +275,12 @@ const QuestionDetail: React.FC = () => {
 
   const loadData = useCallback(async () => {
     if (id) {
-      const [related, q, statsResult, allNotes] = await Promise.all([
+      const [related, q, statsResult, allNotes, questions] = await Promise.all([
         getRelatedNotes(id),
         getNoteById(id),
         getQuestionConstellationStats(id),
-        getNotes()
+        getNotes(),
+        getQuestions()
       ]);
       setRelatedNotes(related.sort((a, b) => b.createdAt - a.createdAt));
       setQuestion(q || null);
@@ -218,6 +295,15 @@ const QuestionDetail: React.FC = () => {
       } else {
         setRelationDensity(null);
       }
+      const otherQuestions = questions
+        .filter((note) => note.id !== id)
+        .sort((a, b) => b.updatedAt - a.updatedAt);
+      setAvailableQuestions(otherQuestions);
+      setRelinkQuestionId((prev) => {
+        if (otherQuestions.length === 0) return null;
+        if (prev && otherQuestions.some((note) => note.id === prev)) return prev;
+        return otherQuestions[0].id;
+      });
     }
   }, [id]);
 
@@ -300,16 +386,29 @@ const QuestionDetail: React.FC = () => {
 
   const openDowngrade = () => {
     setDowngradeType(NoteType.UNCATEGORIZED);
+    setDowngradeDestination('release');
     setIsDowngradeOpen(true);
   };
 
   const handleConfirmDowngrade = async () => {
     if (!question || isDowngrading) return;
+    const shouldRelink = downgradeDestination === 'relink' && relinkQuestionId;
+    if (downgradeDestination === 'relink' && !relinkQuestionId) return;
     setIsDowngrading(true);
     try {
-      await demoteQuestion(question.id, downgradeType);
+      await demoteQuestion(
+        question.id,
+        downgradeType,
+        shouldRelink
+          ? { relinkQuestionId, includeSelf: true }
+          : undefined
+      );
       setIsDowngradeOpen(false);
-      navigate('/dark-matter');
+      if (shouldRelink) {
+        navigate(`/question/${relinkQuestionId}`);
+      } else {
+        navigate('/dark-matter');
+      }
     } finally {
       setIsDowngrading(false);
     }
@@ -498,8 +597,18 @@ const QuestionDetail: React.FC = () => {
         relatedCount={relatedNotes.length}
         selectedType={downgradeType}
         typeOptions={downgradeOptions}
+        destination={downgradeDestination}
+        relinkTargets={availableQuestions.map((note) => ({ id: note.id, title: note.content }))}
+        relinkQuestionId={relinkQuestionId}
         isWorking={isDowngrading}
         onSelectType={setDowngradeType}
+        onDestinationChange={(next) => {
+          setDowngradeDestination(next);
+          if (next === 'relink' && !relinkQuestionId && availableQuestions.length > 0) {
+            setRelinkQuestionId(availableQuestions[0].id);
+          }
+        }}
+        onSelectRelinkQuestion={setRelinkQuestionId}
         onConfirm={handleConfirmDowngrade}
         onCancel={() => !isDowngrading && setIsDowngradeOpen(false)}
         t={t}
