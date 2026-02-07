@@ -3,8 +3,9 @@ import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router-dom';
 import { getQuestions, getNotes, deleteNote, getDarkMatterCount, updateNoteContent } from '../services/storageService';
 import { Note } from '../types';
-import { PlusIcon, TrashIcon, SearchIcon, XIcon, MoreIcon, EditIcon, CheckIcon, LoadingSpinner } from '../components/Icons';
+import { PlusIcon, TrashIcon, SearchIcon, XIcon, MoreIcon, EditIcon, CopyIcon, CheckIcon, LoadingSpinner } from '../components/Icons';
 import { useAppContext } from '../contexts/AppContext';
+import { useNotifications } from '../contexts/NotificationContext';
 
 const ConfirmDialog: React.FC<{
   isOpen: boolean;
@@ -51,6 +52,7 @@ const Home: React.FC = () => {
   const [fabContainer, setFabContainer] = useState<HTMLElement | null>(null);
   const location = useLocation();
   const { t } = useAppContext();
+  const { notify } = useNotifications();
 
   useEffect(() => {
     if (!mobileQuestionActionsId) return;
@@ -141,6 +143,38 @@ const Home: React.FC = () => {
     if (isSavingEdit) return;
     setEditingQuestionId(null);
     setEditContent('');
+  };
+
+  const handleCopyQuestion = async (e: React.MouseEvent, content: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!content) return;
+    setMobileQuestionActionsId(null);
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(content);
+        notify({ message: t('copy_note_success'), variant: 'success', duration: 2000 });
+        return;
+      }
+    } catch {
+      // Fall through to legacy copy.
+    }
+    const textArea = document.createElement('textarea');
+    textArea.value = content;
+    textArea.setAttribute('readonly', '');
+    textArea.style.position = 'fixed';
+    textArea.style.top = '0';
+    textArea.style.left = '0';
+    textArea.style.opacity = '0';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      notify({ message: t('copy_note_success'), variant: 'success', duration: 2000 });
+    } finally {
+      document.body.removeChild(textArea);
+    }
   };
 
   const confirmDelete = async () => {
@@ -336,15 +370,25 @@ const Home: React.FC = () => {
                       <div className={`${isMobileActionsOpen ? 'flex' : 'hidden'} sm:hidden items-center gap-2`} id={`question-actions-${q.id}`} data-mobile-actions>
                         <button
                           onClick={(e) => handleStartEdit(e, q)}
-                          className="h-10 w-10 btn-icon text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                          title="Edit question"
+                          className="h-10 w-10 btn-icon cursor-pointer text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                          title={t('edit')}
+                          aria-label={t('edit')}
                         >
                           <EditIcon className="w-4 h-4" />
                         </button>
                         <button
+                          onClick={(e) => handleCopyQuestion(e, q.content)}
+                          className="h-10 w-10 btn-icon cursor-pointer text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                          title={t('copy_note')}
+                          aria-label={t('copy_note')}
+                        >
+                          <CopyIcon className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={(e) => handleDelete(e, q.id)}
-                          className="h-10 w-10 btn-icon text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                          title="Delete question"
+                          className="h-10 w-10 btn-icon cursor-pointer text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                          title={t('delete')}
+                          aria-label={t('delete')}
                         >
                           <TrashIcon className="w-4 h-4" />
                         </button>
@@ -352,15 +396,25 @@ const Home: React.FC = () => {
                       <div className="hidden sm:flex items-center gap-2">
                         <button
                           onClick={(e) => handleStartEdit(e, q)}
-                          className="h-10 w-10 btn-icon text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                          title="Edit question"
+                          className="h-10 w-10 btn-icon cursor-pointer text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                          title={t('edit')}
+                          aria-label={t('edit')}
                         >
                           <EditIcon className="w-4 h-4" />
                         </button>
                         <button
+                          onClick={(e) => handleCopyQuestion(e, q.content)}
+                          className="h-10 w-10 btn-icon cursor-pointer text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                          title={t('copy_note')}
+                          aria-label={t('copy_note')}
+                        >
+                          <CopyIcon className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={(e) => handleDelete(e, q.id)}
-                          className="h-10 w-10 btn-icon text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                          title="Delete question"
+                          className="h-10 w-10 btn-icon cursor-pointer text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                          title={t('delete')}
+                          aria-label={t('delete')}
                         >
                           <TrashIcon className="w-4 h-4" />
                         </button>

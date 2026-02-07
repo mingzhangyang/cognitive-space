@@ -17,7 +17,8 @@ import {
 import { Note, NoteType, DarkMatterSuggestion } from '../types';
 import { useAppContext } from '../contexts/AppContext';
 import { useAssistantInbox } from '../contexts/AssistantInboxContext';
-import { LoadingSpinner, TrashIcon, EditIcon, CheckIcon, XIcon, MoreIcon } from '../components/Icons';
+import { useNotifications } from '../contexts/NotificationContext';
+import { LoadingSpinner, TrashIcon, EditIcon, CopyIcon, CheckIcon, XIcon, MoreIcon } from '../components/Icons';
 import TypeBadge from '../components/TypeBadge';
 import { analyzeDarkMatter } from '../services/aiService';
 
@@ -161,6 +162,7 @@ const DarkMatter: React.FC = () => {
   } | null>(null);
   const location = useLocation();
   const { t, language } = useAppContext();
+  const { notify } = useNotifications();
   const {
     createJob,
     removeJob,
@@ -339,6 +341,36 @@ const DarkMatter: React.FC = () => {
     setMobileNoteActionsId(null);
     setEditingId(note.id);
     setEditContent(note.content);
+  };
+
+  const handleCopyNote = async (content: string) => {
+    if (!content) return;
+    setMobileNoteActionsId(null);
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(content);
+        notify({ message: t('copy_note_success'), variant: 'success', duration: 2000 });
+        return;
+      }
+    } catch {
+      // Fall through to legacy copy.
+    }
+    const textArea = document.createElement('textarea');
+    textArea.value = content;
+    textArea.setAttribute('readonly', '');
+    textArea.style.position = 'fixed';
+    textArea.style.top = '0';
+    textArea.style.left = '0';
+    textArea.style.opacity = '0';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      notify({ message: t('copy_note_success'), variant: 'success', duration: 2000 });
+    } finally {
+      document.body.removeChild(textArea);
+    }
   };
 
   const handleSaveEdit = async () => {
@@ -689,17 +721,27 @@ const DarkMatter: React.FC = () => {
                   <button
                     onClick={() => handleEdit(note)}
                     disabled={isSavingEdit}
-                    className={`h-10 w-10 btn-icon text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark ${
+                    className={`h-10 w-10 btn-icon cursor-pointer text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark ${
                       isSavingEdit ? 'opacity-60 cursor-not-allowed' : ''
                     }`}
-                    title="Edit"
+                    title={t('edit')}
+                    aria-label={t('edit')}
                   >
                     <EditIcon className="w-4 h-4" />
                   </button>
                   <button
+                    onClick={() => handleCopyNote(note.content)}
+                    className="h-10 w-10 btn-icon cursor-pointer text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                    title={t('copy_note')}
+                    aria-label={t('copy_note')}
+                  >
+                    <CopyIcon className="w-4 h-4" />
+                  </button>
+                  <button
                     onClick={() => handleDelete(note.id)}
-                    className="h-10 w-10 btn-icon text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                    title="Delete"
+                    className="h-10 w-10 btn-icon cursor-pointer text-subtle dark:text-subtle-dark hover:text-red-500 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                    title={t('delete')}
+                    aria-label={t('delete')}
                   >
                     <TrashIcon className="w-4 h-4" />
                   </button>
@@ -748,7 +790,7 @@ const DarkMatter: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setMobileNoteActionsId((prev) => (prev === note.id ? null : note.id))}
-                        className="sm:hidden h-10 w-10 btn-icon text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                        className="sm:hidden h-10 w-10 btn-icon cursor-pointer text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
                         aria-label={isMobileActionsOpen ? 'Hide actions' : 'Show actions'}
                         aria-expanded={isMobileActionsOpen}
                         aria-controls={`note-actions-${note.id}`}
