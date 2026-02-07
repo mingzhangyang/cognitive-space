@@ -279,7 +279,7 @@ const Home: React.FC = () => {
                     </h3>
                   )}
                   {!isEditing && (
-                    <div className="flex items-center gap-2 ml-4">
+                    <div className="relative flex items-center gap-2 ml-4">
                       <IconButton
                         label={isMobileActionsOpen ? t('actions_hide') : t('actions_show')}
                         sizeClassName="h-10 w-10"
@@ -295,7 +295,14 @@ const Home: React.FC = () => {
                       >
                         {isMobileActionsOpen ? <XIcon className="w-4 h-4" /> : <MoreIcon className="w-4 h-4" />}
                       </IconButton>
-                      <div className={`${isMobileActionsOpen ? 'flex' : 'hidden'} sm:hidden items-center gap-2`} id={`question-actions-${q.id}`} data-mobile-actions>
+                      <div
+                        className={`${
+                          isMobileActionsOpen ? 'flex' : 'hidden'
+                        } sm:hidden absolute right-0 top-11 z-20 flex-col gap-1 rounded-xl border border-line/70 dark:border-line-dark/70 bg-surface dark:bg-surface-dark p-2 shadow-[var(--shadow-elev-2)] dark:shadow-[var(--shadow-elev-2-dark)]`}
+                        id={`question-actions-${q.id}`}
+                        data-mobile-actions
+                        role="menu"
+                      >
                         <ActionIconButton
                           action="edit"
                           onClick={(e) => handleStartEdit(e, q)}

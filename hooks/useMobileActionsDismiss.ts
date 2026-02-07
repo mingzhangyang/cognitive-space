@@ -18,9 +18,18 @@ export const useMobileActionsDismiss = (
     if (!activeId) return;
     const selectors = options?.ignoreSelectors ?? DEFAULT_IGNORE_SELECTORS;
     const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (!target) return;
-      if (selectors.some((selector) => target.closest(selector))) return;
+      const target = event.target;
+      const isInIgnoredArea = () => {
+        if (typeof event.composedPath === 'function') {
+          const path = event.composedPath().filter((node): node is Element => node instanceof Element);
+          return selectors.some((selector) => path.some((node) => node.matches(selector)));
+        }
+        if (target instanceof Element) {
+          return selectors.some((selector) => Boolean(target.closest(selector)));
+        }
+        return false;
+      };
+      if (isInIgnoredArea()) return;
       setActiveId(null);
     };
     document.addEventListener('pointerdown', handlePointerDown);

@@ -426,7 +426,7 @@ const QuestionDetail: React.FC = () => {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1">
+          <div className="relative flex items-center gap-1">
             {editingId !== note.id && (
               <>
                 <IconButton
@@ -445,8 +445,11 @@ const QuestionDetail: React.FC = () => {
                 </div>
                 <div
                   id={`note-actions-${note.id}`}
-                  className={`${isMobileActionsOpen ? 'flex' : 'hidden'} sm:hidden gap-1`}
+                  className={`${
+                    isMobileActionsOpen ? 'flex' : 'hidden'
+                  } sm:hidden absolute right-0 top-11 z-20 flex-col gap-1 rounded-xl border border-line/70 dark:border-line-dark/70 bg-surface dark:bg-surface-dark p-2 shadow-[var(--shadow-elev-2)] dark:shadow-[var(--shadow-elev-2-dark)]`}
                   data-mobile-actions
+                  role="menu"
                 >
                   {actionButtons}
                 </div>
