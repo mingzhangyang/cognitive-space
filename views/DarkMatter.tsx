@@ -731,7 +731,7 @@ const DarkMatter: React.FC = () => {
                   </button>
                   <button
                     onClick={() => handleCopyNote(note.content)}
-                    className="h-10 w-10 btn-icon cursor-pointer text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                    className="h-10 w-10 btn-icon cursor-pointer text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
                     title={t('copy_note')}
                     aria-label={t('copy_note')}
                   >

@@ -378,7 +378,7 @@ const Home: React.FC = () => {
                         </button>
                         <button
                           onClick={(e) => handleCopyQuestion(e, q.content)}
-                          className="h-10 w-10 btn-icon cursor-pointer text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                          className="h-10 w-10 btn-icon cursor-pointer text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
                           title={t('copy_note')}
                           aria-label={t('copy_note')}
                         >
@@ -404,7 +404,7 @@ const Home: React.FC = () => {
                         </button>
                         <button
                           onClick={(e) => handleCopyQuestion(e, q.content)}
-                          className="h-10 w-10 btn-icon cursor-pointer text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                          className="h-10 w-10 btn-icon cursor-pointer text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
                           title={t('copy_note')}
                           aria-label={t('copy_note')}
                         >
