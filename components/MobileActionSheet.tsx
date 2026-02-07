@@ -40,11 +40,24 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
       className="sm:hidden fixed inset-0 z-50 flex flex-col justify-end"
       role="dialog"
       aria-modal="true"
+      onPointerDown={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
     >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/40 dark:bg-black/60 animate-fade-in"
-        onClick={onClose}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onClose();
+        }}
+        onPointerDown={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+        onTouchStart={(e) => {
+          e.stopPropagation();
+        }}
         aria-hidden="true"
       />
       {/* Sheet */}
