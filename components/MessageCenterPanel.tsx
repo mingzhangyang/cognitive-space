@@ -3,33 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAssistantInbox, AssistantMessage, NoteSuggestionPayload } from '../contexts/AssistantInboxContext';
 import { useAppContext } from '../contexts/AppContext';
 import { LoadingSpinner, XIcon } from './Icons';
+import IconButton from './IconButton';
 import { getNoteById, updateNoteMeta } from '../services/storageService';
-import { NoteType } from '../types';
-
-const truncate = (text: string, max = 80) => (text.length > max ? `${text.slice(0, max)}...` : text);
-
-const formatTemplate = (template: string, params: Record<string, string | number>) => {
-  return template.replace(/\{(\w+)\}/g, (match, key) => {
-    const value = params[key];
-    return value === undefined ? match : String(value);
-  });
-};
-
-const getTypeLabel = (type: NoteType, t: (key: string) => string) => {
-  switch (type) {
-    case NoteType.QUESTION:
-      return t('type_question');
-    case NoteType.CLAIM:
-      return t('type_claim');
-    case NoteType.EVIDENCE:
-      return t('type_evidence');
-    case NoteType.TRIGGER:
-      return t('type_trigger');
-    case NoteType.UNCATEGORIZED:
-    default:
-      return t('type_uncategorized');
-  }
-};
+import { truncate, formatTemplate, containsCjk } from '../utils/text';
+import { getTypeLabel } from '../utils/notes';
 
 const isNoteSuggestion = (message: AssistantMessage): message is Extract<AssistantMessage, { kind: 'note_suggestion' }> =>
   message.kind === 'note_suggestion';
@@ -51,8 +28,6 @@ const buildNoteSuggestionDetails = (payload: NoteSuggestionPayload, t: (key: str
   }
   return details;
 };
-
-const containsCjk = (text: string) => /[\u4e00-\u9fff]/.test(text);
 
 const getSuggestionReasoning = (
   payload: NoteSuggestionPayload,
@@ -107,14 +82,13 @@ const MessageCenterPanel: React.FC<{ isOpen: boolean; onClose: () => void }> = (
             <p className="text-caption-upper">{translate('assistant_inbox_label')}</p>
             <h2 className="text-lg font-medium text-ink dark:text-ink-dark">{translate('assistant_inbox_title')}</h2>
           </div>
-          <button
-            type="button"
+          <IconButton
+            label={t('menu_close')}
             onClick={onClose}
-            className="h-9 w-9 btn-icon text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-            aria-label={t('menu_close')}
+            className="text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
           >
             <XIcon className="w-4 h-4" />
-          </button>
+          </IconButton>
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">

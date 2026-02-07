@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAppContext } from '../contexts/AppContext';
 import { HelpIcon, HomeIcon, InboxIcon, MenuIcon } from './Icons';
+import IconButton from './IconButton';
 import { getSessionFooterLine } from '../services/footerLine';
 import MessageCenterPanel from './MessageCenterPanel';
 import { useAssistantInbox } from '../contexts/AssistantInboxContext';
@@ -159,13 +160,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <HomeIcon className="w-4 h-4" />
             </Link>
           )}
-          <button
+          <IconButton
+            label={t('assistant_inbox_title')}
             onClick={() => {
               setIsInboxOpen(true);
             }}
-            className="btn-icon btn-glass-icon btn-glass-icon-borderless relative"
-            aria-label={t('assistant_inbox_title')}
-            title={t('assistant_inbox_title')}
+            className="btn-glass-icon btn-glass-icon-borderless relative"
           >
             <InboxIcon className="w-4 h-4" />
             {messageCount > 0 && (
@@ -174,20 +174,19 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 aria-hidden="true"
               />
             )}
-          </button>
+          </IconButton>
           <div className="relative" ref={menuRef}>
-            <button
+            <IconButton
               ref={menuButtonRef}
+              label={menuOpen ? t('menu_close') : t('menu_open')}
               onClick={() => setMenuOpen(prev => !prev)}
-              className="btn-icon btn-glass-icon btn-glass-icon-borderless"
-              aria-label={menuOpen ? t('menu_close') : t('menu_open')}
-              title={menuOpen ? t('menu_close') : t('menu_open')}
+              className="btn-glass-icon btn-glass-icon-borderless"
               aria-haspopup="menu"
               aria-expanded={menuOpen}
               aria-controls="app-menu"
             >
               <MenuIcon className="w-4 h-4" />
-            </button>
+            </IconButton>
             {menuOpen && (
               <div
                 id="app-menu"

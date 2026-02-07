@@ -1,42 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { getQuestions, getNotes, deleteNote, getDarkMatterCount, updateNoteContent } from '../services/storageService';
 import { Note } from '../types';
-import { PlusIcon, TrashIcon, SearchIcon, XIcon, MoreIcon, EditIcon, CopyIcon, CheckIcon, LoadingSpinner } from '../components/Icons';
+import { PlusIcon, SearchIcon, XIcon, MoreIcon, CheckIcon, LoadingSpinner } from '../components/Icons';
+import ActionIconButton from '../components/ActionIconButton';
+import ConfirmDialog from '../components/ConfirmDialog';
+import IconButton from '../components/IconButton';
 import { useAppContext } from '../contexts/AppContext';
-import { useNotifications } from '../contexts/NotificationContext';
-
-const ConfirmDialog: React.FC<{
-  isOpen: boolean;
-  message: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-}> = ({ isOpen, message, onConfirm, onCancel }) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="modal-backdrop" onClick={onCancel}>
-      <div className="modal-card max-w-sm" onClick={e => e.stopPropagation()}>
-        <p className="text-ink dark:text-ink-dark mb-6">{message}</p>
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2 text-sm rounded-md btn-danger"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
+import { useMobileActionsDismiss } from '../hooks/useMobileActionsDismiss';
 
 const Home: React.FC = () => {
   const [questions, setQuestions] = useState<Note[]>([]);
@@ -50,27 +23,9 @@ const Home: React.FC = () => {
   const [query, setQuery] = useState('');
   const [isRecallOpen, setIsRecallOpen] = useState(false);
   const [fabContainer, setFabContainer] = useState<HTMLElement | null>(null);
-  const location = useLocation();
   const { t } = useAppContext();
-  const { notify } = useNotifications();
-
-  useEffect(() => {
-    if (!mobileQuestionActionsId) return;
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (!target) return;
-      if (target.closest('[data-mobile-actions]') || target.closest('[data-mobile-actions-toggle]')) return;
-      setMobileQuestionActionsId(null);
-    };
-    document.addEventListener('pointerdown', handlePointerDown);
-    return () => document.removeEventListener('pointerdown', handlePointerDown);
-  }, [mobileQuestionActionsId]);
-
-  useEffect(() => {
-    if (mobileQuestionActionsId) {
-      setMobileQuestionActionsId(null);
-    }
-  }, [location.key]);
+  const { copyText } = useCopyToClipboard();
+  useMobileActionsDismiss(mobileQuestionActionsId, setMobileQuestionActionsId);
 
   const loadData = async () => {
     const allNotes = await getNotes();
@@ -145,36 +100,10 @@ const Home: React.FC = () => {
     setEditContent('');
   };
 
-  const handleCopyQuestion = async (e: React.MouseEvent, content: string) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleCopyQuestion = async (event: React.MouseEvent, content: string) => {
     if (!content) return;
     setMobileQuestionActionsId(null);
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(content);
-        notify({ message: t('copy_note_success'), variant: 'success', duration: 2000 });
-        return;
-      }
-    } catch {
-      // Fall through to legacy copy.
-    }
-    const textArea = document.createElement('textarea');
-    textArea.value = content;
-    textArea.setAttribute('readonly', '');
-    textArea.style.position = 'fixed';
-    textArea.style.top = '0';
-    textArea.style.left = '0';
-    textArea.style.opacity = '0';
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    try {
-      document.execCommand('copy');
-      notify({ message: t('copy_note_success'), variant: 'success', duration: 2000 });
-    } finally {
-      document.body.removeChild(textArea);
-    }
+    await copyText(content, event);
   };
 
   const confirmDelete = async () => {
@@ -194,7 +123,7 @@ const Home: React.FC = () => {
     <div className="flex flex-col h-full relative">
       <ConfirmDialog
         isOpen={deleteTarget !== null}
-        message="Delete this question and all related notes?"
+        message={t('confirm_delete_question_with_notes')}
         onConfirm={confirmDelete}
         onCancel={() => setDeleteTarget(null)}
       />
@@ -257,15 +186,14 @@ const Home: React.FC = () => {
                   autoFocus
                 />
                 {queryTokens.length > 0 && (
-                  <button
-                    type="button"
+                  <IconButton
+                    label={t('clear_recall')}
+                    sizeClassName="h-10 w-10"
                     onClick={() => setQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 btn-icon text-muted-400 hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                    aria-label={t('clear_recall')}
-                    title={t('clear_recall')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-400 hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
                   >
                     <XIcon className="w-4 h-4" />
-                  </button>
+                  </IconButton>
                 )}
               </div>
               <p className="mt-2 text-caption">{t('recall_hint')}</p>
@@ -352,72 +280,57 @@ const Home: React.FC = () => {
                   )}
                   {!isEditing && (
                     <div className="flex items-center gap-2 ml-4">
-                      <button
-                        type="button"
+                      <IconButton
+                        label={isMobileActionsOpen ? t('actions_hide') : t('actions_show')}
+                        sizeClassName="h-10 w-10"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
                           setMobileQuestionActionsId((prev) => (prev === q.id ? null : q.id));
                         }}
-                        className="sm:hidden h-10 w-10 btn-icon text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                        aria-label={isMobileActionsOpen ? 'Hide actions' : 'Show actions'}
+                        className="sm:hidden text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
                         aria-expanded={isMobileActionsOpen}
                         aria-controls={`question-actions-${q.id}`}
                         data-mobile-actions-toggle
                       >
                         {isMobileActionsOpen ? <XIcon className="w-4 h-4" /> : <MoreIcon className="w-4 h-4" />}
-                      </button>
+                      </IconButton>
                       <div className={`${isMobileActionsOpen ? 'flex' : 'hidden'} sm:hidden items-center gap-2`} id={`question-actions-${q.id}`} data-mobile-actions>
-                        <button
+                        <ActionIconButton
+                          action="edit"
                           onClick={(e) => handleStartEdit(e, q)}
-                          className="h-10 w-10 btn-icon cursor-pointer text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                          title={t('edit')}
-                          aria-label={t('edit')}
-                        >
-                          <EditIcon className="w-4 h-4" />
-                        </button>
-                        <button
+                          baseClassName="text-muted-400 dark:text-muted-400"
+                        />
+                        <ActionIconButton
+                          action="copy"
                           onClick={(e) => handleCopyQuestion(e, q.content)}
-                          className="h-10 w-10 btn-icon cursor-pointer text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                          title={t('copy_note')}
-                          aria-label={t('copy_note')}
-                        >
-                          <CopyIcon className="w-4 h-4" />
-                        </button>
-                        <button
+                          baseClassName="text-muted-400 dark:text-muted-400"
+                        />
+                        <ActionIconButton
+                          action="delete"
                           onClick={(e) => handleDelete(e, q.id)}
-                          className="h-10 w-10 btn-icon cursor-pointer text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                          title={t('delete')}
-                          aria-label={t('delete')}
-                        >
-                          <TrashIcon className="w-4 h-4" />
-                        </button>
+                          baseClassName="text-muted-400 dark:text-muted-400"
+                        />
                       </div>
                       <div className="hidden sm:flex items-center gap-2">
-                        <button
+                        <ActionIconButton
+                          action="edit"
                           onClick={(e) => handleStartEdit(e, q)}
-                          className="h-10 w-10 btn-icon cursor-pointer text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                          title={t('edit')}
-                          aria-label={t('edit')}
-                        >
-                          <EditIcon className="w-4 h-4" />
-                        </button>
-                        <button
+                          baseClassName="text-muted-400 dark:text-muted-400"
+                          className="opacity-0 sm:group-hover:opacity-100 transition-all"
+                        />
+                        <ActionIconButton
+                          action="copy"
                           onClick={(e) => handleCopyQuestion(e, q.content)}
-                          className="h-10 w-10 btn-icon cursor-pointer text-muted-400 hover:text-accent dark:text-muted-400 dark:hover:text-accent-dark opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                          title={t('copy_note')}
-                          aria-label={t('copy_note')}
-                        >
-                          <CopyIcon className="w-4 h-4" />
-                        </button>
-                        <button
+                          baseClassName="text-muted-400 dark:text-muted-400"
+                          className="opacity-0 sm:group-hover:opacity-100 transition-all"
+                        />
+                        <ActionIconButton
+                          action="delete"
                           onClick={(e) => handleDelete(e, q.id)}
-                          className="h-10 w-10 btn-icon cursor-pointer text-muted-400 hover:text-red-500 dark:text-muted-400 dark:hover:text-red-400 opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                          title={t('delete')}
-                          aria-label={t('delete')}
-                        >
-                          <TrashIcon className="w-4 h-4" />
-                        </button>
+                          baseClassName="text-muted-400 dark:text-muted-400"
+                          className="opacity-0 sm:group-hover:opacity-100 transition-all"
+                        />
                       </div>
                     </div>
                   )}

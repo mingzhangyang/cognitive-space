@@ -6,6 +6,8 @@ import { NoteType } from '../types';
 import { LoadingSpinner } from '../components/Icons';
 import { useAppContext } from '../contexts/AppContext';
 import { useAssistantInbox } from '../contexts/AssistantInboxContext';
+import { truncate } from '../utils/text';
+import { createMessageId } from '../utils/ids';
 
 const Write: React.FC = () => {
   const [content, setContent] = useState('');
@@ -23,9 +25,6 @@ const Write: React.FC = () => {
     const fromState = (location.state as { questionId?: string } | null)?.questionId;
     return fromState || fromSearch;
   })();
-
-  // Auto-focus logic or simple textarea
-  const truncate = (text: string, max = 24) => (text.length > max ? `${text.slice(0, max)}...` : text);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -82,13 +81,6 @@ const Write: React.FC = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [content]);
-
-  const createMessageId = () => {
-    if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-      return crypto.randomUUID();
-    }
-    return `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  };
 
   const handleSave = async () => {
     if (!content.trim()) return;

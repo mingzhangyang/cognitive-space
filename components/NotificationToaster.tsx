@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useAppContext } from '../contexts/AppContext';
 import { AlertIcon, CheckIcon, HelpIcon, XIcon } from './Icons';
+import IconButton from './IconButton';
 
 const variantStyles = {
   info: {
@@ -26,6 +28,7 @@ const variantStyles = {
 } as const;
 
 const NotificationToaster: React.FC = () => {
+  const { t } = useAppContext();
   const { notifications, dismiss } = useNotifications();
 
   if (!notifications.length) {
@@ -61,14 +64,14 @@ const NotificationToaster: React.FC = () => {
                 {notification.message}
               </div>
             </div>
-            <button
-              type="button"
+            <IconButton
+              label={t('dismiss_notification')}
+              sizeClassName="h-8 w-8"
               onClick={() => dismiss(notification.id)}
-              className="h-8 w-8 btn-icon cursor-pointer text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-              aria-label="Dismiss notification"
+              className="text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
             >
               <XIcon className="h-4 w-4" />
-            </button>
+            </IconButton>
           </div>
         );
       })}

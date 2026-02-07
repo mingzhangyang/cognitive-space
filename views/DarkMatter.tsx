@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
 import {
   getDarkMatter,
   getDarkMatterCount,
@@ -17,48 +16,17 @@ import {
 import { Note, NoteType, DarkMatterSuggestion } from '../types';
 import { useAppContext } from '../contexts/AppContext';
 import { useAssistantInbox } from '../contexts/AssistantInboxContext';
-import { useNotifications } from '../contexts/NotificationContext';
-import { LoadingSpinner, TrashIcon, EditIcon, CopyIcon, CheckIcon, XIcon, MoreIcon } from '../components/Icons';
+import { LoadingSpinner, CheckIcon, XIcon, MoreIcon } from '../components/Icons';
+import ActionIconButton from '../components/ActionIconButton';
+import ConfirmDialog from '../components/ConfirmDialog';
+import Modal from '../components/Modal';
+import IconButton from '../components/IconButton';
 import TypeBadge from '../components/TypeBadge';
 import { analyzeDarkMatter } from '../services/aiService';
-
-const ConfirmDialog: React.FC<{
-  isOpen: boolean;
-  message: string;
-  confirmLabel: string;
-  cancelLabel: string;
-  confirmTone?: 'danger' | 'primary';
-  onConfirm: () => void;
-  onCancel: () => void;
-}> = ({ isOpen, message, confirmLabel, cancelLabel, confirmTone = 'danger', onConfirm, onCancel }) => {
-  if (!isOpen) return null;
-
-  const confirmClassName = confirmTone === 'danger'
-    ? 'px-4 py-2 text-sm rounded-md btn-danger'
-    : 'px-4 py-2 text-sm rounded-md bg-ink text-white dark:bg-muted-600 hover:opacity-90 transition-opacity';
-
-  return (
-    <div className="modal-backdrop" onClick={onCancel}>
-      <div className="modal-card max-w-sm" onClick={e => e.stopPropagation()}>
-        <p className="text-ink dark:text-ink-dark mb-6">{message}</p>
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors"
-          >
-            {cancelLabel}
-          </button>
-          <button
-            onClick={onConfirm}
-            className={confirmClassName}
-          >
-            {confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
+import { useMobileActionsDismiss } from '../hooks/useMobileActionsDismiss';
+import { containsCjk, formatTemplate } from '../utils/text';
+import { createMessageId } from '../utils/ids';
 
 const QuestionSelector: React.FC<{
   isOpen: boolean;
@@ -71,36 +39,34 @@ const QuestionSelector: React.FC<{
   if (!isOpen) return null;
 
   return (
-    <div className="modal-backdrop" onClick={onCancel}>
-      <div className="modal-card max-w-md w-full max-h-[70vh] flex flex-col" onClick={e => e.stopPropagation()}>
-        <h3 className="text-lg font-medium text-ink dark:text-ink-dark mb-4">{t('select_question')}</h3>
-        <div className="overflow-y-auto flex-1 space-y-2">
-          {questions.length === 0 ? (
-            <p className="text-body-sm-muted py-4 text-center">
-              No questions available. Create one first.
-            </p>
-          ) : (
-            questions.map((q) => (
-              <button
-                key={q.id}
-                onClick={() => onSelect(q.id)}
-                className="w-full text-left p-3 rounded-lg border border-line dark:border-line-dark hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
-              >
-                <p className="text-body-sm line-clamp-2">{q.content}</p>
-              </button>
-            ))
-          )}
-        </div>
-        <div className="mt-4 flex justify-end">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors"
-          >
-            {t('cancel')}
-          </button>
-        </div>
+    <Modal isOpen={isOpen} onClose={onCancel} cardClassName="max-w-md w-full max-h-[70vh] flex flex-col">
+      <h3 className="text-lg font-medium text-ink dark:text-ink-dark mb-4">{t('select_question')}</h3>
+      <div className="overflow-y-auto flex-1 space-y-2">
+        {questions.length === 0 ? (
+          <p className="text-body-sm-muted py-4 text-center">
+            {t('no_questions_available')}
+          </p>
+        ) : (
+          questions.map((q) => (
+            <button
+              key={q.id}
+              onClick={() => onSelect(q.id)}
+              className="w-full text-left p-3 rounded-lg border border-line dark:border-line-dark hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors cursor-pointer"
+            >
+              <p className="text-body-sm line-clamp-2">{q.content}</p>
+            </button>
+          ))
+        )}
       </div>
-    </div>
+      <div className="mt-4 flex justify-end">
+        <button
+          onClick={onCancel}
+          className="px-4 py-2 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors cursor-pointer"
+        >
+          {t('cancel')}
+        </button>
+      </div>
+    </Modal>
   );
 };
 
@@ -136,8 +102,6 @@ const areSuggestionsEqual = (left: DarkMatterSuggestion[], right: DarkMatterSugg
   return true;
 };
 
-const containsCjk = (text: string) => /[\u4e00-\u9fff]/.test(text);
-
 const DarkMatter: React.FC = () => {
   const [darkMatter, setDarkMatter] = useState<Note[]>([]);
   const [darkMatterCount, setDarkMatterCount] = useState(0);
@@ -160,9 +124,8 @@ const DarkMatter: React.FC = () => {
     type: 'create' | 'link';
     suggestion: DarkMatterSuggestion;
   } | null>(null);
-  const location = useLocation();
   const { t, language } = useAppContext();
-  const { notify } = useNotifications();
+  const { copyText } = useCopyToClipboard();
   const {
     createJob,
     removeJob,
@@ -175,23 +138,7 @@ const DarkMatter: React.FC = () => {
   const aiRevealThreshold = 4;
   const pageSize = 25;
 
-  useEffect(() => {
-    if (!mobileNoteActionsId) return;
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (!target) return;
-      if (target.closest('[data-mobile-actions]') || target.closest('[data-mobile-actions-toggle]')) return;
-      setMobileNoteActionsId(null);
-    };
-    document.addEventListener('pointerdown', handlePointerDown);
-    return () => document.removeEventListener('pointerdown', handlePointerDown);
-  }, [mobileNoteActionsId]);
-
-  useEffect(() => {
-    if (mobileNoteActionsId) {
-      setMobileNoteActionsId(null);
-    }
-  }, [location.key]);
+  useMobileActionsDismiss(mobileNoteActionsId, setMobileNoteActionsId);
 
   const noteById = useMemo(() => {
     const map = new Map<string, Note>();
@@ -346,31 +293,7 @@ const DarkMatter: React.FC = () => {
   const handleCopyNote = async (content: string) => {
     if (!content) return;
     setMobileNoteActionsId(null);
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(content);
-        notify({ message: t('copy_note_success'), variant: 'success', duration: 2000 });
-        return;
-      }
-    } catch {
-      // Fall through to legacy copy.
-    }
-    const textArea = document.createElement('textarea');
-    textArea.value = content;
-    textArea.setAttribute('readonly', '');
-    textArea.style.position = 'fixed';
-    textArea.style.top = '0';
-    textArea.style.left = '0';
-    textArea.style.opacity = '0';
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    try {
-      document.execCommand('copy');
-      notify({ message: t('copy_note_success'), variant: 'success', duration: 2000 });
-    } finally {
-      document.body.removeChild(textArea);
-    }
+    await copyText(content);
   };
 
   const handleSaveEdit = async () => {
@@ -399,13 +322,6 @@ const DarkMatter: React.FC = () => {
     setEditContent('');
   };
 
-  const formatTemplate = (template: string, params: Record<string, string | number>) => {
-    return template.replace(/\{(\w+)\}/g, (match, key) => {
-      const value = params[key];
-      return value === undefined ? match : String(value);
-    });
-  };
-
   const getSuggestionReasoning = (reasoning: string | undefined, title: string) => {
     const raw = typeof reasoning === 'string' ? reasoning.trim() : '';
     if (!raw || (language === 'zh' && !containsCjk(raw))) {
@@ -413,13 +329,6 @@ const DarkMatter: React.FC = () => {
       return formatTemplate(t('dark_matter_suggestion_reasoning_fallback'), { title });
     }
     return raw;
-  };
-
-  const createMessageId = () => {
-    if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-      return crypto.randomUUID();
-    }
-    return `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   };
 
   const getConfidenceLabel = (confidence: number) => {
@@ -553,10 +462,7 @@ const DarkMatter: React.FC = () => {
     <div className="flex flex-col h-full relative">
       <ConfirmDialog
         isOpen={deleteTarget !== null}
-        message="Delete this fragment?"
-        confirmLabel={t('delete')}
-        cancelLabel={t('cancel')}
-        confirmTone="danger"
+        message={t('confirm_delete_fragment')}
         onConfirm={confirmDelete}
         onCancel={() => setDeleteTarget(null)}
       />
@@ -565,7 +471,6 @@ const DarkMatter: React.FC = () => {
         isOpen={pendingAction !== null}
         message={confirmMessage}
         confirmLabel={confirmLabel}
-        cancelLabel={t('cancel')}
         confirmTone="primary"
         onConfirm={applySuggestion}
         onCancel={() => setPendingAction(null)}
@@ -718,33 +623,19 @@ const DarkMatter: React.FC = () => {
               const isMobileActionsOpen = mobileNoteActionsId === note.id;
               const actionButtons = (
                 <>
-                  <button
+                  <ActionIconButton
+                    action="edit"
                     onClick={() => handleEdit(note)}
                     disabled={isSavingEdit}
-                    className={`h-10 w-10 btn-icon cursor-pointer text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark ${
-                      isSavingEdit ? 'opacity-60 cursor-not-allowed' : ''
-                    }`}
-                    title={t('edit')}
-                    aria-label={t('edit')}
-                  >
-                    <EditIcon className="w-4 h-4" />
-                  </button>
-                  <button
+                  />
+                  <ActionIconButton
+                    action="copy"
                     onClick={() => handleCopyNote(note.content)}
-                    className="h-10 w-10 btn-icon cursor-pointer text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                    title={t('copy_note')}
-                    aria-label={t('copy_note')}
-                  >
-                    <CopyIcon className="w-4 h-4" />
-                  </button>
-                  <button
+                  />
+                  <ActionIconButton
+                    action="delete"
                     onClick={() => handleDelete(note.id)}
-                    className="h-10 w-10 btn-icon cursor-pointer text-subtle dark:text-subtle-dark hover:text-red-500 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                    title={t('delete')}
-                    aria-label={t('delete')}
-                  >
-                    <TrashIcon className="w-4 h-4" />
-                  </button>
+                  />
                 </>
               );
 
@@ -787,17 +678,17 @@ const DarkMatter: React.FC = () => {
                 <div className="flex items-center gap-1">
                   {editingId !== note.id && (
                     <>
-                      <button
-                        type="button"
+                      <IconButton
+                        label={isMobileActionsOpen ? t('actions_hide') : t('actions_show')}
+                        sizeClassName="h-10 w-10"
                         onClick={() => setMobileNoteActionsId((prev) => (prev === note.id ? null : note.id))}
-                        className="sm:hidden h-10 w-10 btn-icon cursor-pointer text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                        aria-label={isMobileActionsOpen ? 'Hide actions' : 'Show actions'}
+                        className="sm:hidden text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
                         aria-expanded={isMobileActionsOpen}
                         aria-controls={`note-actions-${note.id}`}
                         data-mobile-actions-toggle
                       >
                         {isMobileActionsOpen ? <XIcon className="w-4 h-4" /> : <MoreIcon className="w-4 h-4" />}
-                      </button>
+                      </IconButton>
                       <div className="hidden sm:flex gap-1 opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         {actionButtons}
                       </div>

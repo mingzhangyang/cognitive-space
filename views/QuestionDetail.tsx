@@ -14,65 +14,18 @@ import {
 } from '../services/storageService';
 import { Note, NoteType } from '../types';
 import { useAppContext } from '../contexts/AppContext';
-import { useNotifications } from '../contexts/NotificationContext';
-import { TrashIcon, EditIcon, CopyIcon, CheckIcon, XIcon, EyeIcon, EyeOffIcon, LoadingSpinner, MoreIcon, ArrowDownIcon } from '../components/Icons';
+import { CheckIcon, XIcon, EyeIcon, EyeOffIcon, LoadingSpinner, MoreIcon, ArrowDownIcon, EditIcon } from '../components/Icons';
+import ActionIconButton from '../components/ActionIconButton';
+import ConfirmDialog from '../components/ConfirmDialog';
+import Modal from '../components/Modal';
+import IconButton from '../components/IconButton';
 import TypeBadge from '../components/TypeBadge';
 import QuestionGraph from '../components/QuestionGraph';
 import QuestionStatsPanel from '../components/QuestionStatsPanel';
-
-const formatTemplate = (template: string, params: Record<string, string | number>) => {
-  return template.replace(/\{(\w+)\}/g, (match, key) => {
-    const value = params[key];
-    return value === undefined ? match : String(value);
-  });
-};
-
-const getTypeLabel = (type: NoteType, t: (key: string) => string) => {
-  switch (type) {
-    case NoteType.QUESTION:
-      return t('type_question');
-    case NoteType.CLAIM:
-      return t('type_claim');
-    case NoteType.EVIDENCE:
-      return t('type_evidence');
-    case NoteType.TRIGGER:
-      return t('type_trigger');
-    case NoteType.UNCATEGORIZED:
-    default:
-      return t('type_uncategorized');
-  }
-};
-
-const ConfirmDialog: React.FC<{
-  isOpen: boolean;
-  message: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-}> = ({ isOpen, message, onConfirm, onCancel }) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="modal-backdrop" onClick={onCancel}>
-      <div className="modal-card max-w-sm" onClick={e => e.stopPropagation()}>
-        <p className="text-ink dark:text-ink-dark mb-6">{message}</p>
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2 text-sm rounded-md btn-danger"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
+import { useMobileActionsDismiss } from '../hooks/useMobileActionsDismiss';
+import { formatTemplate } from '../utils/text';
+import { getTypeLabel } from '../utils/notes';
 
 const DowngradeDialog: React.FC<{
   isOpen: boolean;
@@ -120,120 +73,119 @@ const DowngradeDialog: React.FC<{
         : t('downgrade_question_related_none'));
 
   return (
-    <div className="modal-backdrop" onClick={() => !isWorking && onCancel()}>
-      <div className="modal-card max-w-md" onClick={e => e.stopPropagation()}>
-        <div className="space-y-2 mb-5">
-          <p className="text-ink dark:text-ink-dark text-lg font-medium">{t('downgrade_question_title')}</p>
-          <p className="text-body-sm-muted">
-            {formatTemplate(t('downgrade_question_body'), { type: typeLabel })}
-          </p>
-          <p className="text-body-sm-muted">{relatedLine}</p>
-        </div>
+    <Modal isOpen={isOpen} onClose={onCancel} cardClassName="max-w-md" isDismissable={!isWorking}>
+      <div className="space-y-2 mb-5">
+        <p className="text-ink dark:text-ink-dark text-lg font-medium">{t('downgrade_question_title')}</p>
+        <p className="text-body-sm-muted">
+          {formatTemplate(t('downgrade_question_body'), { type: typeLabel })}
+        </p>
+        <p className="text-body-sm-muted">{relatedLine}</p>
+      </div>
 
-        <div className="space-y-2 mb-6">
-          <p className="text-mini-up text-subtle dark:text-subtle-dark">{t('downgrade_question_label')}</p>
-          <div className="flex flex-wrap gap-2">
-            {typeOptions.map((type) => {
-              const isSelected = type === selectedType;
-              return (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => onSelectType(type)}
-                  aria-pressed={isSelected}
-                  className={`chip-outline ${
-                    isSelected
-                      ? 'bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:border-amber-700'
-                      : ''
-                  }`}
-                >
-                  {getTypeLabel(type, t)}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="space-y-2 mb-6">
-          <p className="text-mini-up text-subtle dark:text-subtle-dark">{t('downgrade_question_destination_label')}</p>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => onDestinationChange('release')}
-              aria-pressed={destination === 'release'}
-              className={`chip-outline ${
-                destination === 'release'
-                  ? 'bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:border-amber-700'
-                  : ''
-              }`}
-            >
-              {t('downgrade_question_destination_release')}
-            </button>
-            <button
-              type="button"
-              onClick={() => onDestinationChange('relink')}
-              aria-pressed={destination === 'relink'}
-              disabled={!canRelink}
-              className={`chip-outline ${
-                destination === 'relink'
-                  ? 'bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:border-amber-700'
-                  : ''
-              } ${
-                !canRelink ? 'opacity-60 cursor-not-allowed' : ''
-              }`}
-            >
-              {t('downgrade_question_destination_relink')}
-            </button>
-          </div>
-          {isRelink && (
-            canRelink ? (
-              <select
-                className="input-pill text-sm"
-                value={relinkQuestionId ?? ''}
-                onChange={(event) => onSelectRelinkQuestion(event.target.value)}
-                aria-label={t('downgrade_question_select_question')}
+      <div className="space-y-2 mb-6">
+        <p className="text-mini-up text-subtle dark:text-subtle-dark">{t('downgrade_question_label')}</p>
+        <div className="flex flex-wrap gap-2">
+          {typeOptions.map((type) => {
+            const isSelected = type === selectedType;
+            return (
+              <button
+                key={type}
+                type="button"
+                onClick={() => onSelectType(type)}
+                aria-pressed={isSelected}
+                className={`chip-outline ${
+                  isSelected
+                    ? 'bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:border-amber-700'
+                    : ''
+                }`}
               >
-                {relinkTargets.map((target) => (
-                  <option key={target.id} value={target.id}>
-                    {target.title}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <p className="text-body-sm-muted">{t('downgrade_question_relink_none')}</p>
-            )
-          )}
-        </div>
-
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onCancel}
-            disabled={isWorking}
-            className={`px-4 py-2 rounded-md text-body-sm-muted hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark transition-colors ${
-              isWorking ? 'opacity-60 cursor-not-allowed' : ''
-            }`}
-          >
-            {t('cancel')}
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={isWorking || (isRelink && !relinkTarget)}
-            className={`px-4 py-2 text-sm rounded-md bg-amber-500 text-white hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-500 transition-colors inline-flex items-center gap-2 ${
-              isWorking || (isRelink && !relinkTarget) ? 'opacity-60 cursor-not-allowed' : ''
-            }`}
-          >
-            {isWorking && <LoadingSpinner className="w-3.5 h-3.5 text-white" />}
-            {t('downgrade_question_action')}
-          </button>
+                {getTypeLabel(type, t)}
+              </button>
+            );
+          })}
         </div>
       </div>
-    </div>
+
+      <div className="space-y-2 mb-6">
+        <p className="text-mini-up text-subtle dark:text-subtle-dark">{t('downgrade_question_destination_label')}</p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => onDestinationChange('release')}
+            aria-pressed={destination === 'release'}
+            className={`chip-outline ${
+              destination === 'release'
+                ? 'bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:border-amber-700'
+                : ''
+            }`}
+          >
+            {t('downgrade_question_destination_release')}
+          </button>
+          <button
+            type="button"
+            onClick={() => onDestinationChange('relink')}
+            aria-pressed={destination === 'relink'}
+            disabled={!canRelink}
+            className={`chip-outline ${
+              destination === 'relink'
+                ? 'bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:border-amber-700'
+                : ''
+            } ${
+              !canRelink ? 'opacity-60 cursor-not-allowed' : ''
+            }`}
+          >
+            {t('downgrade_question_destination_relink')}
+          </button>
+        </div>
+        {isRelink && (
+          canRelink ? (
+            <select
+              className="input-pill text-sm"
+              value={relinkQuestionId ?? ''}
+              onChange={(event) => onSelectRelinkQuestion(event.target.value)}
+              aria-label={t('downgrade_question_select_question')}
+            >
+              {relinkTargets.map((target) => (
+                <option key={target.id} value={target.id}>
+                  {target.title}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <p className="text-body-sm-muted">{t('downgrade_question_relink_none')}</p>
+          )
+        )}
+      </div>
+
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={onCancel}
+          disabled={isWorking}
+          className={`px-4 py-2 rounded-md text-body-sm-muted hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark transition-colors ${
+            isWorking ? 'opacity-60 cursor-not-allowed' : ''
+          }`}
+        >
+          {t('cancel')}
+        </button>
+        <button
+          onClick={onConfirm}
+          disabled={isWorking || (isRelink && !relinkTarget)}
+          className={`px-4 py-2 text-sm rounded-md bg-amber-500 text-white hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-500 transition-colors inline-flex items-center gap-2 ${
+            isWorking || (isRelink && !relinkTarget) ? 'opacity-60 cursor-not-allowed' : ''
+          }`}
+        >
+          {isWorking && <LoadingSpinner className="w-3.5 h-3.5 text-white" />}
+          {t('downgrade_question_action')}
+        </button>
+      </div>
+    </Modal>
   );
 };
 
 const QuestionDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [question, setQuestion] = useState<Note | null>(null);
   const [relatedNotes, setRelatedNotes] = useState<Note[]>([]);
   const [visualizationOpen, setVisualizationOpen] = useState(false);
@@ -252,28 +204,11 @@ const QuestionDetail: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; isQuestion: boolean } | null>(null);
   const [mobileNoteActionsId, setMobileNoteActionsId] = useState<string | null>(null);
   const [pendingNoteId, setPendingNoteId] = useState<string | null>(null);
-  const location = useLocation();
   const { t } = useAppContext();
-  const { notify } = useNotifications();
+  const { copyText } = useCopyToClipboard();
   const downgradeOptions = [NoteType.UNCATEGORIZED, NoteType.TRIGGER, NoteType.CLAIM, NoteType.EVIDENCE];
 
-  useEffect(() => {
-    if (!mobileNoteActionsId) return;
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (!target) return;
-      if (target.closest('[data-mobile-actions]') || target.closest('[data-mobile-actions-toggle]')) return;
-      setMobileNoteActionsId(null);
-    };
-    document.addEventListener('pointerdown', handlePointerDown);
-    return () => document.removeEventListener('pointerdown', handlePointerDown);
-  }, [mobileNoteActionsId]);
-
-  useEffect(() => {
-    if (mobileNoteActionsId) {
-      setMobileNoteActionsId(null);
-    }
-  }, [location.key]);
+  useMobileActionsDismiss(mobileNoteActionsId, setMobileNoteActionsId);
 
   const loadData = useCallback(async () => {
     if (id) {
@@ -349,31 +284,7 @@ const QuestionDetail: React.FC = () => {
   const handleCopyNote = async (content: string) => {
     if (!content) return;
     setMobileNoteActionsId(null);
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(content);
-        notify({ message: t('copy_note_success'), variant: 'success', duration: 2000 });
-        return;
-      }
-    } catch {
-      // Fall through to legacy copy.
-    }
-    const textArea = document.createElement('textarea');
-    textArea.value = content;
-    textArea.setAttribute('readonly', '');
-    textArea.style.position = 'fixed';
-    textArea.style.top = '0';
-    textArea.style.left = '0';
-    textArea.style.opacity = '0';
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    try {
-      document.execCommand('copy');
-      notify({ message: t('copy_note_success'), variant: 'success', duration: 2000 });
-    } finally {
-      document.body.removeChild(textArea);
-    }
+    await copyText(content);
   };
 
   const handleSaveEdit = async () => {
@@ -480,33 +391,19 @@ const QuestionDetail: React.FC = () => {
     const isAnalyzing = pendingNoteId === note.id && note.type === NoteType.UNCATEGORIZED;
     const actionButtons = (
       <>
-        <button
+        <ActionIconButton
+          action="edit"
           onClick={() => handleEdit(note)}
           disabled={isSavingEdit}
-          className={`h-10 w-10 btn-icon cursor-pointer text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark ${
-            isSavingEdit ? 'opacity-60 cursor-not-allowed' : ''
-          }`}
-          title={t('edit')}
-          aria-label={t('edit')}
-        >
-          <EditIcon className="w-4 h-4" />
-        </button>
-        <button
+        />
+        <ActionIconButton
+          action="copy"
           onClick={() => handleCopyNote(note.content)}
-          className="h-10 w-10 btn-icon cursor-pointer text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-          title={t('copy_note')}
-          aria-label={t('copy_note')}
-        >
-          <CopyIcon className="w-4 h-4" />
-        </button>
-        <button
+        />
+        <ActionIconButton
+          action="delete"
           onClick={() => handleDelete(note.id, false)}
-          className="h-10 w-10 btn-icon cursor-pointer text-subtle dark:text-subtle-dark hover:text-red-500 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-          title={t('delete')}
-          aria-label={t('delete')}
-        >
-          <TrashIcon className="w-4 h-4" />
-        </button>
+        />
       </>
     );
 
@@ -532,17 +429,17 @@ const QuestionDetail: React.FC = () => {
           <div className="flex items-center gap-1">
             {editingId !== note.id && (
               <>
-                <button
-                  type="button"
+                <IconButton
+                  label={isMobileActionsOpen ? t('actions_hide') : t('actions_show')}
+                  sizeClassName="h-10 w-10"
                   onClick={() => setMobileNoteActionsId((prev) => (prev === note.id ? null : note.id))}
-                  className="sm:hidden h-10 w-10 btn-icon cursor-pointer text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                  aria-label={isMobileActionsOpen ? 'Hide actions' : 'Show actions'}
+                  className="sm:hidden text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
                   aria-expanded={isMobileActionsOpen}
                   aria-controls={`note-actions-${note.id}`}
                   data-mobile-actions-toggle
                 >
                   {isMobileActionsOpen ? <XIcon className="w-4 h-4" /> : <MoreIcon className="w-4 h-4" />}
-                </button>
+                </IconButton>
                 <div className="hidden sm:flex gap-1 opacity-0 sm:group-hover:opacity-100 transition-opacity">
                   {actionButtons}
                 </div>
@@ -629,8 +526,8 @@ const QuestionDetail: React.FC = () => {
       <ConfirmDialog
         isOpen={deleteTarget !== null}
         message={deleteTarget?.isQuestion
-          ? "Delete this question and all related notes?"
-          : "Delete this note?"}
+          ? t('confirm_delete_question_with_notes')
+          : t('confirm_delete_note')}
         onConfirm={confirmDelete}
         onCancel={() => setDeleteTarget(null)}
       />
@@ -691,35 +588,21 @@ const QuestionDetail: React.FC = () => {
             </button>
             {editingId !== question.id && (
               <>
-                <button
+                <ActionIconButton
+                  action="edit"
                   onClick={() => handleEdit(question)}
                   disabled={isSavingEdit}
-                  className={`h-10 w-10 btn-icon cursor-pointer text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark ${
-                    isSavingEdit ? 'opacity-60 cursor-not-allowed' : ''
-                  }`}
-                  title={t('edit')}
-                  aria-label={t('edit')}
-                >
-                  <EditIcon className="w-4 h-4" />
-                </button>
-                <button
+                />
+                <ActionIconButton
+                  action="copy"
                   onClick={() => handleCopyNote(question.content)}
-                  className="h-10 w-10 btn-icon cursor-pointer text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                  title={t('copy_note')}
-                  aria-label={t('copy_note')}
-                >
-                  <CopyIcon className="w-4 h-4" />
-                </button>
+                />
               </>
             )}
-            <button
+            <ActionIconButton
+              action="delete"
               onClick={() => handleDelete(question.id, true)}
-              className="h-10 w-10 btn-icon cursor-pointer text-subtle dark:text-subtle-dark hover:text-red-500 dark:hover:text-red-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-              title={t('delete')}
-              aria-label={t('delete')}
-            >
-              <TrashIcon className="w-4 h-4" />
-            </button>
+            />
           </div>
         </div>
         {editingId === question.id ? (
@@ -797,13 +680,14 @@ const QuestionDetail: React.FC = () => {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <TypeBadge type={selectedGraphNote.type} subType={selectedGraphNote.subType} />
-                      <button
+                      <IconButton
+                        label={t('close_detail')}
+                        sizeClassName="h-8 w-8"
                         onClick={() => setSelectedGraphNote(null)}
-                        className="h-8 w-8 btn-icon text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark"
-                        aria-label="Close detail"
+                        className="text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark"
                       >
                         <XIcon className="w-3.5 h-3.5" />
-                      </button>
+                      </IconButton>
                     </div>
                     <p className="text-body-sm leading-relaxed whitespace-pre-wrap">
                       {selectedGraphNote.content}
