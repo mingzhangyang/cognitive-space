@@ -350,6 +350,258 @@ export const createNoteObject = (content: string): Note => {
   };
 };
 
+export type AppDataExport = {
+  version: number;
+  exportedAt: number;
+  db: {
+    name: string;
+    version: number;
+  };
+  notes: Note[];
+  events: AppEvent[];
+  meta: Record<string, number>;
+};
+
+export type ImportMode = 'replace' | 'merge';
+
+const EXPORT_VERSION = 1;
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const isNumber = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value);
+
+const isNoteType = (value: unknown): value is NoteType =>
+  typeof value === 'string' && Object.values(NoteType).includes(value as NoteType);
+
+const isNote = (value: unknown): value is Note => {
+  if (!isRecord(value)) return false;
+  if (typeof value.id !== 'string') return false;
+  if (typeof value.content !== 'string') return false;
+  if (!isNoteType(value.type)) return false;
+  if (!isNumber(value.createdAt) || !isNumber(value.updatedAt)) return false;
+  if (typeof value.subType !== 'undefined' && typeof value.subType !== 'string') return false;
+  if (typeof value.confidence !== 'undefined' && !isNumber(value.confidence)) return false;
+  if (typeof value.analysisPending !== 'undefined' && typeof value.analysisPending !== 'boolean') return false;
+  if (typeof value.parentId !== 'undefined' && value.parentId !== null && typeof value.parentId !== 'string') return false;
+  return true;
+};
+
+const isNoteEventRecord = (value: unknown): value is NoteEvent => {
+  if (!isRecord(value)) return false;
+  if (typeof value.id !== 'string') return false;
+  if (typeof value.type !== 'string') return false;
+  if (!isNumber(value.createdAt)) return false;
+  if (!isRecord(value.payload)) return false;
+
+  switch (value.type) {
+    case 'NOTE_CREATED':
+      return isRecord(value.payload) && isNote((value.payload as { note?: unknown }).note);
+    case 'NOTE_UPDATED': {
+      const payload = value.payload as { id?: unknown; content?: unknown; updatedAt?: unknown };
+      return typeof payload.id === 'string' && typeof payload.content === 'string' && isNumber(payload.updatedAt);
+    }
+    case 'NOTE_META_UPDATED': {
+      const payload = value.payload as {
+        id?: unknown;
+        updates?: unknown;
+        updatedAt?: unknown;
+      };
+      if (typeof payload.id !== 'string' || !isNumber(payload.updatedAt) || !isRecord(payload.updates)) return false;
+      const updates = payload.updates as Record<string, unknown>;
+      if (typeof updates.parentId !== 'undefined' && updates.parentId !== null && typeof updates.parentId !== 'string') return false;
+      if (typeof updates.type !== 'undefined' && !isNoteType(updates.type)) return false;
+      if (typeof updates.subType !== 'undefined' && typeof updates.subType !== 'string') return false;
+      if (typeof updates.confidence !== 'undefined' && !isNumber(updates.confidence)) return false;
+      if (typeof updates.analysisPending !== 'undefined' && typeof updates.analysisPending !== 'boolean') return false;
+      return true;
+    }
+    case 'NOTE_DELETED': {
+      const payload = value.payload as { id?: unknown };
+      return typeof payload.id === 'string';
+    }
+    case 'NOTE_TOUCHED': {
+      const payload = value.payload as { id?: unknown; updatedAt?: unknown };
+      return typeof payload.id === 'string' && isNumber(payload.updatedAt);
+    }
+    default:
+      return false;
+  }
+};
+
+const isTelemetryEvent = (value: unknown): value is TelemetryEvent => {
+  if (!isRecord(value)) return false;
+  if (typeof value.id !== 'string') return false;
+  if (typeof value.type !== 'string') return false;
+  if (!isNumber(value.createdAt)) return false;
+  if (!isRecord(value.payload)) return false;
+
+  switch (value.type) {
+    case 'AI_DARK_MATTER_ANALYSIS_REQUESTED': {
+      const payload = value.payload as { noteCount?: unknown; questionCount?: unknown };
+      return isNumber(payload.noteCount) && isNumber(payload.questionCount);
+    }
+    case 'AI_DARK_MATTER_SUGGESTION_APPLIED': {
+      const payload = value.payload as { kind?: unknown; noteCount?: unknown; suggestionId?: unknown };
+      const validKind = payload.kind === 'new_question' || payload.kind === 'existing_question';
+      return validKind && isNumber(payload.noteCount) &&
+        (typeof payload.suggestionId === 'undefined' || typeof payload.suggestionId === 'string');
+    }
+    case 'AI_DARK_MATTER_SUGGESTION_DISMISSED': {
+      const payload = value.payload as { suggestionId?: unknown };
+      return typeof payload.suggestionId === 'undefined' || typeof payload.suggestionId === 'string';
+    }
+    default:
+      return false;
+  }
+};
+
+const isAppEvent = (value: unknown): value is AppEvent =>
+  isNoteEventRecord(value) || isTelemetryEvent(value);
+
+export const parseAppDataExport = (value: unknown): AppDataExport | null => {
+  if (!isRecord(value)) return null;
+  if (!isNumber(value.version) || value.version !== EXPORT_VERSION) return null;
+  if (!isNumber(value.exportedAt)) return null;
+  if (!isRecord(value.db) || typeof value.db.name !== 'string' || !isNumber(value.db.version)) return null;
+  if (!Array.isArray(value.notes) || !value.notes.every(isNote)) return null;
+  if (!Array.isArray(value.events) || !value.events.every(isAppEvent)) return null;
+  if (!isRecord(value.meta)) return null;
+
+  const meta: Record<string, number> = {};
+  Object.entries(value.meta).forEach(([key, metaValue]) => {
+    if (isNumber(metaValue)) {
+      meta[key] = metaValue;
+    }
+  });
+
+  return {
+    version: value.version,
+    exportedAt: value.exportedAt,
+    db: { name: value.db.name, version: value.db.version },
+    notes: value.notes,
+    events: value.events,
+    meta
+  };
+};
+
+export const exportAppData = async (): Promise<AppDataExport | null> => {
+  return await withDb<AppDataExport | null>(
+    null,
+    async (db) => {
+      await ensureProjection(db);
+      const [notes, events, metaRecords] = await Promise.all([
+        db.getAll(STORE_NOTES),
+        db.getAll(STORE_EVENTS),
+        db.getAll(STORE_META)
+      ]);
+      const meta = metaRecords.reduce<Record<string, number>>((acc, record) => {
+        if (typeof record?.value === 'number') {
+          acc[record.key] = record.value;
+        }
+        return acc;
+      }, {});
+
+      return {
+        version: EXPORT_VERSION,
+        exportedAt: Date.now(),
+        db: {
+          name: DB_NAME,
+          version: DB_VERSION
+        },
+        notes,
+        events,
+        meta
+      };
+    },
+    'Failed to export data'
+  );
+};
+
+export const clearAllData = async (): Promise<boolean> => {
+  return await withDb(
+    false,
+    async (db) => {
+      const tx = db.transaction([STORE_NOTES, STORE_EVENTS, STORE_META], 'readwrite');
+      await Promise.all([
+        tx.objectStore(STORE_NOTES).clear(),
+        tx.objectStore(STORE_EVENTS).clear(),
+        tx.objectStore(STORE_META).clear()
+      ]);
+      await tx.done;
+      return true;
+    },
+    'Failed to clear data'
+  );
+};
+
+export const importAppData = async (payload: AppDataExport, mode: ImportMode): Promise<boolean> => {
+  return await withDb(
+    false,
+    async (db) => {
+      const tx = db.transaction([STORE_NOTES, STORE_EVENTS, STORE_META], 'readwrite');
+      const notesStore = tx.objectStore(STORE_NOTES);
+      const eventsStore = tx.objectStore(STORE_EVENTS);
+      const metaStore = tx.objectStore(STORE_META);
+
+      if (mode === 'replace') {
+        await Promise.all([
+          notesStore.clear(),
+          eventsStore.clear(),
+          metaStore.clear()
+        ]);
+      }
+
+      for (const note of payload.notes) {
+        await notesStore.put(note);
+      }
+
+      for (const event of payload.events) {
+        await eventsStore.put(event);
+      }
+
+      const existingMetaRecords = mode === 'merge' ? await metaStore.getAll() : [];
+      const existingMeta = existingMetaRecords.reduce<Record<string, number>>((acc, record) => {
+        if (typeof record?.value === 'number') {
+          acc[record.key] = record.value;
+        }
+        return acc;
+      }, {});
+
+      const meta = mode === 'merge' ? { ...existingMeta, ...payload.meta } : { ...payload.meta };
+      const maxImportedEventAt = payload.events.length > 0
+        ? Math.max(...payload.events.map((event) => event.createdAt))
+        : 0;
+      const existingLastEventAt = typeof existingMeta[META_LAST_EVENT_AT] === 'number'
+        ? existingMeta[META_LAST_EVENT_AT]
+        : 0;
+      const existingLastProjectionAt = typeof existingMeta[META_LAST_PROJECTION_AT] === 'number'
+        ? existingMeta[META_LAST_PROJECTION_AT]
+        : 0;
+      const nextLastEventAt = mode === 'merge'
+        ? Math.max(existingLastEventAt, maxImportedEventAt)
+        : maxImportedEventAt;
+      const nextLastProjectionAt = mode === 'merge'
+        ? Math.max(existingLastProjectionAt, nextLastEventAt)
+        : nextLastEventAt;
+
+      meta[META_LAST_EVENT_AT] = nextLastEventAt;
+      meta[META_LAST_PROJECTION_AT] = nextLastProjectionAt;
+
+      for (const [key, value] of Object.entries(meta)) {
+        if (isNumber(value)) {
+          await metaStore.put({ key, value });
+        }
+      }
+
+      await tx.done;
+      return true;
+    },
+    'Failed to import data'
+  );
+};
+
 export const deleteNote = async (noteId: string): Promise<void> => {
   await withDb<void>(
     undefined,

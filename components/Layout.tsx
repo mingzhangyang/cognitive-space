@@ -1,29 +1,52 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAppContext } from '../contexts/AppContext';
-import { HelpIcon, HomeIcon, InboxIcon, MenuIcon } from './Icons';
+import { ArrowDownIcon, ArrowUpIcon, HelpIcon, HomeIcon, InboxIcon, MenuIcon, TrashIcon } from './Icons';
 import IconButton from './IconButton';
 import { getSessionFooterLine } from '../services/footerLine';
 import MessageCenterPanel from './MessageCenterPanel';
 import { useAssistantInbox } from '../contexts/AssistantInboxContext';
+import {
+  clearAllData,
+  exportAppData,
+  importAppData,
+  parseAppDataExport,
+  type AppDataExport,
+  type ImportMode
+} from '../services/storageService';
+import ConfirmDialog from './ConfirmDialog';
+import { useNotifications } from '../contexts/NotificationContext';
+import { formatTemplate } from '../utils/text';
+import Modal from './Modal';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const isHome = location.pathname === '/';
   const { t, language, setLanguage, theme, toggleTheme } = useAppContext();
   const { messageCount, jobs, messages } = useAssistantInbox();
+  const { notify } = useNotifications();
   const year = new Date().getFullYear();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isInboxOpen, setIsInboxOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [footerLine, setFooterLine] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [pendingImport, setPendingImport] = useState<AppDataExport | null>(null);
+  const [pendingImportName, setPendingImportName] = useState('');
+  const [isImportConfirmOpen, setIsImportConfirmOpen] = useState(false);
+  const [importMode, setImportMode] = useState<ImportMode>('merge');
+  const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
   const menuItemRefs = useRef<Array<HTMLButtonElement | HTMLAnchorElement | null>>([]);
+  const importInputRef = useRef<HTMLInputElement | null>(null);
+
+  const menuItemCount = isHome ? 6 : 3;
 
   const focusMenuItem = (index: number) => {
-    const itemCount = 3;
-    const nextIndex = ((index % itemCount) + itemCount) % itemCount;
+    const nextIndex = ((index % menuItemCount) + menuItemCount) % menuItemCount;
     setActiveIndex(nextIndex);
   };
 
@@ -128,7 +151,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         break;
       case 'End':
         event.preventDefault();
-        focusMenuItem(2);
+        focusMenuItem(menuItemCount - 1);
         break;
       case 'Escape':
         event.preventDefault();
@@ -142,6 +165,114 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         break;
     }
   };
+
+  const handleExportData = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    setMenuOpen(false);
+    try {
+      const payload = await exportAppData();
+      if (!payload || typeof document === 'undefined') {
+        notify({ message: t('export_failed'), variant: 'error' });
+        return;
+      }
+
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const dateStamp = new Date(payload.exportedAt).toISOString().slice(0, 10);
+      link.href = url;
+      link.download = `${t('export_file_base')}-${dateStamp}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+      notify({ message: t('export_ready'), variant: 'success' });
+    } catch (error) {
+      console.error('Failed to export data', error);
+      notify({ message: t('export_failed'), variant: 'error' });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleClearData = async () => {
+    if (isClearing) return;
+    setIsClearing(true);
+    const success = await clearAllData();
+    setIsClearing(false);
+    setIsClearConfirmOpen(false);
+    if (!success) {
+      notify({ message: t('clear_failed'), variant: 'error' });
+      return;
+    }
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
+  };
+
+  const handleImportClick = () => {
+    if (isImporting) return;
+    setMenuOpen(false);
+    importInputRef.current?.click();
+  };
+
+  const handleImportFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    event.target.value = '';
+    if (!file) return;
+    try {
+      const content = await file.text();
+      const parsed = parseAppDataExport(JSON.parse(content));
+      if (!parsed) {
+        notify({ message: t('import_invalid'), variant: 'error' });
+        return;
+      }
+      setPendingImport(parsed);
+      setPendingImportName(file.name);
+      setIsImportConfirmOpen(true);
+    } catch (error) {
+      console.error('Failed to import data', error);
+      notify({ message: t('import_failed'), variant: 'error' });
+    }
+  };
+
+  const handleImportConfirm = async () => {
+    if (!pendingImport || isImporting) return;
+    setIsImporting(true);
+    const success = await importAppData(pendingImport, importMode);
+    setIsImporting(false);
+    setIsImportConfirmOpen(false);
+    setPendingImport(null);
+    setPendingImportName('');
+    if (!success) {
+      notify({ message: t('import_failed'), variant: 'error' });
+      return;
+    }
+    notify({ message: t('import_success'), variant: 'success' });
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
+  };
+
+  const handleImportCancel = () => {
+    if (isImporting) return;
+    setIsImportConfirmOpen(false);
+    setPendingImport(null);
+    setPendingImportName('');
+  };
+
+  const helpIndex = isHome ? 5 : 2;
+  const importConfirmMessage = pendingImport
+    ? formatTemplate(t('import_data_confirm'), {
+        notes: pendingImport.notes.length,
+        events: pendingImport.events.length,
+        file: pendingImportName || t('import_file_fallback')
+      })
+    : '';
+  const importModeHelp = importMode === 'merge'
+    ? t('import_mode_merge_hint')
+    : t('import_mode_replace_hint');
 
   return (
     <div className="min-h-screen flex flex-col max-w-3xl mx-auto w-full px-5 sm:px-6 pt-6 sm:pt-9 pb-10 sm:pb-12 relative transition-colors duration-300">
@@ -270,19 +401,91 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     </span>
                   </span>
                 </button>
+                {isHome && (
+                  <>
+                    <button
+                      role="menuitem"
+                      ref={(el) => {
+                        menuItemRefs.current[2] = el;
+                      }}
+                      onClick={handleExportData}
+                      className={`menu-item ${isExporting ? 'opacity-60 cursor-not-allowed' : ''}`}
+                      tabIndex={activeIndex === 2 ? 0 : -1}
+                      onMouseEnter={() => setActiveIndex(2)}
+                      onFocus={() => setActiveIndex(2)}
+                      disabled={isExporting}
+                    >
+                      <span className="h-9 w-9 rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 grid place-items-center text-subtle dark:text-subtle-dark">
+                        <ArrowDownIcon className="w-4 h-4" />
+                      </span>
+                      <span className="flex-1">
+                        <span className="block text-body-sm font-medium">{t('menu_export_data_label')}</span>
+                        <span className="block text-mini text-subtle dark:text-subtle-dark">
+                          {t('menu_export_data_action')}
+                        </span>
+                      </span>
+                    </button>
+                    <button
+                      role="menuitem"
+                      ref={(el) => {
+                        menuItemRefs.current[3] = el;
+                      }}
+                      onClick={handleImportClick}
+                      className={`menu-item ${isImporting ? 'opacity-60 cursor-not-allowed' : ''}`}
+                      tabIndex={activeIndex === 3 ? 0 : -1}
+                      onMouseEnter={() => setActiveIndex(3)}
+                      onFocus={() => setActiveIndex(3)}
+                      disabled={isImporting}
+                    >
+                      <span className="h-9 w-9 rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 grid place-items-center text-subtle dark:text-subtle-dark">
+                        <ArrowUpIcon className="w-4 h-4" />
+                      </span>
+                      <span className="flex-1">
+                        <span className="block text-body-sm font-medium">{t('menu_import_data_label')}</span>
+                        <span className="block text-mini text-subtle dark:text-subtle-dark">
+                          {t('menu_import_data_action')}
+                        </span>
+                      </span>
+                    </button>
+                    <button
+                      role="menuitem"
+                      ref={(el) => {
+                        menuItemRefs.current[4] = el;
+                      }}
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setIsClearConfirmOpen(true);
+                      }}
+                      className="menu-item"
+                      tabIndex={activeIndex === 4 ? 0 : -1}
+                      onMouseEnter={() => setActiveIndex(4)}
+                      onFocus={() => setActiveIndex(4)}
+                    >
+                      <span className="h-9 w-9 rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 grid place-items-center text-subtle dark:text-subtle-dark">
+                        <TrashIcon className="w-4 h-4" />
+                      </span>
+                      <span className="flex-1">
+                        <span className="block text-body-sm font-medium">{t('menu_clear_data_label')}</span>
+                        <span className="block text-mini text-subtle dark:text-subtle-dark">
+                          {t('menu_clear_data_action')}
+                        </span>
+                      </span>
+                    </button>
+                  </>
+                )}
                 <a
                   role="menuitem"
                   ref={(el) => {
-                    menuItemRefs.current[2] = el;
+                    menuItemRefs.current[helpIndex] = el;
                   }}
                   href="https://github.com/mingzhangyang/cognitive-space#guide"
                   className="menu-item"
                   target="_blank"
                   rel="noreferrer"
                   onClick={() => setMenuOpen(false)}
-                  tabIndex={activeIndex === 2 ? 0 : -1}
-                  onMouseEnter={() => setActiveIndex(2)}
-                  onFocus={() => setActiveIndex(2)}
+                  tabIndex={activeIndex === helpIndex ? 0 : -1}
+                  onMouseEnter={() => setActiveIndex(helpIndex)}
+                  onFocus={() => setActiveIndex(helpIndex)}
                 >
                   <span className="h-9 w-9 rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 grid place-items-center text-subtle dark:text-subtle-dark">
                     <HelpIcon className="w-4 h-4" />
@@ -334,6 +537,92 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         onClose={() => {
           setIsInboxOpen(false);
         }}
+      />
+      <input
+        ref={importInputRef}
+        type="file"
+        accept="application/json,.json"
+        className="hidden"
+        onChange={handleImportFileChange}
+        aria-label={t('menu_import_data_label')}
+      />
+      <Modal
+        isOpen={isImportConfirmOpen}
+        onClose={handleImportCancel}
+        cardClassName="max-w-md"
+        isDismissable={!isImporting}
+      >
+        <div className="space-y-5">
+          <div className="space-y-2">
+            <p className="text-ink dark:text-ink-dark text-lg font-medium">{t('import_data_title')}</p>
+            <p className="text-body-sm-muted">{importConfirmMessage}</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-mini-up text-subtle dark:text-subtle-dark">{t('import_mode_label')}</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setImportMode('merge')}
+                aria-pressed={importMode === 'merge'}
+                disabled={isImporting}
+                className={`chip-outline cursor-pointer ${
+                  importMode === 'merge'
+                    ? 'bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:border-amber-700'
+                    : ''
+                } ${isImporting ? 'opacity-60 cursor-not-allowed' : ''}`}
+              >
+                {t('import_mode_merge_label')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setImportMode('replace')}
+                aria-pressed={importMode === 'replace'}
+                disabled={isImporting}
+                className={`chip-outline cursor-pointer ${
+                  importMode === 'replace'
+                    ? 'bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:border-amber-700'
+                    : ''
+                } ${isImporting ? 'opacity-60 cursor-not-allowed' : ''}`}
+              >
+                {t('import_mode_replace_label')}
+              </button>
+            </div>
+            <p className="text-caption text-subtle dark:text-subtle-dark">{importModeHelp}</p>
+          </div>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={handleImportCancel}
+              disabled={isImporting}
+              className={`px-4 py-2 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors ${
+                isImporting ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+              }`}
+            >
+              {t('cancel')}
+            </button>
+            <button
+              onClick={handleImportConfirm}
+              disabled={isImporting}
+              className={`px-4 py-2 text-sm rounded-md transition-colors ${
+                importMode === 'replace'
+                  ? 'btn-danger'
+                  : 'bg-ink text-white dark:bg-muted-600 hover:opacity-90 transition-opacity'
+              } ${isImporting ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+            >
+              {t('import_data_action')}
+            </button>
+          </div>
+        </div>
+      </Modal>
+      <ConfirmDialog
+        isOpen={isClearConfirmOpen}
+        message={t('clear_data_confirm')}
+        onConfirm={handleClearData}
+        onCancel={() => {
+          if (!isClearing) setIsClearConfirmOpen(false);
+        }}
+        confirmLabel={t('clear_data_action')}
+        confirmTone="danger"
+        isWorking={isClearing}
       />
     </div>
   );

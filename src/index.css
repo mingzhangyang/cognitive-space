@@ -250,7 +250,7 @@ html.dark ::-webkit-scrollbar-thumb {
   }
 
   .menu-item {
-    @apply relative z-10 w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-surface-hover dark:hover:bg-surface-hover-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 dark:focus-visible:ring-accent-dark/30;
+    @apply relative z-10 w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-surface-hover dark:hover:bg-surface-hover-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 dark:focus-visible:ring-accent-dark/30 cursor-pointer;
   }
 
   .card-interactive {
