@@ -49,7 +49,6 @@ const MessageCenterPanel: React.FC<{ isOpen: boolean; onClose: () => void }> = (
   const { t, language } = useAppContext();
   const translate = t as (key: string) => string;
   const { jobs, messages, dismissMessage } = useAssistantInbox();
-
   useEffect(() => {
     if (!isOpen) return;
     const handleEscape = (event: KeyboardEvent) => {
@@ -76,10 +75,11 @@ const MessageCenterPanel: React.FC<{ isOpen: boolean; onClose: () => void }> = (
   return (
     <div className="fixed inset-0 z-40">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <aside className="absolute right-0 top-0 h-full w-full max-w-sm sm:max-w-md bg-surface dark:bg-surface-dark border-l border-line dark:border-line-dark shadow-[var(--shadow-elev-2)] flex flex-col">
+      <aside
+        className="absolute right-0 top-0 h-full w-full max-w-sm sm:max-w-md bg-surface dark:bg-surface-dark border-l border-line dark:border-line-dark shadow-[var(--shadow-elev-2)] flex flex-col"
+      >
         <div className="px-5 py-4 border-b border-line-soft dark:border-line-dark flex items-center justify-between">
           <div>
-            <p className="text-caption-upper">{translate('assistant_inbox_label')}</p>
             <h2 className="text-lg font-medium text-ink dark:text-ink-dark">{translate('assistant_inbox_title')}</h2>
           </div>
           <IconButton
