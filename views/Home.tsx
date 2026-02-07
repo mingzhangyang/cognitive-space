@@ -5,11 +5,12 @@ import { getQuestions, getNotes, deleteNote, getDarkMatterCount, updateNoteConte
 import { Note } from '../types';
 import { PlusIcon, SearchIcon, XIcon, MoreIcon, CheckIcon, LoadingSpinner } from '../components/Icons';
 import ActionIconButton from '../components/ActionIconButton';
+import ActionSheetButton from '../components/ActionSheetButton';
 import ConfirmDialog from '../components/ConfirmDialog';
 import IconButton from '../components/IconButton';
+import MobileActionSheet from '../components/MobileActionSheet';
 import { useAppContext } from '../contexts/AppContext';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
-import { useMobileActionsDismiss } from '../hooks/useMobileActionsDismiss';
 
 const Home: React.FC = () => {
   const [questions, setQuestions] = useState<Note[]>([]);
@@ -25,7 +26,6 @@ const Home: React.FC = () => {
   const [fabContainer, setFabContainer] = useState<HTMLElement | null>(null);
   const { t } = useAppContext();
   const { copyText } = useCopyToClipboard();
-  useMobileActionsDismiss(mobileQuestionActionsId, setMobileQuestionActionsId);
 
   const loadData = async () => {
     const allNotes = await getNotes();
@@ -281,44 +281,43 @@ const Home: React.FC = () => {
                   {!isEditing && (
                     <div className="relative flex items-center gap-2 ml-4">
                       <IconButton
-                        label={isMobileActionsOpen ? t('actions_hide') : t('actions_show')}
+                        label={t('actions_show')}
                         sizeClassName="h-10 w-10"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          setMobileQuestionActionsId((prev) => (prev === q.id ? null : q.id));
+                          setMobileQuestionActionsId(q.id);
                         }}
                         className="sm:hidden text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                        aria-expanded={isMobileActionsOpen}
-                        aria-controls={`question-actions-${q.id}`}
-                        data-mobile-actions-toggle
                       >
-                        {isMobileActionsOpen ? <XIcon className="w-4 h-4" /> : <MoreIcon className="w-4 h-4" />}
+                        <MoreIcon className="w-4 h-4" />
                       </IconButton>
-                      <div
-                        className={`${
-                          isMobileActionsOpen ? 'flex' : 'hidden'
-                        } sm:hidden absolute right-0 top-11 z-20 flex-col gap-1 rounded-xl border border-line/70 dark:border-line-dark/70 bg-surface dark:bg-surface-dark p-2 shadow-[var(--shadow-elev-2)] dark:shadow-[var(--shadow-elev-2-dark)]`}
-                        id={`question-actions-${q.id}`}
-                        data-mobile-actions
-                        role="menu"
+                      <MobileActionSheet
+                        isOpen={isMobileActionsOpen}
+                        onClose={() => setMobileQuestionActionsId(null)}
                       >
-                        <ActionIconButton
+                        <ActionSheetButton
                           action="edit"
-                          onClick={(e) => handleStartEdit(e, q)}
-                          baseClassName="text-muted-400 dark:text-muted-400"
+                          onClick={(e) => {
+                            setMobileQuestionActionsId(null);
+                            handleStartEdit(e, q);
+                          }}
                         />
-                        <ActionIconButton
+                        <ActionSheetButton
                           action="copy"
-                          onClick={(e) => handleCopyQuestion(e, q.content)}
-                          baseClassName="text-muted-400 dark:text-muted-400"
+                          onClick={(e) => {
+                            setMobileQuestionActionsId(null);
+                            handleCopyQuestion(e, q.content);
+                          }}
                         />
-                        <ActionIconButton
+                        <ActionSheetButton
                           action="delete"
-                          onClick={(e) => handleDelete(e, q.id)}
-                          baseClassName="text-muted-400 dark:text-muted-400"
+                          onClick={(e) => {
+                            setMobileQuestionActionsId(null);
+                            handleDelete(e, q.id);
+                          }}
                         />
-                      </div>
+                      </MobileActionSheet>
                       <div className="hidden sm:flex items-center gap-2">
                         <ActionIconButton
                           action="edit"

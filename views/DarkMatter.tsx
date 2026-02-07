@@ -18,13 +18,14 @@ import { useAppContext } from '../contexts/AppContext';
 import { useAssistantInbox } from '../contexts/AssistantInboxContext';
 import { LoadingSpinner, CheckIcon, XIcon, MoreIcon } from '../components/Icons';
 import ActionIconButton from '../components/ActionIconButton';
+import ActionSheetButton from '../components/ActionSheetButton';
 import ConfirmDialog from '../components/ConfirmDialog';
 import Modal from '../components/Modal';
 import IconButton from '../components/IconButton';
+import MobileActionSheet from '../components/MobileActionSheet';
 import TypeBadge from '../components/TypeBadge';
 import { analyzeDarkMatter } from '../services/aiService';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
-import { useMobileActionsDismiss } from '../hooks/useMobileActionsDismiss';
 import { containsCjk, formatTemplate } from '../utils/text';
 import { createMessageId } from '../utils/ids';
 
@@ -137,8 +138,6 @@ const DarkMatter: React.FC = () => {
   } = useAssistantInbox();
   const aiRevealThreshold = 4;
   const pageSize = 25;
-
-  useMobileActionsDismiss(mobileNoteActionsId, setMobileNoteActionsId);
 
   const noteById = useMemo(() => {
     const map = new Map<string, Note>();
@@ -679,29 +678,43 @@ const DarkMatter: React.FC = () => {
                   {editingId !== note.id && (
                     <>
                       <IconButton
-                        label={isMobileActionsOpen ? t('actions_hide') : t('actions_show')}
+                        label={t('actions_show')}
                         sizeClassName="h-10 w-10"
-                        onClick={() => setMobileNoteActionsId((prev) => (prev === note.id ? null : note.id))}
+                        onClick={() => setMobileNoteActionsId(note.id)}
                         className="sm:hidden text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                        aria-expanded={isMobileActionsOpen}
-                        aria-controls={`note-actions-${note.id}`}
-                        data-mobile-actions-toggle
                       >
-                        {isMobileActionsOpen ? <XIcon className="w-4 h-4" /> : <MoreIcon className="w-4 h-4" />}
+                        <MoreIcon className="w-4 h-4" />
                       </IconButton>
                       <div className="hidden sm:flex gap-1 opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         {actionButtons}
                       </div>
-                      <div
-                        id={`note-actions-${note.id}`}
-                        className={`${
-                          isMobileActionsOpen ? 'flex' : 'hidden'
-                        } sm:hidden absolute right-0 top-11 z-20 flex-col gap-1 rounded-xl border border-line/70 dark:border-line-dark/70 bg-surface dark:bg-surface-dark p-2 shadow-[var(--shadow-elev-2)] dark:shadow-[var(--shadow-elev-2-dark)]`}
-                        data-mobile-actions
-                        role="menu"
+                      <MobileActionSheet
+                        isOpen={isMobileActionsOpen}
+                        onClose={() => setMobileNoteActionsId(null)}
                       >
-                        {actionButtons}
-                      </div>
+                        <ActionSheetButton
+                          action="edit"
+                          onClick={() => {
+                            setMobileNoteActionsId(null);
+                            handleEdit(note);
+                          }}
+                          disabled={isSavingEdit}
+                        />
+                        <ActionSheetButton
+                          action="copy"
+                          onClick={() => {
+                            setMobileNoteActionsId(null);
+                            handleCopyNote(note.content);
+                          }}
+                        />
+                        <ActionSheetButton
+                          action="delete"
+                          onClick={() => {
+                            setMobileNoteActionsId(null);
+                            handleDelete(note.id);
+                          }}
+                        />
+                      </MobileActionSheet>
                     </>
                   )}
                 </div>
