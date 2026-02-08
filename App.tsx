@@ -6,6 +6,7 @@ import Write from './views/Write';
 import QuestionDetail from './views/QuestionDetail';
 import DarkMatter from './views/DarkMatter';
 import Privacy from './views/Privacy';
+import About from './views/About';
 import { AppProvider } from './contexts/AppContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { AssistantInboxProvider } from './contexts/AssistantInboxContext';
@@ -26,6 +27,7 @@ const App: React.FC = () => {
                 <Route path="/write" element={<Write />} />
                 <Route path="/question/:id" element={<QuestionDetail />} />
                 <Route path="/dark-matter" element={<DarkMatter />} />
+                <Route path="/about" element={<About />} />
                 <Route path="/privacy" element={<Privacy />} />
               </Routes>
             </Layout>

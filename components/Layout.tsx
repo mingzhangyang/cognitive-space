@@ -1,7 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../contexts/AppContext';
-import { ArrowDownIcon, ArrowUpIcon, HelpIcon, HomeIcon, InboxIcon, MenuIcon, TrashIcon } from './Icons';
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  DatabaseIcon,
+  HomeIcon,
+  InboxIcon,
+  InfoIcon,
+  MenuIcon,
+  TrashIcon
+} from './Icons';
 import IconButton from './IconButton';
 import { getSessionFooterLine } from '../services/footerLine';
 import MessageCenterPanel from './MessageCenterPanel';
@@ -26,7 +35,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { messageCount, jobs, messages } = useAssistantInbox();
   const { notify } = useNotifications();
   const year = new Date().getFullYear();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isDataMenuOpen, setIsDataMenuOpen] = useState(false);
   const [isInboxOpen, setIsInboxOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [footerLine, setFooterLine] = useState<string | null>(null);
@@ -43,7 +54,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const menuItemRefs = useRef<Array<HTMLButtonElement | HTMLAnchorElement | null>>([]);
   const importInputRef = useRef<HTMLInputElement | null>(null);
 
-  const menuItemCount = isHome ? 6 : 3;
+  const menuItemCount = isHome ? 4 : 3;
 
   const focusMenuItem = (index: number) => {
     const nextIndex = ((index % menuItemCount) + menuItemCount) % menuItemCount;
@@ -170,6 +181,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     if (isExporting) return;
     setIsExporting(true);
     setMenuOpen(false);
+    setIsDataMenuOpen(false);
     try {
       const payload = await exportAppData();
       if (!payload || typeof document === 'undefined') {
@@ -214,6 +226,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const handleImportClick = () => {
     if (isImporting) return;
     setMenuOpen(false);
+    setIsDataMenuOpen(false);
     importInputRef.current?.click();
   };
 
@@ -262,7 +275,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     setPendingImportName('');
   };
 
-  const helpIndex = isHome ? 5 : 2;
+  const aboutIndex = isHome ? 3 : 2;
   const importConfirmMessage = pendingImport
     ? formatTemplate(t('import_data_confirm'), {
         notes: pendingImport.notes.length,
@@ -402,101 +415,55 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   </span>
                 </button>
                 {isHome && (
-                  <>
-                    <button
-                      role="menuitem"
-                      ref={(el) => {
-                        menuItemRefs.current[2] = el;
-                      }}
-                      onClick={handleExportData}
-                      className={`menu-item ${isExporting ? 'opacity-60 cursor-not-allowed' : ''}`}
-                      tabIndex={activeIndex === 2 ? 0 : -1}
-                      onMouseEnter={() => setActiveIndex(2)}
-                      onFocus={() => setActiveIndex(2)}
-                      disabled={isExporting}
-                    >
-                      <span className="h-9 w-9 rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 grid place-items-center text-subtle dark:text-subtle-dark">
-                        <ArrowDownIcon className="w-4 h-4" />
+                  <button
+                    role="menuitem"
+                    ref={(el) => {
+                      menuItemRefs.current[2] = el;
+                    }}
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setIsDataMenuOpen(true);
+                    }}
+                    className="menu-item"
+                    tabIndex={activeIndex === 2 ? 0 : -1}
+                    onMouseEnter={() => setActiveIndex(2)}
+                    onFocus={() => setActiveIndex(2)}
+                  >
+                    <span className="h-9 w-9 rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 grid place-items-center text-subtle dark:text-subtle-dark">
+                      <DatabaseIcon className="w-4 h-4" />
+                    </span>
+                    <span className="flex-1">
+                      <span className="block text-body-sm font-medium">{t('menu_data_label')}</span>
+                      <span className="block text-mini text-subtle dark:text-subtle-dark">
+                        {t('menu_data_action')}
                       </span>
-                      <span className="flex-1">
-                        <span className="block text-body-sm font-medium">{t('menu_export_data_label')}</span>
-                        <span className="block text-mini text-subtle dark:text-subtle-dark">
-                          {t('menu_export_data_action')}
-                        </span>
-                      </span>
-                    </button>
-                    <button
-                      role="menuitem"
-                      ref={(el) => {
-                        menuItemRefs.current[3] = el;
-                      }}
-                      onClick={handleImportClick}
-                      className={`menu-item ${isImporting ? 'opacity-60 cursor-not-allowed' : ''}`}
-                      tabIndex={activeIndex === 3 ? 0 : -1}
-                      onMouseEnter={() => setActiveIndex(3)}
-                      onFocus={() => setActiveIndex(3)}
-                      disabled={isImporting}
-                    >
-                      <span className="h-9 w-9 rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 grid place-items-center text-subtle dark:text-subtle-dark">
-                        <ArrowUpIcon className="w-4 h-4" />
-                      </span>
-                      <span className="flex-1">
-                        <span className="block text-body-sm font-medium">{t('menu_import_data_label')}</span>
-                        <span className="block text-mini text-subtle dark:text-subtle-dark">
-                          {t('menu_import_data_action')}
-                        </span>
-                      </span>
-                    </button>
-                    <button
-                      role="menuitem"
-                      ref={(el) => {
-                        menuItemRefs.current[4] = el;
-                      }}
-                      onClick={() => {
-                        setMenuOpen(false);
-                        setIsClearConfirmOpen(true);
-                      }}
-                      className="menu-item"
-                      tabIndex={activeIndex === 4 ? 0 : -1}
-                      onMouseEnter={() => setActiveIndex(4)}
-                      onFocus={() => setActiveIndex(4)}
-                    >
-                      <span className="h-9 w-9 rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 grid place-items-center text-subtle dark:text-subtle-dark">
-                        <TrashIcon className="w-4 h-4" />
-                      </span>
-                      <span className="flex-1">
-                        <span className="block text-body-sm font-medium">{t('menu_clear_data_label')}</span>
-                        <span className="block text-mini text-subtle dark:text-subtle-dark">
-                          {t('menu_clear_data_action')}
-                        </span>
-                      </span>
-                    </button>
-                  </>
+                    </span>
+                  </button>
                 )}
-                <a
+                <button
                   role="menuitem"
                   ref={(el) => {
-                    menuItemRefs.current[helpIndex] = el;
+                    menuItemRefs.current[aboutIndex] = el;
                   }}
-                  href="https://github.com/mingzhangyang/cognitive-space#guide"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    navigate('/about');
+                  }}
                   className="menu-item"
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={() => setMenuOpen(false)}
-                  tabIndex={activeIndex === helpIndex ? 0 : -1}
-                  onMouseEnter={() => setActiveIndex(helpIndex)}
-                  onFocus={() => setActiveIndex(helpIndex)}
+                  tabIndex={activeIndex === aboutIndex ? 0 : -1}
+                  onMouseEnter={() => setActiveIndex(aboutIndex)}
+                  onFocus={() => setActiveIndex(aboutIndex)}
                 >
                   <span className="h-9 w-9 rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 grid place-items-center text-subtle dark:text-subtle-dark">
-                    <HelpIcon className="w-4 h-4" />
+                    <InfoIcon className="w-4 h-4" />
                   </span>
                   <span className="flex-1">
-                    <span className="block text-body-sm font-medium">{t('help')}</span>
+                    <span className="block text-body-sm font-medium">{t('menu_about_label')}</span>
                     <span className="block text-mini text-subtle dark:text-subtle-dark">
-                      {t('menu_help_action')}
+                      {t('menu_about_action')}
                     </span>
                   </span>
-                </a>
+                </button>
               </div>
             )}
           </div>
@@ -546,6 +513,79 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         onChange={handleImportFileChange}
         aria-label={t('menu_import_data_label')}
       />
+      <Modal
+        isOpen={isDataMenuOpen}
+        onClose={() => setIsDataMenuOpen(false)}
+        cardClassName="max-w-md w-full"
+      >
+        <div className="space-y-5">
+          <div className="space-y-2">
+            <p className="text-ink dark:text-ink-dark text-lg font-medium">{t('menu_data_label')}</p>
+            <p className="text-body-sm-muted">{t('menu_data_action')}</p>
+          </div>
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={handleExportData}
+              className={`menu-item ${isExporting ? 'opacity-60 cursor-not-allowed' : ''}`}
+              disabled={isExporting}
+            >
+              <span className="h-9 w-9 rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 grid place-items-center text-subtle dark:text-subtle-dark">
+                <ArrowDownIcon className="w-4 h-4" />
+              </span>
+              <span className="flex-1">
+                <span className="block text-body-sm font-medium">{t('menu_export_data_label')}</span>
+                <span className="block text-mini text-subtle dark:text-subtle-dark">
+                  {t('menu_export_data_action')}
+                </span>
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={handleImportClick}
+              className={`menu-item ${isImporting ? 'opacity-60 cursor-not-allowed' : ''}`}
+              disabled={isImporting}
+            >
+              <span className="h-9 w-9 rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 grid place-items-center text-subtle dark:text-subtle-dark">
+                <ArrowUpIcon className="w-4 h-4" />
+              </span>
+              <span className="flex-1">
+                <span className="block text-body-sm font-medium">{t('menu_import_data_label')}</span>
+                <span className="block text-mini text-subtle dark:text-subtle-dark">
+                  {t('menu_import_data_action')}
+                </span>
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsDataMenuOpen(false);
+                setIsClearConfirmOpen(true);
+              }}
+              className="menu-item"
+            >
+              <span className="h-9 w-9 rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 grid place-items-center text-subtle dark:text-subtle-dark">
+                <TrashIcon className="w-4 h-4" />
+              </span>
+              <span className="flex-1">
+                <span className="block text-body-sm font-medium">{t('menu_clear_data_label')}</span>
+                <span className="block text-mini text-subtle dark:text-subtle-dark">
+                  {t('menu_clear_data_action')}
+                </span>
+              </span>
+            </button>
+          </div>
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => setIsDataMenuOpen(false)}
+              className="px-4 py-2 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors cursor-pointer"
+            >
+              {t('cancel')}
+            </button>
+          </div>
+        </div>
+      </Modal>
       <Modal
         isOpen={isImportConfirmOpen}
         onClose={handleImportCancel}

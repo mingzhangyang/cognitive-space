@@ -124,6 +124,22 @@ export const HelpIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+export const LightbulbIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M12 2a7 7 0 0 0-4 12c.8.8 1.5 2 1.5 3h5c0-1 .7-2.2 1.5-3A7 7 0 0 0 12 2Z" />
+    <path d="M9 18h6" />
+    <path d="M10 21h4" />
+  </svg>
+);
+
+export const InfoIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="12" cy="12" r="9" />
+    <line x1="12" y1="10" x2="12" y2="16" />
+    <circle cx="12" cy="7.5" r="0.7" />
+  </svg>
+);
+
 export const InboxIcon = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M3 12.5l3.5-7h11L21 12.5v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -144,6 +160,14 @@ export const MenuIcon = ({ className }: { className?: string }) => (
     <line x1="4" y1="7" x2="20" y2="7" />
     <line x1="4" y1="12" x2="20" y2="12" />
     <line x1="4" y1="17" x2="20" y2="17" />
+  </svg>
+);
+
+export const DatabaseIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <ellipse cx="12" cy="5" rx="8" ry="3" />
+    <path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5" />
+    <path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" />
   </svg>
 );
 

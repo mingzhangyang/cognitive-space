@@ -57,7 +57,7 @@ const SeoManager = () => {
   useEffect(() => {
     const path = normalizePath(location.pathname);
     let config: SeoConfig;
-    const isPublicRoute = path === '/' || path === '/privacy';
+    const isPublicRoute = path === '/' || path === '/privacy' || path === '/about';
 
     if (path.startsWith('/question/')) {
       config = {
@@ -81,6 +81,11 @@ const SeoManager = () => {
             return {
               title: t('seo_title_privacy'),
               description: t('seo_desc_privacy')
+            };
+          case '/about':
+            return {
+              title: t('seo_title_about'),
+              description: t('seo_desc_about')
             };
           case '/':
           default:
