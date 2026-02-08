@@ -305,3 +305,63 @@ html.dark ::-webkit-scrollbar-thumb {
     animation: none;
   }
 }
+
+/* Cast success fade-out */
+@keyframes castSuccessFade {
+  0% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-cast-success {
+  animation: castSuccessFade 1.5s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-cast-success {
+    animation: none;
+  }
+}
+
+/* Markdown preview styling */
+.prose-preview h1 {
+  @apply text-2xl font-bold mb-3 mt-4;
+}
+
+.prose-preview h2 {
+  @apply text-xl font-bold mb-2 mt-3;
+}
+
+.prose-preview h3 {
+  @apply text-lg font-semibold mb-2 mt-3;
+}
+
+.prose-preview p {
+  @apply mb-3 leading-relaxed;
+}
+
+.prose-preview ul {
+  @apply list-disc list-inside mb-3 space-y-1;
+}
+
+.prose-preview ol {
+  @apply list-decimal list-inside mb-3 space-y-1;
+}
+
+.prose-preview code {
+  @apply text-[0.9em] px-1.5 py-0.5 rounded bg-line/60 dark:bg-line-dark/60;
+}
+
+.prose-preview strong {
+  @apply font-bold;
+}
+
+.prose-preview em {
+  @apply italic;
+}

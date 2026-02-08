@@ -1,17 +1,58 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createNoteObject, saveNote, getQuestions, updateNoteMeta } from '../services/storageService';
 import { analyzeText } from '../services/aiService';
 import { NoteType, AnalysisResult } from '../types';
-import { LoadingSpinner } from '../components/Icons';
+import { LoadingSpinner, EyeIcon, EyeOffIcon } from '../components/Icons';
 import { useAppContext } from '../contexts/AppContext';
 import { useAssistantInbox } from '../contexts/AssistantInboxContext';
 import { truncate } from '../utils/text';
 import { createMessageId } from '../utils/ids';
 
+/** Lightweight markdown-to-HTML for preview (bold, italic, headings, lists, code, paragraphs). */
+function renderSimpleMarkdown(text: string): string {
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  return escaped
+    .split('\n\n')
+    .map(block => {
+      const trimmed = block.trim();
+      if (!trimmed) return '';
+      // Headings
+      if (/^### /.test(trimmed)) return `<h3>${inline(trimmed.slice(4))}</h3>`;
+      if (/^## /.test(trimmed)) return `<h2>${inline(trimmed.slice(3))}</h2>`;
+      if (/^# /.test(trimmed)) return `<h1>${inline(trimmed.slice(2))}</h1>`;
+      // Unordered list
+      if (/^[-*] /.test(trimmed)) {
+        const items = trimmed.split('\n').map(l => `<li>${inline(l.replace(/^[-*] /, ''))}</li>`).join('');
+        return `<ul>${items}</ul>`;
+      }
+      // Ordered list
+      if (/^\d+\. /.test(trimmed)) {
+        const items = trimmed.split('\n').map(l => `<li>${inline(l.replace(/^\d+\. /, ''))}</li>`).join('');
+        return `<ol>${items}</ol>`;
+      }
+      return `<p>${inline(trimmed.replace(/\n/g, '<br/>'))}</p>`;
+    })
+    .join('');
+}
+
+function inline(s: string): string {
+  return s
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+    .replace(/_([^_]+)_/g, '<em>$1</em>');
+}
+
 const Write: React.FC = () => {
   const [content, setContent] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [castSuccess, setCastSuccess] = useState(false);
   const { t, language } = useAppContext();
   const { createJob, removeJob, addMessage } = useAssistantInbox();
   const navigate = useNavigate();
@@ -25,6 +66,30 @@ const Write: React.FC = () => {
     const fromState = (location.state as { questionId?: string } | null)?.questionId;
     return fromState || fromSearch;
   })();
+
+  const charCount = content.length;
+  const wordCount = useMemo(() => {
+    const trimmed = content.trim();
+    if (!trimmed) return 0;
+    // For CJK-heavy text, count characters; for Latin text, count words
+    return trimmed.split(/\s+/).filter(Boolean).length;
+  }, [content]);
+  const showCounter = charCount >= 50;
+  const showPreviewToggle = wordCount >= 300;
+
+  // Reset preview when content drops below threshold
+  useEffect(() => {
+    if (!showPreviewToggle) setShowPreview(false);
+  }, [showPreviewToggle]);
+
+  const previewHtml = useMemo(() => {
+    if (!showPreview) return '';
+    return renderSimpleMarkdown(content);
+  }, [showPreview, content]);
+
+  const handleTogglePreview = useCallback(() => {
+    setShowPreview(prev => !prev);
+  }, []);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -135,6 +200,12 @@ const Write: React.FC = () => {
       // UI updates: only if component is still mounted and this is the current cast
       setContent('');
       setIsProcessing(false);
+      setShowPreview(false);
+      // Show "Cast ✓" micro-feedback
+      setCastSuccess(true);
+      setTimeout(() => {
+        if (isMountedRef.current) setCastSuccess(false);
+      }, 1500);
     }
 
     // 4. Process AI results in background when they arrive
@@ -200,26 +271,62 @@ const Write: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col">
       <div className="flex-1 flex flex-col pt-2">
-        <textarea
-          ref={textareaRef}
-          className="w-full bg-transparent text-lg sm:text-xl leading-relaxed text-ink dark:text-ink-dark resize-none focus:outline-none placeholder:text-muted-500 dark:placeholder:text-muted-500 font-serif"
-          placeholder={t('write_placeholder')}
-          value={content}
-          onChange={(e) => {
-            setContent(e.target.value);
-          }}
-          autoFocus
-          disabled={isProcessing}
-        />
+        {showPreview ? (
+          <div
+            className="w-full text-lg sm:text-xl leading-relaxed text-ink dark:text-ink-dark font-serif prose-preview"
+            dangerouslySetInnerHTML={{ __html: previewHtml }}
+          />
+        ) : (
+          <textarea
+            ref={textareaRef}
+            className="w-full bg-transparent text-lg sm:text-xl leading-relaxed text-ink dark:text-ink-dark resize-none focus:outline-none placeholder:text-muted-500 dark:placeholder:text-muted-500 font-serif"
+            placeholder={t('write_placeholder')}
+            value={content}
+            onChange={(e) => {
+              setContent(e.target.value);
+            }}
+            autoFocus
+            disabled={isProcessing}
+          />
+        )}
       </div>
 
-      <div className="min-h-[4.5rem] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-line-soft dark:border-line-dark mt-4 pt-4">
+      {/* Word/char counter + preview toggle */}
+      <div className="flex items-center justify-between mt-2 min-h-6">
+        <span
+          className={`text-micro tabular-nums muted-label transition-opacity duration-300 ${
+            showCounter && !isProcessing ? 'opacity-100' : 'opacity-0'
+          }`}
+          aria-hidden={!showCounter}
+        >
+          {t('write_char_count').replace('{count}', String(charCount))}
+          {' / '}
+          {t('write_word_count').replace('{count}', String(wordCount))}
+        </span>
+
+        {showPreviewToggle && !isProcessing && (
+          <button
+            onClick={handleTogglePreview}
+            className="btn-icon h-7 w-7 text-muted-400 dark:text-muted-500 hover:text-accent dark:hover:text-accent-dark cursor-pointer active:scale-95"
+            title={showPreview ? t('write_edit') : t('write_preview')}
+          >
+            {showPreview ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+          </button>
+        )}
+      </div>
+
+      <div className="min-h-[4.5rem] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-line-soft dark:border-line-dark mt-2 pt-4">
         <div className="text-body-sm-muted flex items-center gap-2 w-full sm:w-auto">
            {isProcessing && (
              <>
                <LoadingSpinner className="w-4 h-4 text-accent dark:text-accent-dark" />
                <span className="animate-pulse">{t('absorbing')}</span>
              </>
+           )}
+           {castSuccess && !isProcessing && (
+             <span className="text-accent dark:text-accent-dark font-medium animate-cast-success">
+               {t('cast_success')}
+             </span>
            )}
         </div>
 
