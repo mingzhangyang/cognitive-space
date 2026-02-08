@@ -8,6 +8,10 @@ export type NotificationInput = {
   variant?: NotificationVariant;
   duration?: number;
   id?: string;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 };
 
 export type NotificationItem = {
@@ -17,6 +21,10 @@ export type NotificationItem = {
   variant: NotificationVariant;
   duration: number;
   createdAt: number;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 };
 
 type NotificationContextProps = {
@@ -58,6 +66,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       variant: input.variant ?? 'info',
       duration,
       createdAt: Date.now(),
+      action: input.action,
     };
 
     setNotifications((prev) => {

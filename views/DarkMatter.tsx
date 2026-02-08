@@ -16,6 +16,7 @@ import {
 import { Note, NoteType, DarkMatterSuggestion } from '../types';
 import { useAppContext } from '../contexts/AppContext';
 import { useAssistantInbox } from '../contexts/AssistantInboxContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import { LoadingSpinner, CheckIcon, XIcon, MoreIcon, SortDescIcon, SortAscIcon } from '../components/Icons';
 import ActionIconButton from '../components/ActionIconButton';
 import ActionSheetButton from '../components/ActionSheetButton';
@@ -113,7 +114,6 @@ const DarkMatter: React.FC = () => {
   const [darkMatterCount, setDarkMatterCount] = useState(0);
   const [questions, setQuestions] = useState<Note[]>([]);
   const [analysisNotes, setAnalysisNotes] = useState<Note[]>([]);
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [linkTarget, setLinkTarget] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
@@ -137,6 +137,7 @@ const DarkMatter: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const { t, language } = useAppContext();
   const { copyText } = useCopyToClipboard();
+  const { notify } = useNotifications();
   const {
     createJob,
     removeJob,
@@ -260,22 +261,33 @@ const DarkMatter: React.FC = () => {
     });
   }, [darkMatter, analysisNotes, updateDarkMatterSuggestions, dismissMessagesByKind]);
 
-  const handleDelete = (noteId: string) => {
+  const handleDelete = async (noteId: string) => {
     setMobileNoteActionsId(null);
-    setDeleteTarget(noteId);
-  };
-
-  const confirmDelete = async () => {
-    if (deleteTarget) {
-      await deleteNote(deleteTarget);
-      removeAnalysisNotes([deleteTarget]);
-      void loadInitial();
-      if (editingId === deleteTarget) {
-        setEditingId(null);
-        setEditContent('');
-      }
-      setDeleteTarget(null);
+    const note = darkMatter.find((n) => n.id === noteId)
+      || analysisNotes.find((n) => n.id === noteId);
+    if (!note) return;
+    const savedNote = { ...note };
+    await deleteNote(noteId);
+    removeAnalysisNotes([noteId]);
+    if (editingId === noteId) {
+      setEditingId(null);
+      setEditContent('');
     }
+    void loadInitial();
+    notify({
+      message: t('fragment_deleted'),
+      variant: 'info',
+      duration: 5000,
+      action: {
+        label: t('undo'),
+        onClick: () => {
+          void (async () => {
+            await saveNote(savedNote);
+            void loadInitial();
+          })();
+        },
+      },
+    });
   };
 
   const handleLinkToQuestion = (noteId: string) => {
@@ -522,13 +534,6 @@ const DarkMatter: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full relative">
-      <ConfirmDialog
-        isOpen={deleteTarget !== null}
-        message={t('confirm_delete_fragment')}
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleteTarget(null)}
-      />
-
       <ConfirmDialog
         isOpen={pendingAction !== null}
         message={confirmMessage}

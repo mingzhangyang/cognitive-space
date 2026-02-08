@@ -63,6 +63,18 @@ const NotificationToaster: React.FC = () => {
               <div className="text-sm text-subtle dark:text-subtle-dark leading-relaxed break-words">
                 {notification.message}
               </div>
+              {notification.action && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    notification.action!.onClick();
+                    dismiss(notification.id);
+                  }}
+                  className="mt-1.5 text-sm font-semibold text-accent dark:text-accent-dark hover:underline cursor-pointer"
+                >
+                  {notification.action.label}
+                </button>
+              )}
             </div>
             <IconButton
               label={t('dismiss_notification')}

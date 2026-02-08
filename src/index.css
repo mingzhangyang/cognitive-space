@@ -104,6 +104,21 @@ html.dark ::-webkit-scrollbar-thumb {
   animation: fadeIn 0.3s ease-out forwards;
 }
 
+/* Route transition animation */
+@keyframes routeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-route-in {
+  animation: routeIn 180ms ease-out;
+}
+
 /* Slide-up animation for bottom sheets */
 @keyframes slideUp {
   from {
@@ -302,6 +317,10 @@ html.dark ::-webkit-scrollbar-thumb {
 
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in {
+    animation: none;
+  }
+
+  .animate-route-in {
     animation: none;
   }
 }

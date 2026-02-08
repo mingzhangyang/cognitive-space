@@ -6,6 +6,7 @@ import {
   getRelatedNotes,
   getQuestions,
   deleteNote,
+  saveNote,
   demoteQuestion,
   updateNoteContent,
   updateNoteMeta,
@@ -15,6 +16,7 @@ import {
 } from '../services/storageService';
 import { Note, NoteType } from '../types';
 import { useAppContext } from '../contexts/AppContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import { CheckIcon, XIcon, EyeIcon, EyeOffIcon, LoadingSpinner, MoreIcon, ArrowDownIcon, EditIcon, ChevronDownIcon, GripVerticalIcon, MoveIcon } from '../components/Icons';
 import ActionIconButton from '../components/ActionIconButton';
 import ActionSheetButton from '../components/ActionSheetButton';
@@ -208,6 +210,7 @@ const QuestionDetail: React.FC = () => {
   const [pendingNoteId, setPendingNoteId] = useState<string | null>(null);
   const { t } = useAppContext();
   const { copyText } = useCopyToClipboard();
+  const { notify } = useNotifications();
   const downgradeOptions = [NoteType.UNCATEGORIZED, NoteType.TRIGGER, NoteType.CLAIM, NoteType.EVIDENCE];
 
   // Collapsible sections state (default: all open)
@@ -336,9 +339,31 @@ const QuestionDetail: React.FC = () => {
     setEditContent('');
   };
 
-  const handleDelete = (noteId: string, isQuestion: boolean) => {
+  const handleDelete = async (noteId: string, isQuestion: boolean) => {
     setMobileNoteActionsId(null);
-    setDeleteTarget({ id: noteId, isQuestion });
+    if (isQuestion) {
+      setDeleteTarget({ id: noteId, isQuestion: true });
+      return;
+    }
+    const note = relatedNotes.find((n) => n.id === noteId);
+    if (!note) return;
+    const savedNote = { ...note };
+    await deleteNote(noteId);
+    void loadData();
+    notify({
+      message: t('note_deleted'),
+      variant: 'info',
+      duration: 5000,
+      action: {
+        label: t('undo'),
+        onClick: () => {
+          void (async () => {
+            await saveNote(savedNote);
+            void loadData();
+          })();
+        },
+      },
+    });
   };
 
   const openMoveToQuestion = (noteId: string) => {
@@ -434,11 +459,7 @@ const QuestionDetail: React.FC = () => {
   const confirmDelete = async () => {
     if (deleteTarget) {
       await deleteNote(deleteTarget.id);
-      if (deleteTarget.isQuestion) {
-        navigate('/');
-      } else {
-        void loadData();
-      }
+      navigate('/');
       setDeleteTarget(null);
     }
   };
@@ -674,9 +695,7 @@ const QuestionDetail: React.FC = () => {
     <div>
       <ConfirmDialog
         isOpen={deleteTarget !== null}
-        message={deleteTarget?.isQuestion
-          ? t('confirm_delete_question_with_notes')
-          : t('confirm_delete_note')}
+        message={t('confirm_delete_question_with_notes')}
         onConfirm={confirmDelete}
         onCancel={() => setDeleteTarget(null)}
       />

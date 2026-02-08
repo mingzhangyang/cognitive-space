@@ -336,7 +336,10 @@ const translations = {
     dark_matter_deselect_all: "Deselect all",
     dark_matter_sort_newest: "Newest first",
     dark_matter_sort_oldest: "Oldest first",
-    dark_matter_batch_promote_confirm: "Promote {count} fragments to individual questions?"
+    dark_matter_batch_promote_confirm: "Promote {count} fragments to individual questions?",
+    undo: "Undo",
+    fragment_deleted: "Fragment deleted",
+    note_deleted: "Note deleted"
   },
   zh: {
     app_name: "认知空间",
@@ -662,7 +665,10 @@ const translations = {
     dark_matter_deselect_all: "取消全选",
     dark_matter_sort_newest: "最新优先",
     dark_matter_sort_oldest: "最早优先",
-    dark_matter_batch_promote_confirm: "将 {count} 条碎片分别升级为独立问题？"
+    dark_matter_batch_promote_confirm: "将 {count} 条碎片分别升级为独立问题？",
+    undo: "撤销",
+    fragment_deleted: "碎片已删除",
+    note_deleted: "笔记已删除"
   }
 };
 
