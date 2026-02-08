@@ -209,6 +209,34 @@ export const EmptyStateIllustration = ({ className }: { className?: string }) =>
   </svg>
 );
 
+export const ChevronDownIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <polyline points="6 9 12 15 18 9"></polyline>
+  </svg>
+);
+
+export const GripVerticalIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="9" cy="5" r="1" fill="currentColor" />
+    <circle cx="9" cy="12" r="1" fill="currentColor" />
+    <circle cx="9" cy="19" r="1" fill="currentColor" />
+    <circle cx="15" cy="5" r="1" fill="currentColor" />
+    <circle cx="15" cy="12" r="1" fill="currentColor" />
+    <circle cx="15" cy="19" r="1" fill="currentColor" />
+  </svg>
+);
+
+export const MoveIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M5 9l-3 3 3 3" />
+    <path d="M9 5l3-3 3 3" />
+    <path d="M15 19l-3 3-3-3" />
+    <path d="M19 9l3 3-3 3" />
+    <line x1="2" y1="12" x2="22" y2="12" />
+    <line x1="12" y1="2" x2="12" y2="22" />
+  </svg>
+);
+
 export const KeyboardIcon = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <rect x="2" y="4" width="20" height="16" rx="2" ry="2" />

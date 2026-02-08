@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   getNoteById,
@@ -8,13 +8,14 @@ import {
   deleteNote,
   demoteQuestion,
   updateNoteContent,
+  updateNoteMeta,
   getQuestionConstellationStats,
   QuestionConstellationStats,
   subscribeToNoteEvents
 } from '../services/storageService';
 import { Note, NoteType } from '../types';
 import { useAppContext } from '../contexts/AppContext';
-import { CheckIcon, XIcon, EyeIcon, EyeOffIcon, LoadingSpinner, MoreIcon, ArrowDownIcon, EditIcon } from '../components/Icons';
+import { CheckIcon, XIcon, EyeIcon, EyeOffIcon, LoadingSpinner, MoreIcon, ArrowDownIcon, EditIcon, ChevronDownIcon, GripVerticalIcon, MoveIcon } from '../components/Icons';
 import ActionIconButton from '../components/ActionIconButton';
 import ActionSheetButton from '../components/ActionSheetButton';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -209,6 +210,20 @@ const QuestionDetail: React.FC = () => {
   const { copyText } = useCopyToClipboard();
   const downgradeOptions = [NoteType.UNCATEGORIZED, NoteType.TRIGGER, NoteType.CLAIM, NoteType.EVIDENCE];
 
+  // Collapsible sections state (default: all open)
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const toggleSection = (key: string) => setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  // Drag-to-reorder state per section
+  const [sectionOrder, setSectionOrder] = useState<Record<string, string[]>>({});
+  const dragItem = useRef<{ noteId: string; sectionKey: string } | null>(null);
+  const dragOverItem = useRef<{ noteId: string; sectionKey: string } | null>(null);
+
+  // Move-to-question state
+  const [moveNoteId, setMoveNoteId] = useState<string | null>(null);
+  const [moveTargetQuestionId, setMoveTargetQuestionId] = useState<string | null>(null);
+  const [isMoving, setIsMoving] = useState(false);
+
   const loadData = useCallback(async () => {
     if (id) {
       const [related, q, statsResult, allNotes, questions] = await Promise.all([
@@ -326,6 +341,66 @@ const QuestionDetail: React.FC = () => {
     setDeleteTarget({ id: noteId, isQuestion });
   };
 
+  const openMoveToQuestion = (noteId: string) => {
+    setMobileNoteActionsId(null);
+    setMoveNoteId(noteId);
+    setMoveTargetQuestionId(availableQuestions.length > 0 ? availableQuestions[0].id : null);
+  };
+
+  const handleConfirmMove = async () => {
+    if (!moveNoteId || !moveTargetQuestionId || isMoving) return;
+    setIsMoving(true);
+    try {
+      await updateNoteMeta(moveNoteId, { parentId: moveTargetQuestionId });
+      setMoveNoteId(null);
+      setMoveTargetQuestionId(null);
+      await loadData();
+    } finally {
+      setIsMoving(false);
+    }
+  };
+
+  // --- Drag-to-reorder helpers ---
+  const getOrderedNotes = (sectionKey: string, notes: Note[]): Note[] => {
+    const order = sectionOrder[sectionKey];
+    if (!order) return notes;
+    const noteMap = new Map(notes.map((n) => [n.id, n]));
+    const ordered: Note[] = [];
+    for (const id of order) {
+      const n = noteMap.get(id);
+      if (n) {
+        ordered.push(n);
+        noteMap.delete(id);
+      }
+    }
+    // Append any new notes not yet ordered
+    for (const n of noteMap.values()) ordered.push(n);
+    return ordered;
+  };
+
+  const handleDragStart = (noteId: string, sectionKey: string) => {
+    dragItem.current = { noteId, sectionKey };
+  };
+
+  const handleDragEnter = (noteId: string, sectionKey: string) => {
+    dragOverItem.current = { noteId, sectionKey };
+  };
+
+  const handleDragEnd = (sectionKey: string, notes: Note[]) => {
+    if (!dragItem.current || !dragOverItem.current) return;
+    if (dragItem.current.sectionKey !== dragOverItem.current.sectionKey) return;
+    const ordered = getOrderedNotes(sectionKey, notes).map((n) => n.id);
+    const fromIndex = ordered.indexOf(dragItem.current.noteId);
+    const toIndex = ordered.indexOf(dragOverItem.current.noteId);
+    if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return;
+    const next = [...ordered];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+    setSectionOrder((prev) => ({ ...prev, [sectionKey]: next }));
+    dragItem.current = null;
+    dragOverItem.current = null;
+  };
+
   const openDowngrade = () => {
     setDowngradeType(NoteType.UNCATEGORIZED);
     setDowngradeDestination('release');
@@ -385,7 +460,7 @@ const QuestionDetail: React.FC = () => {
     (note) => ![NoteType.CLAIM, NoteType.EVIDENCE, NoteType.TRIGGER].includes(note.type)
   );
 
-  const renderNote = (note: Note) => {
+  const renderNote = (note: Note, sectionKey: string) => {
     const isMobileActionsOpen = mobileNoteActionsId === note.id;
     const isAnalyzing = pendingNoteId === note.id && note.type === NoteType.UNCATEGORIZED;
     const actionButtons = (
@@ -399,6 +474,16 @@ const QuestionDetail: React.FC = () => {
           action="copy"
           onClick={() => handleCopyNote(note.content)}
         />
+        {availableQuestions.length > 0 && (
+          <IconButton
+            label={t('move_to_question')}
+            sizeClassName="h-10 w-10"
+            onClick={() => openMoveToQuestion(note.id)}
+            className="text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+          >
+            <MoveIcon className="w-4 h-4" />
+          </IconButton>
+        )}
         <ActionIconButton
           action="delete"
           onClick={() => handleDelete(note.id, false)}
@@ -410,10 +495,26 @@ const QuestionDetail: React.FC = () => {
       <div
         key={note.id}
         id={`note-${note.id}`}
+        draggable
+        onDragStart={() => handleDragStart(note.id, sectionKey)}
+        onDragEnter={() => handleDragEnter(note.id, sectionKey)}
+        onDragEnd={() => handleDragEnd(sectionKey, getOrderedNotes(sectionKey, relatedNotes.filter((n) => {
+          if (sectionKey === 'claims') return n.type === NoteType.CLAIM;
+          if (sectionKey === 'evidence') return n.type === NoteType.EVIDENCE;
+          if (sectionKey === 'triggers') return n.type === NoteType.TRIGGER;
+          return ![NoteType.CLAIM, NoteType.EVIDENCE, NoteType.TRIGGER].includes(n.type);
+        })))}
+        onDragOver={(e) => e.preventDefault()}
         className="group relative pl-4 sm:pl-6 border-l-2 border-line-soft dark:border-line-dark hover:border-line-muted dark:hover:border-muted-600 transition-colors"
       >
         <div className="mb-2 flex items-center justify-between">
-          <div>
+          <div className="flex items-center">
+            <span
+              className="hidden sm:flex items-center cursor-grab active:cursor-grabbing text-muted-300 dark:text-muted-500 opacity-0 group-hover:opacity-100 transition-opacity mr-1 -ml-5"
+              aria-hidden="true"
+            >
+              <GripVerticalIcon className="w-3.5 h-3.5" />
+            </span>
             <TypeBadge type={note.type} subType={note.subType} />
             <span className="text-micro text-muted-300 dark:text-muted-400 ml-2">
               {new Date(note.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -458,6 +559,19 @@ const QuestionDetail: React.FC = () => {
                       handleCopyNote(note.content);
                     }}
                   />
+                  {availableQuestions.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileNoteActionsId(null);
+                        openMoveToQuestion(note.id);
+                      }}
+                      className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-left transition-colors cursor-pointer text-accent dark:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark active:scale-[0.98]"
+                    >
+                      <MoveIcon className="w-5 h-5" />
+                      <span className="text-base font-medium">{t('move_to_question')}</span>
+                    </button>
+                  )}
                   <ActionSheetButton
                     action="delete"
                     onClick={() => {
@@ -522,20 +636,39 @@ const QuestionDetail: React.FC = () => {
     );
   };
 
-  const renderSection = (title: string, emptyText: string, notes: Note[]) => (
-    <section className="space-y-4">
-      <h2 className="section-title">
-        {title}
-      </h2>
-      {notes.length === 0 ? (
-        <p className="text-body-sm-muted">{emptyText}</p>
-      ) : (
-        <div className="space-y-8">
-          {notes.map(renderNote)}
-        </div>
-      )}
-    </section>
-  );
+  const renderSection = (sectionKey: string, title: string, emptyText: string, notes: Note[]) => {
+    const isCollapsed = collapsedSections[sectionKey] ?? false;
+    const orderedNotes = getOrderedNotes(sectionKey, notes);
+    return (
+      <section className="space-y-4">
+        <button
+          type="button"
+          onClick={() => toggleSection(sectionKey)}
+          className="flex items-center gap-2 cursor-pointer group/header w-full text-left"
+          aria-expanded={!isCollapsed}
+        >
+          <ChevronDownIcon
+            className={`w-4 h-4 text-muted-400 dark:text-muted-500 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`}
+          />
+          <h2 className="section-title">
+            {title}
+          </h2>
+          <span className="text-micro tabular-nums text-muted-400 dark:text-muted-500">
+            ({notes.length})
+          </span>
+        </button>
+        {!isCollapsed && (
+          notes.length === 0 ? (
+            <p className="text-body-sm-muted">{emptyText}</p>
+          ) : (
+            <div className="space-y-8">
+              {orderedNotes.map((note) => renderNote(note, sectionKey))}
+            </div>
+          )
+        )}
+      </section>
+    );
+  };
 
   return (
     <div>
@@ -568,6 +701,53 @@ const QuestionDetail: React.FC = () => {
         onCancel={() => !isDowngrading && setIsDowngradeOpen(false)}
         t={t}
       />
+
+      {/* Move-to-question modal */}
+      <Modal
+        isOpen={moveNoteId !== null}
+        onClose={() => !isMoving && setMoveNoteId(null)}
+        cardClassName="max-w-sm"
+        isDismissable={!isMoving}
+      >
+        <div className="space-y-2 mb-5">
+          <p className="text-ink dark:text-ink-dark text-lg font-medium">{t('move_to_question_title')}</p>
+        </div>
+        <div className="mb-6">
+          <select
+            className="input-pill text-sm"
+            value={moveTargetQuestionId ?? ''}
+            onChange={(e) => setMoveTargetQuestionId(e.target.value)}
+            aria-label={t('select_question')}
+          >
+            {availableQuestions.map((q) => (
+              <option key={q.id} value={q.id}>
+                {q.content}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => setMoveNoteId(null)}
+            disabled={isMoving}
+            className={`px-4 py-2 rounded-md text-body-sm-muted hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark transition-colors ${
+              isMoving ? 'opacity-60 cursor-not-allowed' : ''
+            }`}
+          >
+            {t('cancel')}
+          </button>
+          <button
+            onClick={handleConfirmMove}
+            disabled={isMoving || !moveTargetQuestionId}
+            className={`px-4 py-2 text-sm rounded-md bg-accent dark:bg-accent-dark text-white hover:opacity-90 transition-opacity inline-flex items-center gap-2 ${
+              isMoving || !moveTargetQuestionId ? 'opacity-60 cursor-not-allowed' : ''
+            }`}
+          >
+            {isMoving && <LoadingSpinner className="w-3.5 h-3.5 text-white" />}
+            {t('move_to_question_confirm')}
+          </button>
+        </div>
+      </Modal>
 
       <div className="mb-10 sm:mb-12 section-divider pb-8">
         <div className="flex justify-between items-start">
@@ -753,10 +933,10 @@ const QuestionDetail: React.FC = () => {
           </div>
         ) : (
           <>
-            {renderSection(t('section_claims'), t('no_claims'), claims)}
-            {renderSection(t('section_evidence'), t('no_evidence'), evidence)}
-            {renderSection(t('section_triggers'), t('no_triggers'), triggers)}
-            {renderSection(t('section_other'), t('no_other'), otherNotes)}
+            {renderSection('claims', t('section_claims'), t('no_claims'), claims)}
+            {renderSection('evidence', t('section_evidence'), t('no_evidence'), evidence)}
+            {renderSection('triggers', t('section_triggers'), t('no_triggers'), triggers)}
+            {renderSection('other', t('section_other'), t('no_other'), otherNotes)}
           </>
         )}
       </div>

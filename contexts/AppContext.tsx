@@ -322,7 +322,11 @@ const translations = {
     time_minutes_ago: "{count}m ago",
     time_hours_ago: "{count}h ago",
     time_days_ago: "{count}d ago",
-    time_weeks_ago: "{count}w ago"
+    time_weeks_ago: "{count}w ago",
+    move_to_question: "Move to...",
+    move_to_question_title: "Move note to another question",
+    move_to_question_confirm: "Move",
+    note_moved_success: "Note moved"
   },
   zh: {
     app_name: "认知空间",
@@ -634,7 +638,11 @@ const translations = {
     time_minutes_ago: "{count}分钟前",
     time_hours_ago: "{count}小时前",
     time_days_ago: "{count}天前",
-    time_weeks_ago: "{count}周前"
+    time_weeks_ago: "{count}周前",
+    move_to_question: "移动到...",
+    move_to_question_title: "将笔记移至其他问题",
+    move_to_question_confirm: "移动",
+    note_moved_success: "笔记已移动"
   }
 };
 
