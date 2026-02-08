@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { DarkMatterSuggestion, NoteType } from '../types';
+import { DarkMatterSuggestion, NoteType, ConfidenceLabel } from '../types';
 
 const STORAGE_KEY = 'cs_assistant_inbox_v1';
 const STALE_JOB_MS = 20 * 60 * 1000;
@@ -24,12 +24,12 @@ export type NoteSuggestionPayload = {
   updates: {
     type: NoteType;
     subType?: string;
-    confidence?: number;
+    confidenceLabel?: ConfidenceLabel;
     parentId?: string | null;
   };
   classification: NoteType;
   subType?: string;
-  confidence?: number;
+  confidenceLabel?: ConfidenceLabel;
   relatedQuestionId?: string | null;
   relatedQuestionTitle?: string;
   reasoning?: string;

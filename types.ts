@@ -6,12 +6,15 @@ export enum NoteType {
   UNCATEGORIZED = 'uncategorized'
 }
 
+export type ConfidenceLabel = 'likely' | 'possible' | 'loose';
+
 export interface Note {
   id: string;
   content: string;
   type: NoteType;
   subType?: string; // e.g., 'hypothesis', 'fact', 'opinion'
-  confidence?: number; // 0.0 to 1.0
+  confidence?: number; // legacy numeric confidence (0.0 to 1.0)
+  confidenceLabel?: ConfidenceLabel;
   analysisPending?: boolean;
   createdAt: number;
   updatedAt: number;
@@ -23,7 +26,7 @@ export interface Note {
 export interface AnalysisResult {
   classification: NoteType;
   subType?: string;
-  confidence?: number;
+  confidenceLabel?: ConfidenceLabel;
   relatedQuestionId?: string | null;
   reasoning: string;
 }
@@ -36,7 +39,8 @@ export interface DarkMatterSuggestion {
   title: string;
   existingQuestionId?: string;
   noteIds: string[];
-  confidence: number; // 0.0 to 1.0
+  confidence?: number; // legacy numeric confidence (0.0 to 1.0)
+  confidenceLabel: ConfidenceLabel;
   reasoning: string;
 }
 
@@ -63,7 +67,7 @@ export type NoteEvent =
       createdAt: number;
       payload: {
         id: string;
-        updates: Pick<Partial<Note>, 'parentId' | 'type' | 'subType' | 'confidence' | 'analysisPending'>;
+        updates: Pick<Partial<Note>, 'parentId' | 'type' | 'subType' | 'confidence' | 'confidenceLabel' | 'analysisPending'>;
         updatedAt: number;
       };
     }

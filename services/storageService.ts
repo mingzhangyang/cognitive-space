@@ -1,5 +1,6 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 import { Note, NoteEvent, NoteType, AppEvent, TelemetryEvent, DarkMatterSuggestionKind } from '../types';
+import { isConfidenceLabel } from '../utils/confidence';
 
 const DB_NAME = 'cognitive_space_db';
 const DB_VERSION = 2;
@@ -150,6 +151,7 @@ const applyEvent = (state: Map<string, Note>, event: AppEvent): void => {
       if (typeof updates.type !== 'undefined') existing.type = updates.type;
       if (typeof updates.subType !== 'undefined') existing.subType = updates.subType;
       if (typeof updates.confidence !== 'undefined') existing.confidence = updates.confidence;
+      if (typeof updates.confidenceLabel !== 'undefined') existing.confidenceLabel = updates.confidenceLabel;
       if (typeof updates.analysisPending !== 'undefined') {
         existing.analysisPending = updates.analysisPending;
       }
@@ -383,6 +385,7 @@ const isNote = (value: unknown): value is Note => {
   if (!isNumber(value.createdAt) || !isNumber(value.updatedAt)) return false;
   if (typeof value.subType !== 'undefined' && typeof value.subType !== 'string') return false;
   if (typeof value.confidence !== 'undefined' && !isNumber(value.confidence)) return false;
+  if (typeof value.confidenceLabel !== 'undefined' && !isConfidenceLabel(value.confidenceLabel)) return false;
   if (typeof value.analysisPending !== 'undefined' && typeof value.analysisPending !== 'boolean') return false;
   if (typeof value.parentId !== 'undefined' && value.parentId !== null && typeof value.parentId !== 'string') return false;
   return true;
@@ -414,6 +417,7 @@ const isNoteEventRecord = (value: unknown): value is NoteEvent => {
       if (typeof updates.type !== 'undefined' && !isNoteType(updates.type)) return false;
       if (typeof updates.subType !== 'undefined' && typeof updates.subType !== 'string') return false;
       if (typeof updates.confidence !== 'undefined' && !isNumber(updates.confidence)) return false;
+      if (typeof updates.confidenceLabel !== 'undefined' && !isConfidenceLabel(updates.confidenceLabel)) return false;
       if (typeof updates.analysisPending !== 'undefined' && typeof updates.analysisPending !== 'boolean') return false;
       return true;
     }
@@ -664,7 +668,7 @@ export const updateNoteContent = async (noteId: string, newContent: string): Pro
 
 export const updateNoteMeta = async (
   noteId: string,
-  updates: Pick<Partial<Note>, 'parentId' | 'type' | 'subType' | 'confidence' | 'analysisPending'>
+  updates: Pick<Partial<Note>, 'parentId' | 'type' | 'subType' | 'confidence' | 'confidenceLabel' | 'analysisPending'>
 ): Promise<void> => {
   await withDb<void>(
     undefined,
@@ -683,6 +687,7 @@ export const updateNoteMeta = async (
         if (typeof updates.type !== 'undefined') note.type = updates.type;
         if (typeof updates.subType !== 'undefined') note.subType = updates.subType;
         if (typeof updates.confidence !== 'undefined') note.confidence = updates.confidence;
+        if (typeof updates.confidenceLabel !== 'undefined') note.confidenceLabel = updates.confidenceLabel;
         if (typeof updates.analysisPending !== 'undefined') note.analysisPending = updates.analysisPending;
         note.updatedAt = updatedAt;
         await db.put(STORE_NOTES, note);

@@ -7,6 +7,7 @@ import IconButton from './IconButton';
 import { getNoteById, updateNoteMeta } from '../services/storageService';
 import { truncate, formatTemplate, containsCjk } from '../utils/text';
 import { getTypeLabel } from '../utils/notes';
+import { coerceConfidenceLabel } from '../utils/confidence';
 
 const isNoteSuggestion = (message: AssistantMessage): message is Extract<AssistantMessage, { kind: 'note_suggestion' }> =>
   message.kind === 'note_suggestion';
@@ -14,16 +15,26 @@ const isNoteSuggestion = (message: AssistantMessage): message is Extract<Assista
 const isDarkMatterReady = (message: AssistantMessage): message is Extract<AssistantMessage, { kind: 'dark_matter_ready' }> =>
   message.kind === 'dark_matter_ready';
 
+const getConfidenceLabelText = (label: string, t: (key: string) => string) => {
+  if (label === 'likely') return t('dark_matter_ai_confidence_likely');
+  if (label === 'possible') return t('dark_matter_ai_confidence_possible');
+  return t('dark_matter_ai_confidence_loose');
+};
+
 const buildNoteSuggestionDetails = (payload: NoteSuggestionPayload, t: (key: string) => string) => {
   const details: Array<{ label: string; value: string }> = [];
   details.push({ label: t('assistant_suggestion_type'), value: getTypeLabel(payload.classification, t) });
   if (payload.relatedQuestionTitle) {
     details.push({ label: t('assistant_suggestion_related'), value: truncate(payload.relatedQuestionTitle, 42) });
   }
-  if (typeof payload.confidence === 'number') {
+  const rawConfidenceLabel = (payload as { confidenceLabel?: unknown }).confidenceLabel;
+  const rawConfidenceScore = (payload as { confidence?: unknown }).confidence;
+  const hasConfidence = typeof rawConfidenceLabel === 'string' || typeof rawConfidenceScore === 'number';
+  if (hasConfidence) {
+    const confidenceLabel = coerceConfidenceLabel(rawConfidenceLabel, rawConfidenceScore);
     details.push({
       label: t('assistant_suggestion_confidence'),
-      value: `${Math.round(payload.confidence * 100)}%`
+      value: getConfidenceLabelText(confidenceLabel, t)
     });
   }
   return details;

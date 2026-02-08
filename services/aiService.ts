@@ -1,4 +1,5 @@
 import { Note, NoteType, AnalysisResult, DarkMatterAnalysisResult } from "../types";
+import { coerceConfidenceLabel } from "../utils/confidence";
 
 export const analyzeText = async (
   text: string, 
@@ -33,7 +34,10 @@ export const analyzeText = async (
       ? (classificationValue as NoteType)
       : NoteType.TRIGGER;
     const subType = typeof result.subType === 'string' ? result.subType : undefined;
-    const confidence = typeof result.confidence === 'number' ? result.confidence : 0.5;
+    const confidenceLabel = coerceConfidenceLabel(
+      (result as { confidenceLabel?: unknown }).confidenceLabel,
+      (result as { confidence?: unknown }).confidence
+    );
     const relatedQuestionId =
       typeof result.relatedQuestionId === 'string' ? result.relatedQuestionId : null;
     const reasoning = typeof result.reasoning === 'string' ? result.reasoning : 'Analyzed by GLM';
@@ -41,7 +45,7 @@ export const analyzeText = async (
     return {
       classification,
       subType,
-      confidence,
+      confidenceLabel,
       relatedQuestionId,
       reasoning
     };
@@ -51,7 +55,7 @@ export const analyzeText = async (
     return {
       classification: NoteType.TRIGGER,
       reasoning: "Analysis failed, defaulted to Trigger.",
-      confidence: 0
+      confidenceLabel: 'loose'
     };
   }
 };
@@ -87,7 +91,15 @@ export const analyzeDarkMatter = async (
     }
 
     const result = (await response.json()) as DarkMatterAnalysisResult;
-    const suggestions = Array.isArray(result?.suggestions) ? result.suggestions : [];
+    const suggestions = Array.isArray(result?.suggestions)
+      ? result.suggestions.map((suggestion) => ({
+          ...suggestion,
+          confidenceLabel: coerceConfidenceLabel(
+            (suggestion as { confidenceLabel?: unknown }).confidenceLabel,
+            (suggestion as { confidence?: unknown }).confidence
+          )
+        }))
+      : [];
     return { suggestions };
   } catch (error) {
     console.error("Dark matter AI analysis failed:", error);

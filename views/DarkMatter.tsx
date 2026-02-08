@@ -28,6 +28,7 @@ import { analyzeDarkMatter } from '../services/aiService';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { containsCjk, formatTemplate } from '../utils/text';
 import { createMessageId } from '../utils/ids';
+import { coerceConfidenceLabel } from '../utils/confidence';
 
 const QuestionSelector: React.FC<{
   isOpen: boolean;
@@ -73,6 +74,10 @@ const QuestionSelector: React.FC<{
 
 const normalizeSuggestionForCompare = (suggestion: DarkMatterSuggestion) => ({
   ...suggestion,
+  confidenceLabel: coerceConfidenceLabel(
+    (suggestion as { confidenceLabel?: unknown }).confidenceLabel,
+    (suggestion as { confidence?: unknown }).confidence
+  ),
   existingQuestionId: suggestion.existingQuestionId ?? null,
   noteIds: [...suggestion.noteIds].sort()
 });
@@ -90,7 +95,7 @@ const areSuggestionsEqual = (left: DarkMatterSuggestion[], right: DarkMatterSugg
       || a.kind !== b.kind
       || a.title !== b.title
       || a.existingQuestionId !== b.existingQuestionId
-      || a.confidence !== b.confidence
+      || a.confidenceLabel !== b.confidenceLabel
       || a.reasoning !== b.reasoning
       || a.noteIds.length !== b.noteIds.length
     ) {
@@ -330,9 +335,9 @@ const DarkMatter: React.FC = () => {
     return raw;
   };
 
-  const getConfidenceLabel = (confidence: number) => {
-    if (confidence >= 0.7) return t('dark_matter_ai_confidence_likely');
-    if (confidence >= 0.5) return t('dark_matter_ai_confidence_possible');
+  const getConfidenceLabel = (label: string) => {
+    if (label === 'likely') return t('dark_matter_ai_confidence_likely');
+    if (label === 'possible') return t('dark_matter_ai_confidence_possible');
     return t('dark_matter_ai_confidence_loose');
   };
 
@@ -559,7 +564,12 @@ const DarkMatter: React.FC = () => {
                     </p>
                   </div>
                   <span className="text-mini-up text-muted-500 dark:text-muted-400">
-                    {getConfidenceLabel(suggestion.confidence)}
+                    {getConfidenceLabel(
+                      coerceConfidenceLabel(
+                        (suggestion as { confidenceLabel?: unknown }).confidenceLabel,
+                        (suggestion as { confidence?: unknown }).confidence
+                      )
+                    )}
                   </span>
                 </div>
                 <div className="mt-3 space-y-2">

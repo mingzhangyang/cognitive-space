@@ -12,10 +12,12 @@ type AnalyzeRequest = {
   existingQuestions?: Array<{ id: string; content: string }>;
 };
 
+type ConfidenceLabel = 'likely' | 'possible' | 'loose';
+
 type AnalyzeResponse = {
   classification: 'question' | 'claim' | 'evidence' | 'trigger' | 'uncategorized';
   subType?: string;
-  confidence: number;
+  confidenceLabel: ConfidenceLabel;
   relatedQuestionId?: string | null;
   reasoning: string;
 };
@@ -38,7 +40,7 @@ type DarkMatterSuggestion = {
   title: string;
   existingQuestionId?: string;
   noteIds: string[];
-  confidence: number;
+  confidenceLabel: ConfidenceLabel;
   reasoning: string;
 };
 
@@ -61,6 +63,35 @@ const CLASSIFICATIONS = new Set<AnalyzeResponse['classification']>([
   'trigger',
   'uncategorized'
 ]);
+const CONFIDENCE_LABELS = new Set<ConfidenceLabel>(['likely', 'possible', 'loose']);
+
+function scoreToConfidenceLabel(score: number): ConfidenceLabel {
+  if (score >= 0.7) return 'likely';
+  if (score >= 0.5) return 'possible';
+  return 'loose';
+}
+
+function confidenceLabelToScore(label: ConfidenceLabel): number {
+  switch (label) {
+    case 'likely':
+      return 0.75;
+    case 'possible':
+      return 0.6;
+    default:
+      return 0.4;
+  }
+}
+
+function normalizeConfidenceLabel(input: any): ConfidenceLabel {
+  const labelRaw = typeof input?.confidenceLabel === 'string' ? input.confidenceLabel.toLowerCase() : '';
+  if (CONFIDENCE_LABELS.has(labelRaw as ConfidenceLabel)) {
+    return labelRaw as ConfidenceLabel;
+  }
+  if (typeof input?.confidence === 'number') {
+    return scoreToConfidenceLabel(input.confidence);
+  }
+  return 'possible';
+}
 
 /**
  * Generate a cache key from the analysis request
@@ -69,7 +100,7 @@ function getCacheKey(text: string, language: string, questionIds: string[]): str
   // Sort question IDs for consistent cache keys
   const sortedIds = [...questionIds].sort().join(',');
   // Simple hash-like key (for Cloudflare Cache API)
-  const raw = `analyze:${language}:${sortedIds}:${text}`;
+  const raw = `analyze:v2:${language}:${sortedIds}:${text}`;
   return raw;
 }
 
@@ -98,7 +129,7 @@ function getDarkMatterCacheKey(
     .map((q) => `${q.id}:${q.content.length}:${hashString(q.content)}`)
     .join('|');
 
-  const raw = `dark-matter:${language}:${maxClusters}:notes:${noteDigest}:questions:${questionDigest}`;
+  const raw = `dark-matter:v2:${language}:${maxClusters}:notes:${noteDigest}:questions:${questionDigest}`;
   return `dm:${hashString(raw)}`;
 }
 
@@ -427,17 +458,17 @@ Your task is to analyze the cognitive role of this text.
    - trigger: Raw input, inspiration, fragments, or simple notes that don't fit above categories.
      - Subtypes: 'quote', 'feeling', 'idea', 'note'.
    - uncategorized: Ambiguous, mixed, or not clear enough to classify.
-   Guardrail: Avoid forcing structure. If you are not confident, use 'uncategorized' with low confidence.
+   Guardrail: Avoid forcing structure. If you are not confident, use 'uncategorized' with confidenceLabel="loose".
 
 2. Connect: Determine if this text strongly overlaps with one of the Living Questions.
-   - Only provide an ID if the overlap is strong (confidence >= 0.7).
+   - Only provide an ID if the overlap is strong and confidenceLabel="likely".
    - Otherwise return null.
 
-3. Confidence: Assign a confidence score (0.0 to 1.0) based on how clear the intent is.
+3. ConfidenceLabel: Choose one of "likely", "possible", "loose" based on how clear the intent is.
 
 ${langInstruction}
 
-Return JSON only with keys: classification, subType, confidence, relatedQuestionId, reasoning.
+Return JSON only with keys: classification, subType, confidenceLabel, relatedQuestionId, reasoning.
 Classification must be one of: 'question', 'claim', 'evidence', 'trigger', 'uncategorized'.
 Reasoning should be phrased as a suggestion so the user can decide whether to accept it.
 `.trim();
@@ -497,7 +528,7 @@ Return JSON only with this shape:
       "title": "string",
       "existingQuestionId": "optional string when kind is existing_question",
       "noteIds": ["note-id-1", "note-id-2"],
-      "confidence": 0.0-1.0,
+      "confidenceLabel": "likely" | "possible" | "loose",
       "reasoning": "short"
     }
   ]
@@ -572,7 +603,7 @@ function heuristicClassify(text: string): AnalyzeResponse {
     return {
       classification: 'question',
       subType,
-      confidence: 0.6,
+      confidenceLabel: 'possible',
       relatedQuestionId: null,
       reasoning: 'Classified by heuristic pattern matching (AI unavailable).'
     };
@@ -584,7 +615,7 @@ function heuristicClassify(text: string): AnalyzeResponse {
     return {
       classification: 'claim',
       subType: 'opinion',
-      confidence: 0.5,
+      confidenceLabel: 'possible',
       relatedQuestionId: null,
       reasoning: 'Classified by heuristic pattern matching (AI unavailable).'
     };
@@ -596,7 +627,7 @@ function heuristicClassify(text: string): AnalyzeResponse {
     return {
       classification: 'evidence',
       subType: 'observation',
-      confidence: 0.5,
+      confidenceLabel: 'possible',
       relatedQuestionId: null,
       reasoning: 'Classified by heuristic pattern matching (AI unavailable).'
     };
@@ -606,7 +637,7 @@ function heuristicClassify(text: string): AnalyzeResponse {
   return {
     classification: 'trigger',
     subType: 'idea',
-    confidence: 0.3,
+    confidenceLabel: 'loose',
     relatedQuestionId: null,
     reasoning: 'Classified as trigger by default (AI unavailable).'
   };
@@ -620,16 +651,16 @@ function normalizeResult(input: any, validQuestionIds: Set<string>): AnalyzeResp
     ? (classificationRaw as AnalyzeResponse['classification'])
     : 'trigger';
 
-  const confidenceRaw = typeof input?.confidence === 'number' ? input.confidence : 0.5;
-  const confidence = Math.max(0, Math.min(1, confidenceRaw));
+  const confidenceLabel = normalizeConfidenceLabel(input);
+  const confidenceScore = confidenceLabelToScore(confidenceLabel);
 
-  const shouldSuppressClassification = confidence < CLASSIFICATION_CONFIDENCE_THRESHOLD;
+  const shouldSuppressClassification = confidenceScore < CLASSIFICATION_CONFIDENCE_THRESHOLD;
   const finalClassification = shouldSuppressClassification ? 'uncategorized' : classification;
 
   // Validate relatedQuestionId - only accept if it exists in the provided questions
   let relatedQuestionId: string | null = null;
   if (
-    confidence >= RELATION_CONFIDENCE_THRESHOLD &&
+    confidenceScore >= RELATION_CONFIDENCE_THRESHOLD &&
     finalClassification !== 'trigger' &&
     finalClassification !== 'uncategorized' &&
     typeof input?.relatedQuestionId === 'string' &&
@@ -653,7 +684,7 @@ function normalizeResult(input: any, validQuestionIds: Set<string>): AnalyzeResp
         : typeof input?.subType === 'string'
           ? input.subType
           : undefined,
-    confidence,
+    confidenceLabel,
     relatedQuestionId,
     reasoning
   };
@@ -711,9 +742,9 @@ export function normalizeDarkMatterResult(
 
     filteredNoteIds.forEach((id) => usedNoteIds.add(id));
 
-    const confidenceRaw = typeof suggestion.confidence === 'number' ? suggestion.confidence : 0.5;
-    const confidence = Math.max(0, Math.min(1, confidenceRaw));
-    if (confidence < DARK_MATTER_CONFIDENCE_THRESHOLD) continue;
+    const confidenceLabel = normalizeConfidenceLabel(suggestion);
+    const confidenceScore = confidenceLabelToScore(confidenceLabel);
+    if (confidenceScore < DARK_MATTER_CONFIDENCE_THRESHOLD) continue;
     const reasoning =
       typeof suggestion.reasoning === 'string' && suggestion.reasoning.trim()
         ? suggestion.reasoning.trim()
@@ -730,7 +761,7 @@ export function normalizeDarkMatterResult(
       title,
       existingQuestionId,
       noteIds: filteredNoteIds,
-      confidence,
+      confidenceLabel,
       reasoning
     });
   }

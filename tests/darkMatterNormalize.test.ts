@@ -11,7 +11,7 @@ describe('normalizeDarkMatterResult', () => {
             kind: 'new_question',
             title: 'Focus habits',
             noteIds: ['n1', 'n2', 'bad'],
-            confidence: 0.7,
+            confidenceLabel: 'likely',
             reasoning: 'Overlap'
           },
           {
@@ -19,7 +19,7 @@ describe('normalizeDarkMatterResult', () => {
             kind: 'new_question',
             title: 'Single note',
             noteIds: ['n3'],
-            confidence: 0.4,
+            confidenceLabel: 'loose',
             reasoning: 'Too small'
           }
         ]
@@ -44,7 +44,7 @@ describe('normalizeDarkMatterResult', () => {
             title: '',
             existingQuestionId: 'q1',
             noteIds: ['n1', 'n2'],
-            confidence: 0.8,
+            confidenceLabel: 'likely',
             reasoning: 'Match'
           },
           {
@@ -53,7 +53,7 @@ describe('normalizeDarkMatterResult', () => {
             title: 'Invalid',
             existingQuestionId: 'q2',
             noteIds: ['n3', 'n4'],
-            confidence: 0.6,
+            confidenceLabel: 'possible',
             reasoning: 'Bad id'
           }
         ]
@@ -77,7 +77,7 @@ describe('normalizeDarkMatterResult', () => {
             kind: 'new_question',
             title: 'Cluster A',
             noteIds: ['n1', 'n2'],
-            confidence: 0.7,
+            confidenceLabel: 'likely',
             reasoning: 'A'
           },
           {
@@ -85,7 +85,7 @@ describe('normalizeDarkMatterResult', () => {
             kind: 'new_question',
             title: 'Cluster B',
             noteIds: ['n2', 'n3'],
-            confidence: 0.7,
+            confidenceLabel: 'likely',
             reasoning: 'B'
           }
         ]

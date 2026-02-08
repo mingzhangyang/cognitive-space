@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createNoteObject, saveNote, getQuestions, updateNoteMeta } from '../services/storageService';
 import { analyzeText } from '../services/aiService';
-import { NoteType } from '../types';
+import { NoteType, AnalysisResult } from '../types';
 import { LoadingSpinner } from '../components/Icons';
 import { useAppContext } from '../contexts/AppContext';
 import { useAssistantInbox } from '../contexts/AssistantInboxContext';
@@ -170,12 +170,12 @@ const Write: React.FC = () => {
     const updates: {
       type: NoteType;
       subType?: string;
-      confidence?: number;
+      confidenceLabel?: AnalysisResult['confidenceLabel'];
       parentId?: string | null;
     } = {
       type: analysis.classification,
       subType: analysis.subType,
-      confidence: analysis.confidence
+      confidenceLabel: analysis.confidenceLabel
     };
     if (typeof parentIdForUpdate !== 'undefined') {
       updates.parentId = parentIdForUpdate;
@@ -192,7 +192,7 @@ const Write: React.FC = () => {
         updates,
         classification: analysis.classification,
         subType: analysis.subType,
-        confidence: analysis.confidence,
+        confidenceLabel: analysis.confidenceLabel,
         relatedQuestionId: analysis.relatedQuestionId ?? null,
         relatedQuestionTitle: linkedQuestion?.content,
         reasoning: analysis.reasoning
