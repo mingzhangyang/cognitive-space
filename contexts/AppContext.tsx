@@ -289,7 +289,12 @@ const translations = {
     load_more: "Load more",
     loading_more: "Loading more...",
     dark_matter_confirm_create: "Create question \"{title}\" and link {count} fragments?",
-    dark_matter_confirm_link: "Link {count} fragments to \"{title}\"?"
+    dark_matter_confirm_link: "Link {count} fragments to \"{title}\"?",
+    time_just_now: "just now",
+    time_minutes_ago: "{count}m ago",
+    time_hours_ago: "{count}h ago",
+    time_days_ago: "{count}d ago",
+    time_weeks_ago: "{count}w ago"
   },
   zh: {
     app_name: "认知空间",
@@ -568,7 +573,12 @@ const translations = {
     load_more: "加载更多",
     loading_more: "正在加载...",
     dark_matter_confirm_create: "创建问题「{title}」并关联 {count} 条碎片？",
-    dark_matter_confirm_link: "将 {count} 条碎片关联到「{title}」？"
+    dark_matter_confirm_link: "将 {count} 条碎片关联到「{title}」？",
+    time_just_now: "刚刚",
+    time_minutes_ago: "{count}分钟前",
+    time_hours_ago: "{count}小时前",
+    time_days_ago: "{count}天前",
+    time_weeks_ago: "{count}周前"
   }
 };
 

@@ -942,18 +942,27 @@ export const getDarkMatterCount = async (): Promise<number> => {
     async (db) => {
       await ensureProjection(db);
       const tx = db.transaction(STORE_NOTES, 'readonly');
-      const index = tx.store.index('by-updated');
-      let cursor = await index.openCursor(null, 'prev');
-      let count = 0;
+
+      // O(1) counts via index metadata instead of full cursor scan
+      const totalCount = await tx.store.count();
+      // Notes with a valid parentId (string) are in the by-parent index;
+      // null/undefined parentId entries are excluded from the index.
+      const withParentCount = await tx.store.index('by-parent').count();
+      const orphanCount = totalCount - withParentCount;
+
+      // Iterate only questions (typically few) to find orphan questions
+      let orphanQuestions = 0;
+      let cursor = await tx.store.index('by-type').openCursor(NoteType.QUESTION);
       while (cursor) {
         const note = cursor.value;
-        if (note.type !== NoteType.QUESTION && (note.parentId === null || note.parentId === undefined)) {
-          count += 1;
+        if (note.parentId === null || note.parentId === undefined) {
+          orphanQuestions++;
         }
         cursor = await cursor.continue();
       }
+
       await tx.done;
-      return count;
+      return orphanCount - orphanQuestions;
     },
     'Failed to count dark matter'
   );

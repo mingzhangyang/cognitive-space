@@ -161,11 +161,8 @@ const Write: React.FC = () => {
       : undefined;
     const parentIdForUpdate = streamQuestionId || ((!isQuestion && relatedQuestionId) ? relatedQuestionId : undefined);
 
-    try {
-      await updateNoteMeta(newNote.id, { analysisPending: false });
-    } catch (error) {
-      console.error("Error updating note metadata:", error);
-    }
+    // analysisPending is cleared when the user acts on the suggestion (Apply/Dismiss)
+    // in the message center, avoiding a redundant NOTE_META_UPDATED event.
 
     const updates: {
       type: NoteType;

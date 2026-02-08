@@ -440,11 +440,11 @@ const DarkMatter: React.FC = () => {
     const days = Math.floor(hours / 24);
     const weeks = Math.floor(days / 7);
 
-    if (weeks > 0) return `${weeks}w ago`;
-    if (days > 0) return `${days}d ago`;
-    if (hours > 0) return `${hours}h ago`;
-    if (minutes > 0) return `${minutes}m ago`;
-    return 'just now';
+    if (weeks > 0) return formatTemplate(t('time_weeks_ago'), { count: weeks });
+    if (days > 0) return formatTemplate(t('time_days_ago'), { count: days });
+    if (hours > 0) return formatTemplate(t('time_hours_ago'), { count: hours });
+    if (minutes > 0) return formatTemplate(t('time_minutes_ago'), { count: minutes });
+    return t('time_just_now');
   };
 
   const confirmMessage = pendingAction
