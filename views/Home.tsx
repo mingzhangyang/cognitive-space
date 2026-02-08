@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getQuestions, getNotes, deleteNote, getDarkMatterCount, updateNoteContent } from '../services/storageService';
 import { Note } from '../types';
-import { PlusIcon, SearchIcon, XIcon, MoreIcon, CheckIcon, LoadingSpinner } from '../components/Icons';
+import { PlusIcon, SearchIcon, XIcon, MoreIcon, CheckIcon, LoadingSpinner, EmptyStateIllustration } from '../components/Icons';
 import ActionIconButton from '../components/ActionIconButton';
 import ActionSheetButton from '../components/ActionSheetButton';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -24,8 +24,30 @@ const Home: React.FC = () => {
   const [query, setQuery] = useState('');
   const [isRecallOpen, setIsRecallOpen] = useState(false);
   const [fabContainer, setFabContainer] = useState<HTMLElement | null>(null);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(() =>
+    localStorage.getItem('cs_onboarding_dismissed') === '1'
+  );
   const { t } = useAppContext();
   const { copyText } = useCopyToClipboard();
+  const navigate = useNavigate();
+
+  // --- Keyboard shortcut: N → /write (suggestion #3) ---
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // Skip if user is typing in an input, textarea, or contentEditable
+    const tag = (e.target as HTMLElement).tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return;
+    if (e.key === 'n' || e.key === 'N') {
+      if (!e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        navigate('/write');
+      }
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   const loadData = async () => {
     const allNotes = await getNotes();
@@ -53,6 +75,21 @@ const Home: React.FC = () => {
       });
   const hasQuestions = questions.length > 0;
   const isFiltering = queryTokens.length > 0;
+
+  // --- Tension / heat indicator (suggestion #2) ---
+  const getTensionColor = (updatedAt: number): string => {
+    const daysSince = (Date.now() - updatedAt) / (1000 * 60 * 60 * 24);
+    if (daysSince < 1) return 'bg-emerald-400 dark:bg-emerald-400';        // very warm
+    if (daysSince < 3) return 'bg-teal-400 dark:bg-teal-300';              // warm
+    if (daysSince < 7) return 'bg-amber-400 dark:bg-amber-300';            // cooling
+    if (daysSince < 14) return 'bg-orange-300 dark:bg-orange-300';         // cool
+    return 'bg-muted-300 dark:bg-muted-600';                                // dormant
+  };
+
+  const dismissOnboarding = () => {
+    setOnboardingDismissed(true);
+    localStorage.setItem('cs_onboarding_dismissed', '1');
+  };
 
   const openRecall = () => setIsRecallOpen(true);
   const closeRecall = () => {
@@ -129,7 +166,14 @@ const Home: React.FC = () => {
       />
 
       <div className="mb-7 sm:mb-8">
-        <h1 className="page-title mb-2">{t('living_questions')}</h1>
+        <h1 className="page-title mb-2">
+          {t('living_questions')}
+          {hasQuestions && (
+            <span className="ml-2 text-muted-400 dark:text-muted-500 tabular-nums font-sans text-lg sm:text-xl font-normal">
+              {t('question_count_separator')} {questions.length}
+            </span>
+          )}
+        </h1>
         <p className="page-subtitle">{t('problems_mind')}</p>
       </div>
 
@@ -214,12 +258,29 @@ const Home: React.FC = () => {
               </>
             ) : (
               <>
+                {/* Empty-state illustration (suggestion #1) */}
+                <EmptyStateIllustration className="w-40 h-auto mx-auto mb-4 text-accent/50 dark:text-accent-dark/40" />
                 <p className="text-ink dark:text-ink-dark font-serif mb-2 text-lg">
                   {hasNotes ? t('no_question_yet') : t('space_empty')}
                 </p>
                 <p className="text-body-sm-muted">
                   {t('just_write')}
                 </p>
+                {/* Onboarding nudge for first-time users (suggestion #17) */}
+                {!hasNotes && !onboardingDismissed && (
+                  <div className="mt-6 mx-auto max-w-xs rounded-xl border border-accent/20 dark:border-accent-dark/20 bg-accent/5 dark:bg-accent-dark/5 px-4 py-3 animate-fade-in">
+                    <p className="text-body-sm text-ink dark:text-ink-dark mb-2">
+                      {t('empty_state_onboarding')}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={dismissOnboarding}
+                      className="text-xs text-accent dark:text-accent-dark hover:underline cursor-pointer"
+                    >
+                      {t('empty_state_onboarding_dismiss')}
+                    </button>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -342,6 +403,11 @@ const Home: React.FC = () => {
                   )}
                 </div>
                 <div className="mt-3 flex items-center gap-2 section-kicker">
+                  {/* Tension indicator dot (suggestion #2) */}
+                  <span
+                    className={`inline-block w-2 h-2 rounded-full ${getTensionColor(q.updatedAt)} shrink-0`}
+                    title={new Date(q.updatedAt).toLocaleDateString()}
+                  />
                   <span>{t('last_active')} {new Date(q.updatedAt).toLocaleDateString()}</span>
                 </div>
               </>
@@ -367,15 +433,21 @@ const Home: React.FC = () => {
         )}
       </div>
 
-      {/* Floating Action Button */}
+      {/* Floating Action Button + keyboard hint */}
       {fabContainer && createPortal(
-        <Link
-          to="/write"
-          className="fixed bottom-20 right-4 sm:bottom-24 sm:right-8 bg-action text-white w-14 h-14 rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-transform hover:bg-action-hover focus:outline-none focus:ring-4 focus:ring-action-ring dark:bg-action dark:hover:bg-action-hover-dark dark:focus:ring-action-ring/50 z-50"
-          aria-label="Write"
-        >
-          <PlusIcon className="w-6 h-6" />
-        </Link>,
+        <div className="fixed bottom-20 right-4 sm:bottom-24 sm:right-8 z-50 flex flex-col items-center gap-2">
+          {/* Keyboard shortcut hint (suggestion #3) — desktop only */}
+          <span className="hidden sm:block text-micro text-muted-400 dark:text-muted-500 tabular-nums select-none">
+            {t('keyboard_shortcut_write')}
+          </span>
+          <Link
+            to="/write"
+            className="bg-action text-white w-14 h-14 rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-transform hover:bg-action-hover focus:outline-none focus:ring-4 focus:ring-action-ring dark:bg-action dark:hover:bg-action-hover-dark dark:focus:ring-action-ring/50"
+            aria-label="Write"
+          >
+            <PlusIcon className="w-6 h-6" />
+          </Link>
+        </div>,
         fabContainer
       )}
     </div>

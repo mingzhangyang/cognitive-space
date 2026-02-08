@@ -188,3 +188,37 @@ export const CrosshairIcon = ({ className }: { className?: string }) => (
     <line x1="18" y1="12" x2="22" y2="12" />
   </svg>
 );
+
+// Empty-state illustration: a soft thought-bubble / orbit motif
+export const EmptyStateIllustration = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" fill="none" className={className}>
+    {/* Outer orbit */}
+    <ellipse cx="80" cy="60" rx="60" ry="40" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" opacity="0.25" />
+    {/* Inner orbit */}
+    <ellipse cx="80" cy="60" rx="36" ry="24" stroke="currentColor" strokeWidth="1" strokeDasharray="3 3" opacity="0.2" />
+    {/* Central thought circle */}
+    <circle cx="80" cy="60" r="14" stroke="currentColor" strokeWidth="1.4" opacity="0.35" />
+    <circle cx="80" cy="60" r="3" fill="currentColor" opacity="0.2" />
+    {/* Orbiting dots */}
+    <circle cx="140" cy="58" r="3" fill="currentColor" opacity="0.3" />
+    <circle cx="44" cy="42" r="2.5" fill="currentColor" opacity="0.25" />
+    <circle cx="110" cy="88" r="2" fill="currentColor" opacity="0.2" />
+    <circle cx="56" cy="80" r="2.5" fill="currentColor" opacity="0.22" />
+    {/* Floating question mark */}
+    <text x="80" y="65" textAnchor="middle" fontSize="14" fontFamily="serif" fill="currentColor" opacity="0.3">?</text>
+  </svg>
+);
+
+export const KeyboardIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <rect x="2" y="4" width="20" height="16" rx="2" ry="2" />
+    <line x1="6" y1="8" x2="6.01" y2="8" />
+    <line x1="10" y1="8" x2="10.01" y2="8" />
+    <line x1="14" y1="8" x2="14.01" y2="8" />
+    <line x1="18" y1="8" x2="18.01" y2="8" />
+    <line x1="8" y1="12" x2="8.01" y2="12" />
+    <line x1="12" y1="12" x2="12.01" y2="12" />
+    <line x1="16" y1="12" x2="16.01" y2="12" />
+    <line x1="7" y1="16" x2="17" y2="16" />
+  </svg>
+);
