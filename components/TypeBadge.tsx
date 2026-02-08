@@ -1,6 +1,7 @@
 import React from 'react';
 import { NoteType } from '../types';
 import { useAppContext } from '../contexts/AppContext';
+import { SUBTYPE_KEYS } from '../utils/subtypes';
 
 interface TypeBadgeProps {
   type: NoteType;
@@ -18,10 +19,18 @@ const TypeBadge: React.FC<TypeBadgeProps> = ({ type, subType }) => {
     [NoteType.UNCATEGORIZED]: 'bg-gray-50 dark:bg-gray-800/70 text-gray-500 dark:text-gray-300 border-gray-100 dark:border-gray-700'
   };
 
+  // Data is normalized on write by storageService + background migration,
+  // so subType should already be a canonical key. Fall back to raw value for safety.
+  const resolvedSubType = subType && SUBTYPE_KEYS.has(subType)
+    ? t(`subtype_${subType}` as any)
+    : subType?.trim();
+
   return (
     <span className={`badge-base ${colors[type] || colors[NoteType.UNCATEGORIZED]}`}>
       {t(`type_${type}` as any)}
-      {subType && <span className="font-normal opacity-70 ml-1 normal-case tracking-normal">· {subType}</span>}
+      {resolvedSubType && (
+        <span className="font-normal opacity-70 ml-1 normal-case tracking-normal">· {resolvedSubType}</span>
+      )}
     </span>
   );
 };

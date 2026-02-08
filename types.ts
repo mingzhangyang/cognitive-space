@@ -12,7 +12,7 @@ export interface Note {
   id: string;
   content: string;
   type: NoteType;
-  subType?: string; // e.g., 'hypothesis', 'fact', 'opinion'
+  subType?: string; // e.g., 'hypothesis', 'fact', 'opinion', 'inspiration'
   confidence?: number; // legacy numeric confidence (0.0 to 1.0)
   confidenceLabel?: ConfidenceLabel;
   analysisPending?: boolean;

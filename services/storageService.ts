@@ -1,6 +1,7 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 import { Note, NoteEvent, NoteType, AppEvent, TelemetryEvent, DarkMatterSuggestionKind } from '../types';
 import { isConfidenceLabel } from '../utils/confidence';
+import { SUBTYPE_KEYS, normalizeSubType } from '../utils/subtypes';
 
 const DB_NAME = 'cognitive_space_db';
 const DB_VERSION = 2;
@@ -9,6 +10,7 @@ const STORE_EVENTS = 'events';
 const STORE_META = 'meta';
 const META_LAST_EVENT_AT = 'lastEventAt';
 const META_LAST_PROJECTION_AT = 'lastProjectionAt';
+const META_SUBTYPE_MIGRATION_V1 = 'subTypeMigrationV1';
 const NOTE_EVENT_TYPES = new Set<NoteEvent['type']>([
   'NOTE_CREATED',
   'NOTE_UPDATED',
@@ -16,6 +18,7 @@ const NOTE_EVENT_TYPES = new Set<NoteEvent['type']>([
   'NOTE_DELETED',
   'NOTE_TOUCHED'
 ]);
+
 
 interface CognitiveSpaceDB extends DBSchema {
   notes: {
@@ -44,6 +47,8 @@ interface CognitiveSpaceDB extends DBSchema {
 }
 
 let dbPromise: Promise<IDBPDatabase<CognitiveSpaceDB>> | null = null;
+let subTypeMigrationPromise: Promise<void> | null = null;
+let subTypeMigrationDone = false;
 
 export type NoteStoreEventKind =
   | 'created'
@@ -76,6 +81,36 @@ const emitNoteEvent = (detail: NoteStoreEventDetail): void => {
 
 const logDbError = (message: string, error: unknown) => {
   console.error(message, error);
+};
+
+const normalizeNoteSubTypeInPlace = (note: Note): boolean => {
+  if (typeof note.subType !== 'string') return false;
+  const normalized = normalizeSubType(note.subType);
+  if (normalized === note.subType) return false;
+  if (normalized) {
+    note.subType = normalized;
+  } else {
+    delete note.subType;
+  }
+  return true;
+};
+
+const normalizeEventSubTypeInPlace = (event: AppEvent): boolean => {
+  if (event.type === 'NOTE_CREATED') {
+    return normalizeNoteSubTypeInPlace(event.payload.note);
+  }
+  if (event.type === 'NOTE_META_UPDATED') {
+    if (!Object.prototype.hasOwnProperty.call(event.payload.updates, 'subType')) return false;
+    const normalized = normalizeSubType(event.payload.updates.subType);
+    if (normalized === event.payload.updates.subType) return false;
+    if (normalized) {
+      event.payload.updates.subType = normalized;
+    } else {
+      delete event.payload.updates.subType;
+    }
+    return true;
+  }
+  return false;
 };
 
 const getMetaValue = async (db: IDBPDatabase<CognitiveSpaceDB>, key: string): Promise<number> => {
@@ -217,6 +252,51 @@ const ensureProjection = async (db: IDBPDatabase<CognitiveSpaceDB>): Promise<voi
   await rebuildProjectionFromEvents(db);
 };
 
+const runSubTypeMigration = async (db: IDBPDatabase<CognitiveSpaceDB>): Promise<void> => {
+  const migratedAt = await getMetaValue(db, META_SUBTYPE_MIGRATION_V1);
+  if (migratedAt) return;
+  const tx = db.transaction([STORE_NOTES, STORE_EVENTS, STORE_META], 'readwrite');
+  const notesStore = tx.objectStore(STORE_NOTES);
+  const eventsStore = tx.objectStore(STORE_EVENTS);
+  const metaStore = tx.objectStore(STORE_META);
+
+  const notes = await notesStore.getAll();
+  for (const note of notes) {
+    if (normalizeNoteSubTypeInPlace(note)) {
+      await notesStore.put(note);
+    }
+  }
+
+  const events = await eventsStore.getAll();
+  for (const event of events) {
+    if (normalizeEventSubTypeInPlace(event)) {
+      await eventsStore.put(event);
+    }
+  }
+
+  await metaStore.put({ key: META_SUBTYPE_MIGRATION_V1, value: Date.now() });
+  await tx.done;
+};
+
+const scheduleSubTypeMigration = (db: IDBPDatabase<CognitiveSpaceDB>): void => {
+  if (subTypeMigrationDone || subTypeMigrationPromise) return;
+
+  const run = () => {
+    subTypeMigrationPromise = runSubTypeMigration(db).then(() => {
+      subTypeMigrationDone = true;
+    }).catch((error) => {
+      logDbError('Failed to migrate subType values', error);
+      subTypeMigrationPromise = null;
+    });
+  };
+
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(run, { timeout: 2000 });
+  } else {
+    setTimeout(run, 0);
+  }
+};
+
 const getDb = async (): Promise<IDBPDatabase<CognitiveSpaceDB> | null> => {
   if (!dbPromise) {
     dbPromise = openDB<CognitiveSpaceDB>(DB_NAME, DB_VERSION, {
@@ -250,7 +330,9 @@ const getDb = async (): Promise<IDBPDatabase<CognitiveSpaceDB> | null> => {
   }
 
   try {
-    return await dbPromise;
+    const db = await dbPromise;
+    scheduleSubTypeMigration(db);
+    return db;
   } catch (error) {
     logDbError('Failed to open IndexedDB', error);
     dbPromise = null;
@@ -558,10 +640,12 @@ export const importAppData = async (payload: AppDataExport, mode: ImportMode): P
       }
 
       for (const note of payload.notes) {
+        normalizeNoteSubTypeInPlace(note);
         await notesStore.put(note);
       }
 
       for (const event of payload.events) {
+        normalizeEventSubTypeInPlace(event);
         await eventsStore.put(event);
       }
 
@@ -592,6 +676,7 @@ export const importAppData = async (payload: AppDataExport, mode: ImportMode): P
 
       meta[META_LAST_EVENT_AT] = nextLastEventAt;
       meta[META_LAST_PROJECTION_AT] = nextLastProjectionAt;
+      meta[META_SUBTYPE_MIGRATION_V1] = Date.now();
 
       for (const [key, value] of Object.entries(meta)) {
         if (isNumber(value)) {
@@ -670,6 +755,10 @@ export const updateNoteMeta = async (
   noteId: string,
   updates: Pick<Partial<Note>, 'parentId' | 'type' | 'subType' | 'confidence' | 'confidenceLabel' | 'analysisPending'>
 ): Promise<void> => {
+  const normalizedUpdates = {
+    ...updates,
+    ...(typeof updates.subType === 'string' ? { subType: normalizeSubType(updates.subType) } : {})
+  };
   await withDb<void>(
     undefined,
     async (db) => {
@@ -680,19 +769,19 @@ export const updateNoteMeta = async (
           id: crypto.randomUUID(),
           type: 'NOTE_META_UPDATED',
           createdAt: updatedAt,
-          payload: { id: noteId, updates, updatedAt }
+          payload: { id: noteId, updates: normalizedUpdates, updatedAt }
         };
         await appendEvent(db, event);
-        if (typeof updates.parentId !== 'undefined') note.parentId = updates.parentId;
-        if (typeof updates.type !== 'undefined') note.type = updates.type;
-        if (typeof updates.subType !== 'undefined') note.subType = updates.subType;
-        if (typeof updates.confidence !== 'undefined') note.confidence = updates.confidence;
-        if (typeof updates.confidenceLabel !== 'undefined') note.confidenceLabel = updates.confidenceLabel;
-        if (typeof updates.analysisPending !== 'undefined') note.analysisPending = updates.analysisPending;
+        if (typeof normalizedUpdates.parentId !== 'undefined') note.parentId = normalizedUpdates.parentId;
+        if (typeof normalizedUpdates.type !== 'undefined') note.type = normalizedUpdates.type;
+        if (typeof normalizedUpdates.subType !== 'undefined') note.subType = normalizedUpdates.subType;
+        if (typeof normalizedUpdates.confidence !== 'undefined') note.confidence = normalizedUpdates.confidence;
+        if (typeof normalizedUpdates.confidenceLabel !== 'undefined') note.confidenceLabel = normalizedUpdates.confidenceLabel;
+        if (typeof normalizedUpdates.analysisPending !== 'undefined') note.analysisPending = normalizedUpdates.analysisPending;
         note.updatedAt = updatedAt;
         await db.put(STORE_NOTES, note);
         const newParentId =
-          typeof updates.parentId !== 'undefined' ? updates.parentId : note.parentId;
+          typeof normalizedUpdates.parentId !== 'undefined' ? normalizedUpdates.parentId : note.parentId;
         if (newParentId) {
           await touchNoteUpdatedAt(db, newParentId);
         }
