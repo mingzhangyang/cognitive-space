@@ -16,7 +16,7 @@ import {
 import { Note, NoteType, DarkMatterSuggestion } from '../types';
 import { useAppContext } from '../contexts/AppContext';
 import { useAssistantInbox } from '../contexts/AssistantInboxContext';
-import { LoadingSpinner, CheckIcon, XIcon, MoreIcon } from '../components/Icons';
+import { LoadingSpinner, CheckIcon, XIcon, MoreIcon, SortDescIcon, SortAscIcon } from '../components/Icons';
 import ActionIconButton from '../components/ActionIconButton';
 import ActionSheetButton from '../components/ActionSheetButton';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -130,6 +130,11 @@ const DarkMatter: React.FC = () => {
     type: 'create' | 'link';
     suggestion: DarkMatterSuggestion;
   } | null>(null);
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [batchLinkOpen, setBatchLinkOpen] = useState(false);
+  const [batchPromoteConfirm, setBatchPromoteConfirm] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const { t, language } = useAppContext();
   const { copyText } = useCopyToClipboard();
   const {
@@ -152,6 +157,11 @@ const DarkMatter: React.FC = () => {
     });
     return map;
   }, [darkMatter, analysisNotes]);
+
+  const sortedDarkMatter = useMemo(() => {
+    if (sortOrder === 'newest') return darkMatter;
+    return [...darkMatter].sort((a, b) => a.createdAt - b.createdAt);
+  }, [darkMatter, sortOrder]);
 
   const loadInitial = async () => {
     setIsLoadingMore(true);
@@ -326,6 +336,54 @@ const DarkMatter: React.FC = () => {
     setEditContent('');
   };
 
+  const toggleSelectMode = () => {
+    if (isSelectMode) {
+      setSelectedIds(new Set());
+    } else {
+      setEditingId(null);
+      setEditContent('');
+    }
+    setIsSelectMode((prev) => !prev);
+  };
+
+  const toggleSelect = (noteId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(noteId)) next.delete(noteId);
+      else next.add(noteId);
+      return next;
+    });
+  };
+
+  const handleBatchLink = () => {
+    if (selectedIds.size === 0) return;
+    setBatchLinkOpen(true);
+  };
+
+  const confirmBatchLink = async (questionId: string) => {
+    const ids: string[] = Array.from(selectedIds);
+    await Promise.all(ids.map((id) => updateNoteMeta(id, { parentId: questionId })));
+    removeAnalysisNotes(ids);
+    setSelectedIds(new Set());
+    setIsSelectMode(false);
+    setBatchLinkOpen(false);
+    void loadInitial();
+  };
+
+  const handleBatchPromote = async () => {
+    const ids: string[] = Array.from(selectedIds);
+    await Promise.all(ids.map((id) => updateNoteMeta(id, { type: NoteType.QUESTION, parentId: null })));
+    removeAnalysisNotes(ids);
+    setSelectedIds(new Set());
+    setIsSelectMode(false);
+    setBatchPromoteConfirm(false);
+    void loadInitial();
+  };
+
+  const toggleSortOrder = () => {
+    setSortOrder((prev) => (prev === 'newest' ? 'oldest' : 'newest'));
+  };
+
   const getSuggestionReasoning = (reasoning: string | undefined, title: string) => {
     const raw = typeof reasoning === 'string' ? reasoning.trim() : '';
     if (!raw || (language === 'zh' && !containsCjk(raw))) {
@@ -487,6 +545,22 @@ const DarkMatter: React.FC = () => {
         onCancel={() => setLinkTarget(null)}
       />
 
+      <QuestionSelector
+        isOpen={batchLinkOpen}
+        questions={questions}
+        onSelect={confirmBatchLink}
+        onCancel={() => setBatchLinkOpen(false)}
+      />
+
+      <ConfirmDialog
+        isOpen={batchPromoteConfirm}
+        message={formatTemplate(t('dark_matter_batch_promote_confirm'), { count: selectedIds.size })}
+        confirmLabel={t('dark_matter_batch_promote')}
+        confirmTone="primary"
+        onConfirm={handleBatchPromote}
+        onCancel={() => setBatchPromoteConfirm(false)}
+      />
+
       {/* Header */}
       <div className="mb-7 sm:mb-8">
         <div className="flex items-center gap-3 mb-2">
@@ -497,9 +571,43 @@ const DarkMatter: React.FC = () => {
         </div>
         <p className="page-subtitle">{t('dark_matter_desc')}</p>
         {darkMatterCount > 0 && (
-          <p className="mt-2 text-caption-upper">
-            {darkMatterCount} {t('dark_matter_count')}
-          </p>
+          <div className="mt-2 flex items-center gap-3 flex-wrap">
+            <p className="text-caption-upper">
+              {darkMatterCount} {t('dark_matter_count')}
+            </p>
+            <button
+              onClick={toggleSortOrder}
+              className="inline-flex items-center gap-1 text-xs text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark transition-colors cursor-pointer"
+              title={sortOrder === 'newest' ? t('dark_matter_sort_oldest') : t('dark_matter_sort_newest')}
+            >
+              {sortOrder === 'newest' ? <SortDescIcon className="w-3.5 h-3.5" /> : <SortAscIcon className="w-3.5 h-3.5" />}
+              <span>{sortOrder === 'newest' ? t('dark_matter_sort_newest') : t('dark_matter_sort_oldest')}</span>
+            </button>
+            <button
+              onClick={toggleSelectMode}
+              className={`inline-flex items-center px-3 py-1 text-xs rounded-full border transition-colors cursor-pointer ${
+                isSelectMode
+                  ? 'bg-accent dark:bg-accent-dark text-white border-accent dark:border-accent-dark'
+                  : 'border-line dark:border-line-dark text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark hover:border-ink/30 dark:hover:border-ink-dark/30'
+              }`}
+            >
+              {isSelectMode ? t('dark_matter_select_done') : t('dark_matter_select')}
+            </button>
+            {isSelectMode && sortedDarkMatter.length > 0 && (
+              <button
+                onClick={() =>
+                  selectedIds.size === sortedDarkMatter.length
+                    ? setSelectedIds(new Set())
+                    : setSelectedIds(new Set(sortedDarkMatter.map((n) => n.id)))
+                }
+                className="text-xs text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark transition-colors cursor-pointer"
+              >
+                {selectedIds.size === sortedDarkMatter.length
+                  ? t('dark_matter_deselect_all')
+                  : t('dark_matter_select_all')}
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -572,14 +680,17 @@ const DarkMatter: React.FC = () => {
                     )}
                   </span>
                 </div>
-                <div className="mt-3 space-y-2">
+                <div className="mt-3 flex flex-wrap gap-1.5">
                   {suggestion.noteIds.map((noteId) => {
                     const note = noteById.get(noteId);
                     if (!note) return null;
+                    const snippet = note.content.length > 60
+                      ? note.content.slice(0, 60) + '…'
+                      : note.content;
                     return (
-                      <p key={note.id} className="text-body-sm text-ink dark:text-ink-dark line-clamp-2">
-                        “{note.content}”
-                      </p>
+                      <span key={note.id} className="inline-block text-xs bg-surface-hover dark:bg-surface-hover-dark rounded-md px-2 py-1 text-subtle dark:text-subtle-dark max-w-full truncate">
+                        {snippet}
+                      </span>
                     );
                   })}
                 </div>
@@ -628,8 +739,9 @@ const DarkMatter: React.FC = () => {
           </div>
         ) : (
           <>
-            {darkMatter.map((note) => {
+            {sortedDarkMatter.map((note) => {
               const isMobileActionsOpen = mobileNoteActionsId === note.id;
+              const isSelected = selectedIds.has(note.id);
               const actionButtons = (
                 <>
                   <ActionIconButton
@@ -651,11 +763,27 @@ const DarkMatter: React.FC = () => {
               return (
                 <div
                   key={note.id}
-                  className="group surface-card p-4 sm:p-5 card-interactive"
+                  className={`group surface-card p-4 sm:p-5 card-interactive ${
+                    isSelectMode && isSelected
+                      ? 'ring-2 ring-accent dark:ring-accent-dark'
+                      : ''
+                  } ${isSelectMode ? 'cursor-pointer' : ''}`}
+                  onClick={isSelectMode ? () => toggleSelect(note.id) : undefined}
+                  role={isSelectMode ? 'checkbox' : undefined}
+                  aria-checked={isSelectMode ? isSelected : undefined}
                 >
               {/* Note header */}
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="flex items-center gap-2">
+                  {isSelectMode && (
+                    <span className={`shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                      isSelected
+                        ? 'bg-accent dark:bg-accent-dark border-accent dark:border-accent-dark'
+                        : 'border-line dark:border-line-dark'
+                    }`}>
+                      {isSelected && <CheckIcon className="w-3 h-3 text-white" />}
+                    </span>
+                  )}
                   <TypeBadge type={note.type} subType={note.subType} />
                   <span className="muted-caption">
                     {formatRelativeTime(note.createdAt)}
@@ -685,7 +813,7 @@ const DarkMatter: React.FC = () => {
                   )}
                 </div>
                 <div className="relative flex items-center gap-1">
-                  {editingId !== note.id && (
+                  {editingId !== note.id && !isSelectMode && (
                     <>
                       <IconButton
                         label={t('actions_show')}
@@ -780,7 +908,7 @@ const DarkMatter: React.FC = () => {
               )}
 
               {/* Actions */}
-              {editingId !== note.id && (
+              {editingId !== note.id && !isSelectMode && (
                 <div className="flex flex-wrap gap-2 pt-3 border-t border-line-soft dark:border-line-dark">
                   <button
                     onClick={() => handleLinkToQuestion(note.id)}
@@ -822,6 +950,29 @@ const DarkMatter: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* Batch action bar */}
+      {isSelectMode && selectedIds.size > 0 && (
+        <div className="sticky bottom-0 left-0 right-0 bg-surface dark:bg-surface-dark border-t border-line dark:border-line-dark px-4 py-3 flex items-center justify-between gap-3 z-10 shadow-[var(--shadow-elev-2)] dark:shadow-[var(--shadow-elev-2-dark)]">
+          <span className="text-body-sm tabular-nums text-subtle dark:text-subtle-dark">
+            {formatTemplate(t('dark_matter_selected_count'), { count: selectedIds.size })}
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={(e) => { e.stopPropagation(); handleBatchLink(); }}
+              className="chip-outline hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+            >
+              {t('dark_matter_batch_link')}
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setBatchPromoteConfirm(true); }}
+              className="chip-outline hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+            >
+              {t('dark_matter_batch_promote')}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

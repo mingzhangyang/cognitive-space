@@ -326,7 +326,17 @@ const translations = {
     move_to_question: "Move to...",
     move_to_question_title: "Move note to another question",
     move_to_question_confirm: "Move",
-    note_moved_success: "Note moved"
+    note_moved_success: "Note moved",
+    dark_matter_select: "Select",
+    dark_matter_select_done: "Done",
+    dark_matter_selected_count: "{count} selected",
+    dark_matter_batch_link: "Link all to…",
+    dark_matter_batch_promote: "Promote to question",
+    dark_matter_select_all: "Select all",
+    dark_matter_deselect_all: "Deselect all",
+    dark_matter_sort_newest: "Newest first",
+    dark_matter_sort_oldest: "Oldest first",
+    dark_matter_batch_promote_confirm: "Promote {count} fragments to individual questions?"
   },
   zh: {
     app_name: "认知空间",
@@ -482,7 +492,7 @@ const translations = {
     about_boundaries_title: "这个应用永远不会做的事",
     about_boundaries_intro: "这些边界保护你不被工具塑形的权利。",
     about_boundary_1: "永远不会替你自动生成结论或判断。",
-    about_boundary_2: "永远不会要求你"完成"或"关闭"一个问题。",
+    about_boundary_2: "永远不会要求你“完成”或“关闭”一个问题。",
     about_boundary_3: "永远不会隐藏过去的错误或改写你的思考轨迹。",
     about_boundary_4: "永远不会用分数或进度条量化思考质量。",
     about_boundary_5: "永远不会以生产力话术——连续打卡、KPI、每日目标——作为价值主张。",
@@ -642,7 +652,17 @@ const translations = {
     move_to_question: "移动到...",
     move_to_question_title: "将笔记移至其他问题",
     move_to_question_confirm: "移动",
-    note_moved_success: "笔记已移动"
+    note_moved_success: "笔记已移动",
+    dark_matter_select: "选择",
+    dark_matter_select_done: "完成",
+    dark_matter_selected_count: "已选 {count} 条",
+    dark_matter_batch_link: "全部关联到…",
+    dark_matter_batch_promote: "升级为问题",
+    dark_matter_select_all: "全选",
+    dark_matter_deselect_all: "取消全选",
+    dark_matter_sort_newest: "最新优先",
+    dark_matter_sort_oldest: "最早优先",
+    dark_matter_batch_promote_confirm: "将 {count} 条碎片分别升级为独立问题？"
   }
 };
 

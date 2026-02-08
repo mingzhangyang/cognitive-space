@@ -250,3 +250,23 @@ export const KeyboardIcon = ({ className }: { className?: string }) => (
     <line x1="7" y1="16" x2="17" y2="16" />
   </svg>
 );
+
+export const SortDescIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M11 5h10" />
+    <path d="M11 9h7" />
+    <path d="M11 13h4" />
+    <path d="M3 17l3 3 3-3" />
+    <path d="M6 18V4" />
+  </svg>
+);
+
+export const SortAscIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M11 5h4" />
+    <path d="M11 9h7" />
+    <path d="M11 13h10" />
+    <path d="M3 7l3-3 3 3" />
+    <path d="M6 6v14" />
+  </svg>
+);
