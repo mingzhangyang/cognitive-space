@@ -799,17 +799,41 @@ export const demoteQuestion = async (
   options?: { relinkQuestionId?: string | null; includeSelf?: boolean }
 ): Promise<void> => {
   if (targetType === NoteType.QUESTION) return;
-  const relatedNotes = await getRelatedNotes(questionId);
   const relinkQuestionId = options?.relinkQuestionId ?? null;
   const includeSelf = options?.includeSelf ?? false;
   const nextParentId = relinkQuestionId ?? null;
-  await updateNoteMeta(questionId, {
-    type: targetType,
-    parentId: includeSelf ? nextParentId : null
-  });
-  for (const note of relatedNotes) {
-    await updateNoteMeta(note.id, { parentId: nextParentId });
-  }
+  await withDb<void>(
+    undefined,
+    async (db) => {
+      const relatedNotes = await db.getAllFromIndex(STORE_NOTES, 'by-parent', questionId);
+      const allNotes: { id: string; updates: Pick<Partial<Note>, 'parentId' | 'type'> }[] = [
+        { id: questionId, updates: { type: targetType, parentId: includeSelf ? nextParentId : null } },
+        ...relatedNotes.map((n) => ({ id: n.id, updates: { parentId: nextParentId } }))
+      ];
+      for (const { id, updates } of allNotes) {
+        const note = id === questionId ? await db.get(STORE_NOTES, id) : relatedNotes.find((n) => n.id === id);
+        if (!note) continue;
+        const updatedAt = Date.now();
+        const event: NoteEvent = {
+          id: crypto.randomUUID(),
+          type: 'NOTE_META_UPDATED',
+          createdAt: updatedAt,
+          payload: { id, updates, updatedAt }
+        };
+        await appendEvent(db, event);
+        if (typeof updates.parentId !== 'undefined') note.parentId = updates.parentId;
+        if (typeof updates.type !== 'undefined') note.type = updates.type;
+        note.updatedAt = updatedAt;
+        await db.put(STORE_NOTES, note);
+        if (note.parentId) {
+          await touchNoteUpdatedAt(db, note.parentId);
+        }
+        emitNoteEvent({ id, kind: 'meta_updated' });
+      }
+      await markProjectionUpToDate(db);
+    },
+    'Failed to demote question'
+  );
 };
 
 const logTelemetryEvent = async (event: TelemetryEvent): Promise<void> => {

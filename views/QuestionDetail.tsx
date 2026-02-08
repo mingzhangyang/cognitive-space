@@ -680,7 +680,7 @@ const QuestionDetail: React.FC = () => {
               {t('question_constellation')}
             </h2>
             <span className="section-meta">
-              Read-only
+              {t('read_only')}
             </span>
           </div>
           <div className="space-y-6">
@@ -734,7 +734,7 @@ const QuestionDetail: React.FC = () => {
                         }}
                         className="chip-outline hover:border-line-muted dark:hover:border-muted-600"
                       >
-                        Jump to note
+                        {t('jump_to_note')}
                       </button>
                     </div>
                   </div>
