@@ -1,5 +1,5 @@
 import { getNotes } from './storageService';
-import { Language } from '../contexts/AppContext';
+import { Language, translations } from '../contexts/AppContext';
 import { Note, NoteType } from '../types';
 
 const SESSION_KEY_PREFIX = 'cs_footer_line_v1';
@@ -14,28 +14,28 @@ const MAX_EXCLAMATIONS = 1;
 
 const DEFAULT_LINES: Record<Language, string[]> = {
   en: [
-    'Meaning will unfurl of its own accord.',
-    'A quiet thread becomes a path.',
-    'What lingers now will gather sense.',
-    'Small fragments lean toward a center.',
-    'The question you keep will answer you.',
-    'Light touches the edges of doubt.',
-    'Patience makes a map from scatter.',
-    'Each note is a seed of clarity.',
-    'The mind loosens; the pattern appears.',
-    'Silence is also a kind of evidence.'
+    translations.en.footer_line_1,
+    translations.en.footer_line_2,
+    translations.en.footer_line_3,
+    translations.en.footer_line_4,
+    translations.en.footer_line_5,
+    translations.en.footer_line_6,
+    translations.en.footer_line_7,
+    translations.en.footer_line_8,
+    translations.en.footer_line_9,
+    translations.en.footer_line_10,
   ],
   zh: [
-    '意义的纹理会自行舒展。',
-    '细微的线索终会成路。',
-    '停留之处，终将聚拢成意。',
-    '碎片也会向中心倾斜。',
-    '你守着的问题，会反过来照亮你。',
-    '微光触及疑虑的边缘。',
-    '耐心让散乱有了形。',
-    '每一条记录都是清晰的种子。',
-    '心一松，图样就显露。',
-    '沉默也是一种证据。'
+    translations.zh.footer_line_1,
+    translations.zh.footer_line_2,
+    translations.zh.footer_line_3,
+    translations.zh.footer_line_4,
+    translations.zh.footer_line_5,
+    translations.zh.footer_line_6,
+    translations.zh.footer_line_7,
+    translations.zh.footer_line_8,
+    translations.zh.footer_line_9,
+    translations.zh.footer_line_10,
   ]
 };
 

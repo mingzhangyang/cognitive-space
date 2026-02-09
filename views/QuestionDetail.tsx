@@ -101,7 +101,7 @@ const DowngradeDialog: React.FC<{
                 aria-pressed={isSelected}
                 className={`chip-outline ${
                   isSelected
-                    ? 'bg-cs-amber-100 text-cs-amber-900 border-cs-amber-200 dark:bg-cs-amber-900/40 dark:text-cs-amber-100 dark:border-cs-amber-700'
+                    ? 'bg-accent/20 text-accent border-accent/30 dark:bg-accent-dark/20 dark:text-accent-dark dark:border-accent-dark/30'
                     : ''
                 }`}
               >
@@ -176,7 +176,7 @@ const DowngradeDialog: React.FC<{
         <button
           onClick={onConfirm}
           disabled={isWorking || (isRelink && !relinkTarget)}
-          className={`px-4 py-2 text-sm rounded-md bg-cs-amber-500 text-white hover:bg-cs-amber-600 dark:bg-cs-amber-600 dark:hover:bg-cs-amber-500 transition-colors inline-flex items-center gap-2 ${
+          className={`px-4 py-2 text-sm rounded-md bg-accent text-white hover:opacity-90 dark:bg-accent-dark dark:hover:opacity-90 transition-colors inline-flex items-center gap-2 ${
             isWorking || (isRelink && !relinkTarget) ? 'opacity-60 cursor-not-allowed' : ''
           }`}
         >
@@ -502,7 +502,7 @@ const QuestionDetail: React.FC = () => {
             label={t('move_to_question')}
             sizeClassName="h-10 w-10"
             onClick={() => openMoveToQuestion(note.id)}
-            className="text-subtle dark:text-subtle-dark hover:text-cs-indigo-600 dark:hover:text-cs-indigo-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+            className="text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
           >
             <MoveIcon className="w-4 h-4" />
           </IconButton>

@@ -11,7 +11,7 @@ interface AppContextProps {
   t: (key: keyof typeof translations['en']) => string;
 }
 
-const translations = {
+export const translations = {
   en: {
     app_name: "Cognitive Space",
     seo_title_home: "Cognitive Space - AI Workspace for Structured Thinking",
@@ -103,6 +103,16 @@ const translations = {
     no_triggers: "No triggers yet.",
     no_other: "Nothing else yet.",
     footer_philosophy: "Meaning will unfurl of its own accord.",
+    footer_line_1: "Meaning will unfurl of its own accord.",
+    footer_line_2: "A quiet thread becomes a path.",
+    footer_line_3: "What lingers now will gather sense.",
+    footer_line_4: "Small fragments lean toward a center.",
+    footer_line_5: "The question you keep will answer you.",
+    footer_line_6: "Light touches the edges of doubt.",
+    footer_line_7: "Patience makes a map from scatter.",
+    footer_line_8: "Each note is a seed of clarity.",
+    footer_line_9: "The mind loosens; the pattern appears.",
+    footer_line_10: "Silence is also a kind of evidence.",
     back_problems: "Back to Problems",
     problem_not_found: "Problem not found.",
     visualize: "Visualize",
@@ -435,6 +445,16 @@ const translations = {
     no_triggers: "尚无触发物。",
     no_other: "暂无其他内容。",
     footer_philosophy: "意义的纹理会自行舒展。",
+    footer_line_1: "意义的纹理会自行舒展。",
+    footer_line_2: "细微的线索终会成路。",
+    footer_line_3: "停留之处，终将聚拢成意。",
+    footer_line_4: "碎片也会向中心倾斜。",
+    footer_line_5: "你守着的问题，会反过来照亮你。",
+    footer_line_6: "微光触及疑虑的边缘。",
+    footer_line_7: "耐心让散乱有了形。",
+    footer_line_8: "每一条记录都是清晰的种子。",
+    footer_line_9: "心一松，图样就显露。",
+    footer_line_10: "沉默也是一种证据。",
     back_problems: "回到问题列表",
     problem_not_found: "未找到该问题。",
     visualize: "可视化",
