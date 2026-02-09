@@ -9,6 +9,8 @@ import {
   InboxIcon,
   InfoIcon,
   MenuIcon,
+  MoonIcon,
+  SunIcon,
   TrashIcon
 } from './Icons';
 import IconButton from './IconButton';
@@ -392,21 +394,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 >
                   <span className="h-9 w-9 rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 grid place-items-center text-subtle dark:text-subtle-dark">
                     {theme === 'light' ? (
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M21 12.4A8.5 8.5 0 1 1 11.6 3a7 7 0 0 0 9.4 9.4Z" />
-                      </svg>
+                      <MoonIcon className="w-4 h-4" />
                     ) : (
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <circle cx="12" cy="12" r="4" />
-                        <path d="M12 2v2" />
-                        <path d="M12 20v2" />
-                        <path d="M4.9 4.9l1.4 1.4" />
-                        <path d="M17.7 17.7l1.4 1.4" />
-                        <path d="M2 12h2" />
-                        <path d="M20 12h2" />
-                        <path d="M4.9 19.1l1.4-1.4" />
-                        <path d="M17.7 6.3l1.4-1.4" />
-                      </svg>
+                      <SunIcon className="w-4 h-4" />
                     )}
                   </span>
                   <span className="flex-1">

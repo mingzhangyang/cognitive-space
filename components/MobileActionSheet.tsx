@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useAppContext } from '../contexts/AppContext';
+import IconButton from './IconButton';
 import { XIcon } from './Icons';
 
 type MobileActionSheetProps = {
@@ -73,13 +74,14 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
           <span className="text-sm font-medium text-subtle dark:text-subtle-dark">
             {title || t('actions')}
           </span>
-          <button
+          <IconButton
+            label={t('menu_close')}
             onClick={onClose}
-            className="btn-icon h-8 w-8 text-muted-400 hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark cursor-pointer"
-            aria-label={t('menu_close')}
+            sizeClassName="h-8 w-8"
+            className="text-muted-400 hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
           >
             <XIcon className="w-4 h-4" />
-          </button>
+          </IconButton>
         </div>
         {/* Actions */}
         <div className="flex flex-col gap-1">

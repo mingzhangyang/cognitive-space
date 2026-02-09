@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAppContext } from '../contexts/AppContext';
+import { XIcon } from '../components/Icons';
 
 const About: React.FC = () => {
   const { t } = useAppContext();
@@ -191,9 +192,7 @@ const About: React.FC = () => {
               className="flex items-start gap-3 rounded-xl border border-line/40 bg-surface/50 px-4 py-3 text-body-sm-muted dark:border-line-dark/40 dark:bg-surface-dark/50"
             >
               <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-line/80 text-muted-400 dark:border-line-dark/80 dark:text-muted-500" aria-hidden="true">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M3 3l6 6M9 3L3 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
+                <XIcon className="w-3 h-3" />
               </span>
               <span>{item}</span>
             </li>
