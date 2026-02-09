@@ -189,24 +189,9 @@ export const CrosshairIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// Empty-state illustration: a soft thought-bubble / orbit motif
+// Empty-state illustration: use favicon asset for consistency
 export const EmptyStateIllustration = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" fill="none" className={className}>
-    {/* Outer orbit */}
-    <ellipse cx="80" cy="60" rx="60" ry="40" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" opacity="0.25" />
-    {/* Inner orbit */}
-    <ellipse cx="80" cy="60" rx="36" ry="24" stroke="currentColor" strokeWidth="1" strokeDasharray="3 3" opacity="0.2" />
-    {/* Central thought circle */}
-    <circle cx="80" cy="60" r="14" stroke="currentColor" strokeWidth="1.4" opacity="0.35" />
-    <circle cx="80" cy="60" r="3" fill="currentColor" opacity="0.2" />
-    {/* Orbiting dots */}
-    <circle cx="140" cy="58" r="3" fill="currentColor" opacity="0.3" />
-    <circle cx="44" cy="42" r="2.5" fill="currentColor" opacity="0.25" />
-    <circle cx="110" cy="88" r="2" fill="currentColor" opacity="0.2" />
-    <circle cx="56" cy="80" r="2.5" fill="currentColor" opacity="0.22" />
-    {/* Floating question mark */}
-    <text x="80" y="65" textAnchor="middle" fontSize="14" fontFamily="serif" fill="currentColor" opacity="0.3">?</text>
-  </svg>
+  <img src="/favison.svg" className={className} alt="" aria-hidden="true" />
 );
 
 export const ChevronDownIcon = ({ className }: { className?: string }) => (
