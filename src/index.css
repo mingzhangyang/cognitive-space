@@ -203,6 +203,10 @@ html.dark ::-webkit-scrollbar-thumb {
     @apply text-sm text-subtle dark:text-subtle-dark;
   }
 
+  .text-body-lg {
+    @apply text-base sm:text-lg text-ink dark:text-ink-dark;
+  }
+
   .text-caption {
     @apply text-xs text-muted-400 dark:text-muted-400;
   }
