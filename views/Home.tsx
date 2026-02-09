@@ -78,10 +78,10 @@ const Home: React.FC = () => {
   // --- Tension / heat indicator (suggestion #2) ---
   const getTensionColor = (updatedAt: number): string => {
     const daysSince = (Date.now() - updatedAt) / (1000 * 60 * 60 * 24);
-    if (daysSince < 1) return 'bg-emerald-400 dark:bg-emerald-400';        // very warm
-    if (daysSince < 3) return 'bg-teal-400 dark:bg-teal-300';              // warm
-    if (daysSince < 7) return 'bg-cs-amber-400 dark:bg-cs-amber-300';            // cooling
-    if (daysSince < 14) return 'bg-orange-300 dark:bg-orange-300';         // cool
+    if (daysSince < 1) return 'bg-accent dark:bg-accent';        // very warm
+    if (daysSince < 3) return 'bg-cs-amber-400 dark:bg-cs-amber-300';              // warm
+    if (daysSince < 7) return 'bg-cs-amber-500 dark:bg-cs-amber-400';            // cooling
+    if (daysSince < 14) return 'bg-orange-400 dark:bg-orange-300';         // cool
     return 'bg-muted-300 dark:bg-muted-600';                                // dormant
   };
 
@@ -244,7 +244,7 @@ const Home: React.FC = () => {
         </div>
 
         {filteredQuestions.length === 0 ? (
-          <div className="text-center py-14 px-5 surface-empty shadow-sm">
+          <div className="text-center py-14 px-5 surface-empty shadow-[var(--shadow-elev-1)] dark:shadow-[var(--shadow-elev-1-dark)]">
             {hasQuestions && isFiltering ? (
               <>
                 <p className="text-ink dark:text-ink-dark font-serif mb-2 text-lg">

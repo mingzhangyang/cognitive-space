@@ -774,7 +774,7 @@ const QuestionDetail: React.FC = () => {
             <Tooltip content={visualizationOpen ? t('hide_visualization') : t('visualize')}>
             <button
               onClick={() => setVisualizationOpen((prev) => !prev)}
-              className="h-10 w-10 sm:h-auto sm:w-auto sm:px-3 sm:py-2 muted-label border-0 sm:border sm:border-line dark:sm:border-line-dark hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark sm:hover:border-line-muted dark:sm:hover:border-muted-600 btn-icon"
+              className="h-10 w-10 sm:h-auto sm:w-auto sm:px-3 sm:py-2 muted-label border-0 sm:border sm:border-line dark:sm:border-line-dark hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark sm:hover:border-line-muted dark:sm:hover:border-muted-600 btn-icon cursor-pointer"
               aria-label={visualizationOpen ? t('hide_visualization') : t('visualize')}
             >
               <span className="sm:hidden">
@@ -790,7 +790,7 @@ const QuestionDetail: React.FC = () => {
               onClick={openDowngrade}
               disabled={isSavingEdit || editingId === question.id || isDowngrading}
               className={`h-10 w-10 sm:h-auto sm:w-auto sm:px-3 sm:py-2 muted-label border-0 sm:border sm:border-line dark:sm:border-line-dark hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark sm:hover:border-line-muted dark:sm:hover:border-muted-600 btn-icon ${
-                isSavingEdit || editingId === question.id || isDowngrading ? 'opacity-60 cursor-not-allowed' : ''
+                isSavingEdit || editingId === question.id || isDowngrading ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
               }`}
               aria-label={t('downgrade_question_action')}
             >

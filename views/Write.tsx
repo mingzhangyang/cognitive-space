@@ -337,7 +337,7 @@ const Write: React.FC = () => {
           disabled={!content.trim() || isProcessing}
           className={`w-full sm:w-auto px-6 py-3 min-h-11 rounded-full font-medium transition-all ${
             content.trim() && !isProcessing
-              ? 'bg-action dark:bg-action text-white hover:bg-action-hover dark:hover:bg-action-hover-dark shadow-md'
+              ? 'bg-action dark:bg-action text-white hover:bg-action-hover dark:hover:bg-action-hover-dark shadow-[var(--shadow-elev-2)] dark:shadow-[var(--shadow-elev-2-dark)]'
               : 'bg-line dark:bg-surface-hover-dark text-muted-400 dark:text-muted-500 cursor-not-allowed'
           }`}
         >

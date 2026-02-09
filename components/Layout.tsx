@@ -318,7 +318,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <InboxIcon className="w-4 h-4" />
             {messageCount > 0 && (
               <span
-                className={`absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full shadow-sm ${inboxDotClassName}`}
+                className={`absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full shadow-[var(--shadow-elev-1)] dark:shadow-[var(--shadow-elev-1-dark)] ${inboxDotClassName}`}
                 aria-hidden="true"
               />
             )}
@@ -375,7 +375,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     </span>
                   </span>
                   <span className="text-micro uppercase tracking-[0.2em] text-muted-400 dark:text-muted-400">
-                    {language === 'en' ? 'EN' : '中文'}
+                    {language === 'en' ? t('menu_language_en') : t('menu_language_zh')}
                   </span>
                 </button>
                 <button

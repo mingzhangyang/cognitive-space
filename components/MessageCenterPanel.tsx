@@ -87,7 +87,7 @@ const MessageCenterPanel: React.FC<{ isOpen: boolean; onClose: () => void }> = (
     <div className="fixed inset-0 z-40">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <aside
-        className="absolute right-0 top-0 h-full w-full max-w-sm sm:max-w-md bg-surface dark:bg-surface-dark border-l border-line dark:border-line-dark shadow-[var(--shadow-elev-2)] flex flex-col"
+        className="absolute right-0 top-0 h-full w-full max-w-sm sm:max-w-md bg-surface dark:bg-surface-dark border-l border-line dark:border-line-dark shadow-[var(--shadow-elev-2)] dark:shadow-[var(--shadow-elev-2-dark)] flex flex-col"
       >
         <div className="px-5 py-4 border-b border-line-soft dark:border-line-dark flex items-center justify-between">
           <div>
@@ -165,7 +165,7 @@ const MessageCenterPanel: React.FC<{ isOpen: boolean; onClose: () => void }> = (
                               console.error('Failed to apply suggestion', error);
                             }
                           }}
-                          className="px-3 py-1.5 rounded-full bg-ink text-white dark:bg-muted-600 hover:opacity-90 transition-opacity text-xs"
+                          className="px-3 py-1.5 rounded-full bg-ink text-white dark:bg-muted-600 hover:opacity-90 transition-opacity text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 dark:focus-visible:ring-accent-dark/30"
                         >
                           {translate('assistant_suggestion_apply')}
                         </button>
@@ -175,7 +175,7 @@ const MessageCenterPanel: React.FC<{ isOpen: boolean; onClose: () => void }> = (
                             await clearAnalysisPending(message.payload.noteId);
                             dismissMessage(message.id);
                           }}
-                          className="px-3 py-1.5 rounded-full border border-line-muted dark:border-muted-600 hover:border-muted-400 dark:hover:border-muted-500 transition-colors text-xs text-subtle dark:text-subtle-dark"
+                          className="px-3 py-1.5 rounded-full border border-line-muted dark:border-muted-600 hover:border-muted-400 dark:hover:border-muted-500 transition-colors text-xs text-subtle dark:text-subtle-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 dark:focus-visible:ring-accent-dark/30"
                         >
                           {translate('assistant_suggestion_dismiss')}
                         </button>

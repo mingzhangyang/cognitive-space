@@ -91,7 +91,7 @@ const About: React.FC = () => {
             <img
               src="/favicon.svg"
               alt={t('app_name')}
-              className="h-24 w-24 rounded-2xl border border-line/60 bg-transparent p-1 shadow-[var(--shadow-elev-1)] dark:border-line-dark/60 dark:bg-transparent"
+              className="h-24 w-24 rounded-2xl border border-line/60 bg-transparent p-1 shadow-[var(--shadow-elev-1)] dark:shadow-[var(--shadow-elev-1-dark)] dark:border-line-dark/60 dark:bg-transparent"
             />
             <p className="text-body-sm font-medium text-ink dark:text-ink-dark">{t('app_name')}</p>
           </div>

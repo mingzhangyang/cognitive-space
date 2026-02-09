@@ -70,7 +70,7 @@ const Tooltip: React.FC<TooltipProps> = ({ content, placement = 'top', children 
         <span
           id={id}
           role="tooltip"
-          className={`z-50 pointer-events-none absolute left-1/2 transform -translate-x-1/2 whitespace-nowrap text-mini px-2 py-1 rounded shadow-[var(--shadow-elev-1)] bg-ink text-white dark:bg-muted-600 dark:text-white ${
+          className={`z-50 pointer-events-none absolute left-1/2 transform -translate-x-1/2 whitespace-nowrap text-mini px-2 py-1 rounded shadow-[var(--shadow-elev-1)] dark:shadow-[var(--shadow-elev-1-dark)] bg-ink text-white dark:bg-muted-600 dark:text-white ${
             placement === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'
           }`}
         >
