@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Note, NoteType } from '../types';
 import { useAppContext } from '../contexts/AppContext';
 import { CrosshairIcon, MinusIcon, PlusIcon } from './Icons';
+import Tooltip from './Tooltip';
 
 interface QuestionGraphProps {
   question: Note;
@@ -420,22 +421,26 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
             </span>
           </div>
           <span className="hidden sm:block h-4 w-px bg-line/50 dark:bg-line-dark/50 mx-0.5" />
-          <button
-            type="button"
-            onClick={zoomIn}
-            className="h-7 w-7 grid place-items-center rounded-full cursor-pointer text-muted-500 dark:text-muted-400 hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark active:scale-95 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 dark:focus-visible:ring-accent-dark/30"
-            aria-label={t('zoom_in')}
-          >
-            <PlusIcon className="h-3.5 w-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={zoomOut}
-            className="h-7 w-7 grid place-items-center rounded-full cursor-pointer text-muted-500 dark:text-muted-400 hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark active:scale-95 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 dark:focus-visible:ring-accent-dark/30"
-            aria-label={t('zoom_out')}
-          >
-            <MinusIcon className="h-3.5 w-3.5" />
-          </button>
+          <Tooltip content={t('zoom_in')}>
+            <button
+              type="button"
+              onClick={zoomIn}
+              className="h-7 w-7 grid place-items-center rounded-full cursor-pointer text-muted-500 dark:text-muted-400 hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark active:scale-95 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 dark:focus-visible:ring-accent-dark/30"
+              aria-label={t('zoom_in')}
+            >
+              <PlusIcon className="h-3.5 w-3.5" />
+            </button>
+          </Tooltip>
+          <Tooltip content={t('zoom_out')}>
+            <button
+              type="button"
+              onClick={zoomOut}
+              className="h-7 w-7 grid place-items-center rounded-full cursor-pointer text-muted-500 dark:text-muted-400 hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark active:scale-95 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 dark:focus-visible:ring-accent-dark/30"
+              aria-label={t('zoom_out')}
+            >
+              <MinusIcon className="h-3.5 w-3.5" />
+            </button>
+          </Tooltip>
           <span className="h-4 w-px bg-line/50 dark:bg-line-dark/50 mx-0.5" />
           <button
             type="button"

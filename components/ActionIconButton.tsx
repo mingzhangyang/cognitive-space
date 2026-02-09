@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { CopyIcon, EditIcon, TrashIcon } from './Icons';
+import Tooltip from './Tooltip';
 
 type ActionKind = 'edit' | 'copy' | 'delete';
 
@@ -59,16 +60,17 @@ const ActionIconButton: React.FC<ActionIconButtonProps> = ({
     .join(' ');
 
   return (
-    <button
-      type={type}
-      onClick={onClick}
-      disabled={disabled}
-      className={buttonClassName}
-      title={t(labelKey)}
-      aria-label={t(labelKey)}
-    >
-      <Icon className={iconClassName} />
-    </button>
+    <Tooltip content={t(labelKey)}>
+      <button
+        type={type}
+        onClick={onClick}
+        disabled={disabled}
+        className={buttonClassName}
+        aria-label={t(labelKey)}
+      >
+        <Icon className={iconClassName} />
+      </button>
+    </Tooltip>
   );
 };
 

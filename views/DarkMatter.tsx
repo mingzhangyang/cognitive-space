@@ -27,6 +27,7 @@ import MobileActionSheet from '../components/MobileActionSheet';
 import TypeBadge from '../components/TypeBadge';
 import { analyzeDarkMatter } from '../services/aiService';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
+import Tooltip from '../components/Tooltip';
 import { containsCjk, formatTemplate } from '../utils/text';
 import { createMessageId } from '../utils/ids';
 import { coerceConfidenceLabel } from '../utils/confidence';
@@ -580,14 +581,16 @@ const DarkMatter: React.FC = () => {
             <p className="text-caption-upper">
               {darkMatterCount} {t('dark_matter_count')}
             </p>
+            <Tooltip content={sortOrder === 'newest' ? t('dark_matter_sort_oldest') : t('dark_matter_sort_newest')}>
             <button
               onClick={toggleSortOrder}
               className="inline-flex items-center gap-1 text-xs text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark transition-colors cursor-pointer"
-              title={sortOrder === 'newest' ? t('dark_matter_sort_oldest') : t('dark_matter_sort_newest')}
+              aria-label={sortOrder === 'newest' ? t('dark_matter_sort_oldest') : t('dark_matter_sort_newest')}
             >
               {sortOrder === 'newest' ? <SortDescIcon className="w-3.5 h-3.5" /> : <SortAscIcon className="w-3.5 h-3.5" />}
               <span>{sortOrder === 'newest' ? t('dark_matter_sort_newest') : t('dark_matter_sort_oldest')}</span>
             </button>
+            </Tooltip>
             <button
               onClick={toggleSelectMode}
               className={`inline-flex items-center px-3 py-1 text-xs rounded-full border transition-colors cursor-pointer ${
@@ -797,7 +800,6 @@ const DarkMatter: React.FC = () => {
                     <span
                       className="inline-flex items-center gap-1 rounded-full bg-surface-hover dark:bg-surface-hover-dark px-2 py-0.5 text-[10px] uppercase tracking-wider text-subtle dark:text-subtle-dark"
                       aria-label={t('analyzing')}
-                      title={t('analyzing')}
                     >
                       <span className="flex items-center gap-1" aria-hidden="true">
                         <span
@@ -822,6 +824,7 @@ const DarkMatter: React.FC = () => {
                     <>
                       <IconButton
                         label={t('actions_show')}
+                        showTooltip={false}
                         sizeClassName="h-10 w-10"
                         onClick={() => setMobileNoteActionsId(note.id)}
                         className="sm:hidden text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"

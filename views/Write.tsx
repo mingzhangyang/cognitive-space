@@ -6,6 +6,7 @@ import { NoteType, AnalysisResult } from '../types';
 import { LoadingSpinner, EyeIcon, EyeOffIcon } from '../components/Icons';
 import { useAppContext } from '../contexts/AppContext';
 import { useAssistantInbox } from '../contexts/AssistantInboxContext';
+import Tooltip from '../components/Tooltip';
 import { truncate } from '../utils/text';
 import { createMessageId } from '../utils/ids';
 
@@ -305,13 +306,15 @@ const Write: React.FC = () => {
         </span>
 
         {showPreviewToggle && !isProcessing && (
-          <button
-            onClick={handleTogglePreview}
-            className="btn-icon h-7 w-7 text-muted-400 dark:text-muted-500 hover:text-accent dark:hover:text-accent-dark cursor-pointer active:scale-95"
-            title={showPreview ? t('write_edit') : t('write_preview')}
-          >
-            {showPreview ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
-          </button>
+          <Tooltip content={showPreview ? t('write_edit') : t('write_preview')}>
+            <button
+              onClick={handleTogglePreview}
+              className="btn-icon h-7 w-7 text-muted-400 dark:text-muted-500 hover:text-accent dark:hover:text-accent-dark cursor-pointer active:scale-95"
+              aria-label={showPreview ? t('write_edit') : t('write_preview')}
+            >
+              {showPreview ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+            </button>
+          </Tooltip>
         )}
       </div>
 

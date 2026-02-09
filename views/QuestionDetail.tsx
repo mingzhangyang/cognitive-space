@@ -28,6 +28,7 @@ import MobileActionSheet from '../components/MobileActionSheet';
 import TypeBadge from '../components/TypeBadge';
 import QuestionGraph from '../components/QuestionGraph';
 import QuestionStatsPanel from '../components/QuestionStatsPanel';
+import Tooltip from '../components/Tooltip';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { formatTemplate } from '../utils/text';
 import { getTypeLabel } from '../utils/notes';
@@ -553,6 +554,7 @@ const QuestionDetail: React.FC = () => {
               <>
                 <IconButton
                   label={t('actions_show')}
+                  showTooltip={false}
                   sizeClassName="h-10 w-10"
                   onClick={() => setMobileNoteActionsId(note.id)}
                   className="sm:hidden text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
@@ -769,11 +771,11 @@ const QuestionDetail: React.FC = () => {
         <div className="flex justify-between items-start">
           <span className="text-xs font-bold text-accent dark:text-accent-dark tracking-widest uppercase mb-3 block">{t('current_problem')}</span>
           <div className="flex items-center gap-2">
+            <Tooltip content={visualizationOpen ? t('hide_visualization') : t('visualize')}>
             <button
               onClick={() => setVisualizationOpen((prev) => !prev)}
               className="h-10 w-10 sm:h-auto sm:w-auto sm:px-3 sm:py-2 muted-label border-0 sm:border sm:border-line dark:sm:border-line-dark hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark sm:hover:border-line-muted dark:sm:hover:border-muted-600 btn-icon"
               aria-label={visualizationOpen ? t('hide_visualization') : t('visualize')}
-              title={visualizationOpen ? t('hide_visualization') : t('visualize')}
             >
               <span className="sm:hidden">
                 {visualizationOpen ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
@@ -782,6 +784,8 @@ const QuestionDetail: React.FC = () => {
                 {visualizationOpen ? t('hide_visualization') : t('visualize')}
               </span>
             </button>
+            </Tooltip>
+            <Tooltip content={t('downgrade_question_action')}>
             <button
               onClick={openDowngrade}
               disabled={isSavingEdit || editingId === question.id || isDowngrading}
@@ -789,7 +793,6 @@ const QuestionDetail: React.FC = () => {
                 isSavingEdit || editingId === question.id || isDowngrading ? 'opacity-60 cursor-not-allowed' : ''
               }`}
               aria-label={t('downgrade_question_action')}
-              title={t('downgrade_question_action')}
             >
               <span className="sm:hidden">
                 <ArrowDownIcon className="w-4 h-4" />
@@ -798,6 +801,7 @@ const QuestionDetail: React.FC = () => {
                 {t('downgrade_question_action')}
               </span>
             </button>
+            </Tooltip>
             {editingId !== question.id && (
               <>
                 <ActionIconButton

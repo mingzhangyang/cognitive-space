@@ -12,6 +12,7 @@ import {
   TrashIcon
 } from './Icons';
 import IconButton from './IconButton';
+import Tooltip from './Tooltip';
 import { getSessionFooterLine } from '../services/footerLine';
 import MessageCenterPanel from './MessageCenterPanel';
 import { useAssistantInbox } from '../contexts/AssistantInboxContext';
@@ -295,14 +296,15 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </Link>
         <div className="flex items-center gap-2">
           {!isHome && (
-            <Link
-              to="/"
-              className="btn-icon btn-glass-icon"
-              aria-label={t('back_problems')}
-              title={t('back_problems')}
-            >
-              <HomeIcon className="w-4 h-4" />
-            </Link>
+            <Tooltip content={t('back_problems')}>
+              <Link
+                to="/"
+                className="btn-icon btn-glass-icon"
+                aria-label={t('back_problems')}
+              >
+                <HomeIcon className="w-4 h-4" />
+              </Link>
+            </Tooltip>
           )}
           <IconButton
             label={t('assistant_inbox_title')}

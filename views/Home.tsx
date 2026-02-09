@@ -11,6 +11,7 @@ import IconButton from '../components/IconButton';
 import MobileActionSheet from '../components/MobileActionSheet';
 import { useAppContext } from '../contexts/AppContext';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
+import Tooltip from '../components/Tooltip';
 
 const Home: React.FC = () => {
   const [questions, setQuestions] = useState<Note[]>([]);
@@ -186,7 +187,6 @@ const Home: React.FC = () => {
                 onClick={openRecall}
                 className="btn-pill btn-outline muted-label w-full sm:w-auto"
                 aria-label={t('recall_label')}
-                title={t('recall_label')}
               >
                 <SearchIcon className="w-4 h-4" />
                 <span>{t('recall_label')}</span>
@@ -343,6 +343,7 @@ const Home: React.FC = () => {
                     <div className="relative flex items-center gap-2 ml-4">
                       <IconButton
                         label={t('actions_show')}
+                        showTooltip={false}
                         sizeClassName="h-10 w-10"
                         onClick={(e) => {
                           e.preventDefault();
@@ -406,7 +407,6 @@ const Home: React.FC = () => {
                   {/* Tension indicator dot (suggestion #2) */}
                   <span
                     className={`inline-block w-2 h-2 rounded-full ${getTensionColor(q.updatedAt)} shrink-0`}
-                    title={new Date(q.updatedAt).toLocaleDateString()}
                   />
                   <span>{t('last_active')} {new Date(q.updatedAt).toLocaleDateString()}</span>
                 </div>
@@ -436,7 +436,7 @@ const Home: React.FC = () => {
       {/* Floating Action Button + keyboard hint */}
       {fabContainer && createPortal(
         <div className="fixed bottom-20 right-4 sm:bottom-24 sm:right-8 z-50 flex flex-col items-center gap-2">
-          <div className="relative group">
+          <Tooltip content={t('keyboard_shortcut_write')}>
             <Link
               to="/write"
               className="bg-action text-white w-14 h-14 rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-transform hover:bg-action-hover focus:outline-none focus:ring-4 focus:ring-action-ring dark:bg-action dark:hover:bg-action-hover-dark dark:focus:ring-action-ring/50"
@@ -444,13 +444,7 @@ const Home: React.FC = () => {
             >
               <PlusIcon className="w-6 h-6" />
             </Link>
-            <span
-              className="hidden sm:inline-block absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-surface/90 dark:bg-surface-dark/90 px-2 py-1 text-micro text-muted-400 dark:text-muted-500 shadow-md opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity"
-              aria-hidden="true"
-            >
-              {t('keyboard_shortcut_write')}
-            </span>
-          </div>
+          </Tooltip>
         </div>,
         fabContainer
       )}
