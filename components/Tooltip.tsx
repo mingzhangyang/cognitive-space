@@ -39,7 +39,7 @@ const Tooltip: React.FC<TooltipProps> = ({ content, placement = 'top', children 
 
   const merged = React.cloneElement(children, {
     ref: (node: any) => {
-      setRef((children as any).ref, node);
+      setRef(children.props.ref, node);
       hostRef.current = node;
     },
     'aria-describedby': content
