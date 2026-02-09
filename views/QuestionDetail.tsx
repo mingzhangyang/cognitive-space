@@ -18,6 +18,7 @@ import { Note, NoteType } from '../types';
 import { useAppContext } from '../contexts/AppContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { CheckIcon, XIcon, EyeIcon, EyeOffIcon, LoadingSpinner, MoreIcon, ArrowDownIcon, EditIcon, ChevronDownIcon, GripVerticalIcon, MoveIcon } from '../components/Icons';
+import { UNIFIED_TEXT_CLASS } from '../components/ActionSheetButton';
 import ActionIconButton from '../components/ActionIconButton';
 import ActionSheetButton from '../components/ActionSheetButton';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -581,17 +582,13 @@ const QuestionDetail: React.FC = () => {
                     }}
                   />
                   {availableQuestions.length > 0 && (
-                    <button
-                      type="button"
+                    <ActionSheetButton
+                      action="move"
                       onClick={() => {
                         setMobileNoteActionsId(null);
                         openMoveToQuestion(note.id);
                       }}
-                      className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-left transition-colors cursor-pointer text-accent dark:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark active:scale-[0.98]"
-                    >
-                      <MoveIcon className="w-5 h-5" />
-                      <span className="text-base font-medium">{t('move_to_question')}</span>
-                    </button>
+                    />
                   )}
                   <ActionSheetButton
                     action="delete"

@@ -1,23 +1,53 @@
 import React from 'react';
 import { useAppContext } from '../contexts/AppContext';
-import { CopyIcon, EditIcon, TrashIcon } from './Icons';
+import { CopyIcon, EditIcon, TrashIcon, MoveIcon } from './Icons';
 
-type ActionKind = 'edit' | 'copy' | 'delete';
+/**
+ * CSS class used for action sheet option text to ensure a unified muted color
+ * across light and dark themes.
+ */
+export const UNIFIED_TEXT_CLASS = 'text-muted-400 dark:text-muted-500';
 
-type ActionSheetButtonProps = {
+/**
+ * Action kinds supported by the action sheet.
+ * - `edit`: edit the item
+ * - `copy`: copy the item content
+ * - `delete`: remove the item
+ * - `move`: move the item to another question
+ */
+export type ActionKind = 'edit' | 'copy' | 'delete' | 'move';
+
+/**
+ * Props for `ActionSheetButton`.
+ * - `action`: which action to render (icon + localized label)
+ * - `onClick`: optional click handler
+ * - `disabled`: whether the button is disabled
+ */
+export type ActionSheetButtonProps = {
   action: ActionKind;
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
   disabled?: boolean;
 };
 
-const UNIFIED_TEXT_CLASS = 'text-muted-400 dark:text-muted-500';
-
-const actionConfig: Record<ActionKind, { labelKey: string; textClassName: string; Icon: React.FC<{ className?: string }> }> = {
+/**
+ * Mapping from `ActionKind` to localized label and icon.
+ * Uses `UNIFIED_TEXT_CLASS` so all action items share the same text color.
+ */
+const actionConfig: Record<
+  ActionKind,
+  { labelKey: string; textClassName: string; Icon: React.FC<{ className?: string }> }
+> = {
   edit: { labelKey: 'edit', textClassName: UNIFIED_TEXT_CLASS, Icon: EditIcon },
   copy: { labelKey: 'copy_note', textClassName: UNIFIED_TEXT_CLASS, Icon: CopyIcon },
-  delete: { labelKey: 'delete', textClassName: UNIFIED_TEXT_CLASS, Icon: TrashIcon }
+  delete: { labelKey: 'delete', textClassName: UNIFIED_TEXT_CLASS, Icon: TrashIcon },
+  move: { labelKey: 'move_to_question', textClassName: UNIFIED_TEXT_CLASS, Icon: MoveIcon }
 };
 
+/**
+ * A single-line action used inside mobile action sheets. Renders an icon and
+ * a localized label. Styling matches other sheet options (muted text,
+ * hover background, disabled state).
+ */
 const ActionSheetButton: React.FC<ActionSheetButtonProps> = ({
   action,
   onClick,
