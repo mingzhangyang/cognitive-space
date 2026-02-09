@@ -335,7 +335,7 @@ const Home: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    <h3 className="text-lg font-medium text-ink dark:text-ink-dark group-hover:text-accent dark:group-hover:text-accent-dark transition-colors leading-relaxed flex-1 pr-2">
+                    <h3 className="text-lg font-medium text-ink dark:text-ink-dark leading-relaxed flex-1 pr-2">
                       {q.content}
                     </h3>
                   )}
