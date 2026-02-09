@@ -121,7 +121,7 @@ const DowngradeDialog: React.FC<{
             aria-pressed={destination === 'release'}
             className={`chip-outline ${
               destination === 'release'
-                ? 'bg-cs-amber-100 text-cs-amber-900 border-cs-amber-200 dark:bg-cs-amber-900/40 dark:text-cs-amber-100 dark:border-cs-amber-700'
+                ? 'bg-warning/15 text-warning border-warning/30 dark:bg-warning-dark/20 dark:text-warning-dark dark:border-warning-dark/30'
                 : ''
             }`}
           >
@@ -134,7 +134,7 @@ const DowngradeDialog: React.FC<{
             disabled={!canRelink}
             className={`chip-outline ${
               destination === 'relink'
-                ? 'bg-cs-amber-100 text-cs-amber-900 border-cs-amber-200 dark:bg-cs-amber-900/40 dark:text-cs-amber-100 dark:border-cs-amber-700'
+                ? 'bg-warning/15 text-warning border-warning/30 dark:bg-warning-dark/20 dark:text-warning-dark dark:border-warning-dark/30'
                 : ''
             } ${
               !canRelink ? 'opacity-60 cursor-not-allowed' : ''

@@ -36,13 +36,13 @@ const QuestionStatsPanel: React.FC<QuestionStatsPanelProps> = ({ stats, relation
           {t('stats_type_distribution')}
         </p>
         <div className="mt-2 flex flex-wrap gap-2 text-xs text-ink dark:text-ink-dark">
-          <span className="px-2 py-1 rounded-full bg-surface-hover dark:bg-surface-hover-dark text-accent dark:text-accent-dark border border-line dark:border-line-dark">
+          <span className="px-2 py-1 rounded-full bg-surface-hover dark:bg-surface-hover-dark text-note-claim dark:text-note-claim-dark border border-line dark:border-line-dark">
             {t('section_claims')}: {stats?.claimCount ?? 0}
           </span>
-          <span className="px-2 py-1 rounded-full bg-surface-hover dark:bg-surface-hover-dark text-cs-amber-600 dark:text-cs-amber-300 border border-line dark:border-line-dark">
+          <span className="px-2 py-1 rounded-full bg-surface-hover dark:bg-surface-hover-dark text-note-evidence dark:text-note-evidence-dark border border-line dark:border-line-dark">
             {t('section_evidence')}: {stats?.evidenceCount ?? 0}
           </span>
-          <span className="px-2 py-1 rounded-full bg-surface-hover dark:bg-surface-hover-dark text-cs-magenta dark:text-cs-magenta border border-line dark:border-line-dark">
+          <span className="px-2 py-1 rounded-full bg-surface-hover dark:bg-surface-hover-dark text-note-trigger dark:text-note-trigger-dark border border-line dark:border-line-dark">
             {t('section_triggers')}: {stats?.triggerCount ?? 0}
           </span>
         </div>

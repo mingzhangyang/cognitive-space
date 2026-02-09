@@ -38,6 +38,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { messageCount, jobs, messages } = useAssistantInbox();
   const { notify } = useNotifications();
   const year = new Date().getFullYear();
+  const footerBrandLine = formatTemplate(t('footer_brand_line'), { year });
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isDataMenuOpen, setIsDataMenuOpen] = useState(false);
@@ -102,7 +103,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const hasRunningJobs = jobs.length > 0;
   const hasSuggestions = messages.length > 0;
   const inboxDotClassName = hasRunningJobs
-    ? 'bg-cs-amber-400 dark:bg-cs-amber-300'
+    ? 'bg-warning dark:bg-warning-dark'
     : hasSuggestions
       ? 'bg-accent dark:bg-accent-dark'
       : 'bg-line dark:bg-line-dark';
@@ -469,7 +470,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <footer className="relative mt-16 sm:mt-20 py-6 text-center text-mini-up text-subtle dark:text-subtle-dark before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-line dark:before:bg-line-dark">
         <p>{footerLine ?? t('footer_philosophy')}</p>
         <p className="mt-1 flex items-center justify-center gap-2">
-          <span>@{year} Orangely.xyz</span>
+          <span>{footerBrandLine}</span>
           <span aria-hidden="true" className="text-muted-300 dark:text-muted-700">|</span>
           <Link
             to="/privacy"
@@ -599,7 +600,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 disabled={isImporting}
                 className={`chip-outline cursor-pointer ${
                   importMode === 'merge'
-                    ? 'bg-cs-amber-100 text-cs-amber-900 border-cs-amber-200 dark:bg-cs-amber-900/40 dark:text-cs-amber-100 dark:border-cs-amber-700'
+                    ? 'bg-warning/15 text-warning border-warning/30 dark:bg-warning-dark/20 dark:text-warning-dark dark:border-warning-dark/30'
                     : ''
                 } ${isImporting ? 'opacity-60 cursor-not-allowed' : ''}`}
               >
@@ -612,7 +613,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 disabled={isImporting}
                 className={`chip-outline cursor-pointer ${
                   importMode === 'replace'
-                    ? 'bg-cs-amber-100 text-cs-amber-900 border-cs-amber-200 dark:bg-cs-amber-900/40 dark:text-cs-amber-100 dark:border-cs-amber-700'
+                    ? 'bg-warning/15 text-warning border-warning/30 dark:bg-warning-dark/20 dark:text-warning-dark dark:border-warning-dark/30'
                     : ''
                 } ${isImporting ? 'opacity-60 cursor-not-allowed' : ''}`}
               >

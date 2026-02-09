@@ -275,6 +275,7 @@ export const SparklesIcon = ({ className }: { className?: string }) => (
 export const SunIcon = ({ className }: { className?: string }) => (
   <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2" />
     <path d="M12 20v2" />
     <path d="M4.9 4.9l1.4 1.4" />
     <path d="M17.7 17.7l1.4 1.4" />

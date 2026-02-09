@@ -53,7 +53,7 @@ const QuestionSelector: React.FC<{
             <button
               key={q.id}
               onClick={() => onSelect(q.id)}
-              className="w-full text-left p-3 rounded-lg border border-line dark:border-line-dark hover:border-cs-amber-300 dark:hover:border-cs-amber-600 hover:bg-cs-amber-50 dark:hover:bg-cs-amber-900/20 transition-colors cursor-pointer"
+              className="w-full text-left p-3 rounded-lg border border-line dark:border-line-dark hover:border-warning/30 dark:hover:border-warning-dark/30 hover:bg-warning/5 dark:hover:bg-warning-dark/10 transition-colors cursor-pointer"
             >
               <p className="text-body-sm line-clamp-2">{q.content}</p>
             </button>

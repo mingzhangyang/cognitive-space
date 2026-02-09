@@ -12,9 +12,9 @@ const TypeBadge: React.FC<TypeBadgeProps> = ({ type, subType }) => {
   const { t } = useAppContext();
 
   const colors = {
-    [NoteType.CLAIM]: 'bg-surface-hover dark:bg-surface-hover-dark text-accent dark:text-accent-dark border-line dark:border-line-dark',
-    [NoteType.EVIDENCE]: 'bg-surface-hover dark:bg-surface-hover-dark text-cs-amber-600 dark:text-cs-amber-300 border-line dark:border-line-dark',
-    [NoteType.TRIGGER]: 'bg-surface-hover dark:bg-surface-hover-dark text-cs-magenta dark:text-cs-magenta border-line dark:border-line-dark',
+    [NoteType.CLAIM]: 'bg-surface-hover dark:bg-surface-hover-dark text-note-claim dark:text-note-claim-dark border-line dark:border-line-dark',
+    [NoteType.EVIDENCE]: 'bg-surface-hover dark:bg-surface-hover-dark text-note-evidence dark:text-note-evidence-dark border-line dark:border-line-dark',
+    [NoteType.TRIGGER]: 'bg-surface-hover dark:bg-surface-hover-dark text-note-trigger dark:text-note-trigger-dark border-line dark:border-line-dark',
     [NoteType.QUESTION]: 'bg-surface-hover dark:bg-surface-hover-dark/80 text-muted-600 dark:text-muted-300 border-line-muted dark:border-line-dark',
     [NoteType.UNCATEGORIZED]: 'bg-surface-hover dark:bg-surface-hover-dark text-muted-400 dark:text-muted-500 border-line dark:border-line-dark'
   };

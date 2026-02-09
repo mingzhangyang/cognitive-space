@@ -79,10 +79,10 @@ const Home: React.FC = () => {
   // --- Tension / heat indicator (suggestion #2) ---
   const getTensionColor = (updatedAt: number): string => {
     const daysSince = (Date.now() - updatedAt) / (1000 * 60 * 60 * 24);
-    if (daysSince < 1) return 'bg-accent dark:bg-accent';        // very warm
-    if (daysSince < 3) return 'bg-cs-amber-400 dark:bg-cs-amber-300';              // warm
-    if (daysSince < 7) return 'bg-cs-amber-500 dark:bg-cs-amber-400';            // cooling
-    if (daysSince < 14) return 'bg-orange-400 dark:bg-orange-300';         // cool
+    if (daysSince < 1) return 'bg-accent dark:bg-accent-dark';        // very warm
+    if (daysSince < 3) return 'bg-warning dark:bg-warning-dark';              // warm
+    if (daysSince < 7) return 'bg-warning/70 dark:bg-warning-dark/70';            // cooling
+    if (daysSince < 14) return 'bg-warning/40 dark:bg-warning-dark/40';         // cool
     return 'bg-muted-300 dark:bg-muted-600';                                // dormant
   };
 

@@ -10,6 +10,14 @@
   --color-subtle-dark: #94a3b8;
   --color-accent: #0f766e;
   --color-accent-dark: #2dd4bf;
+  --color-warning: #d97706;
+  --color-warning-dark: #fbbf24;
+  --color-note-claim: var(--color-accent);
+  --color-note-claim-dark: var(--color-accent-dark);
+  --color-note-evidence: var(--color-warning);
+  --color-note-evidence-dark: var(--color-warning-dark);
+  --color-note-trigger: var(--color-magenta);
+  --color-note-trigger-dark: #f472b6;
   --color-surface: #ffffff;
   --color-surface-dark: #1c1917;
   --color-surface-hover: #f5f5f4;
