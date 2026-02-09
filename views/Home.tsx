@@ -81,7 +81,7 @@ const Home: React.FC = () => {
     const daysSince = (Date.now() - updatedAt) / (1000 * 60 * 60 * 24);
     if (daysSince < 1) return 'bg-emerald-400 dark:bg-emerald-400';        // very warm
     if (daysSince < 3) return 'bg-teal-400 dark:bg-teal-300';              // warm
-    if (daysSince < 7) return 'bg-amber-400 dark:bg-amber-300';            // cooling
+    if (daysSince < 7) return 'bg-cs-amber-400 dark:bg-cs-amber-300';            // cooling
     if (daysSince < 14) return 'bg-orange-300 dark:bg-orange-300';         // cool
     return 'bg-muted-300 dark:bg-muted-600';                                // dormant
   };
@@ -436,17 +436,21 @@ const Home: React.FC = () => {
       {/* Floating Action Button + keyboard hint */}
       {fabContainer && createPortal(
         <div className="fixed bottom-20 right-4 sm:bottom-24 sm:right-8 z-50 flex flex-col items-center gap-2">
-          {/* Keyboard shortcut hint (suggestion #3) — desktop only */}
-          <span className="hidden sm:block text-micro text-muted-400 dark:text-muted-500 tabular-nums select-none">
-            {t('keyboard_shortcut_write')}
-          </span>
-          <Link
-            to="/write"
-            className="bg-action text-white w-14 h-14 rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-transform hover:bg-action-hover focus:outline-none focus:ring-4 focus:ring-action-ring dark:bg-action dark:hover:bg-action-hover-dark dark:focus:ring-action-ring/50"
-            aria-label="Write"
-          >
-            <PlusIcon className="w-6 h-6" />
-          </Link>
+          <div className="relative group">
+            <Link
+              to="/write"
+              className="bg-action text-white w-14 h-14 rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-transform hover:bg-action-hover focus:outline-none focus:ring-4 focus:ring-action-ring dark:bg-action dark:hover:bg-action-hover-dark dark:focus:ring-action-ring/50"
+              aria-label={t('write_label')}
+            >
+              <PlusIcon className="w-6 h-6" />
+            </Link>
+            <span
+              className="hidden sm:inline-block absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-surface/90 dark:bg-surface-dark/90 px-2 py-1 text-micro text-muted-400 dark:text-muted-500 shadow-md opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity"
+              aria-hidden="true"
+            >
+              {t('keyboard_shortcut_write')}
+            </span>
+          </div>
         </div>,
         fabContainer
       )}

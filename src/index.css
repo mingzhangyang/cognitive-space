@@ -30,6 +30,11 @@
   --color-action-hover: #16a085;
   --color-action-hover-dark: #25d0b2;
   --color-action-ring: #9ee7d8;
+  --color-turquoise: #1abc9c;
+  --color-amber: #f59e0b;
+  --color-magenta: #db2777;
+  --color-indigo: #4f46e5; /* indigo-600 */
+  --color-indigo-dark: #818cf8; /* indigo-400 for dark */
   --shadow-elev-1: 0 1px 0 rgba(12, 10, 9, 0.04), 0 8px 18px -16px rgba(12, 10, 9, 0.2);
   --shadow-elev-2: 0 12px 28px -16px rgba(12, 10, 9, 0.28);
   --shadow-elev-1-dark: 0 1px 0 rgba(0, 0, 0, 0.35), 0 10px 20px -16px rgba(0, 0, 0, 0.45);
@@ -298,6 +303,7 @@ html.dark ::-webkit-scrollbar-thumb {
   .chip-outline {
     @apply inline-flex items-center gap-2 px-3 py-1.5 text-xs rounded-full border border-line dark:border-line-dark text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/25 dark:focus-visible:ring-accent-dark/25;
   }
+
 }
 
 .dark .surface-card,

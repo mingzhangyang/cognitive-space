@@ -99,7 +99,7 @@ const DowngradeDialog: React.FC<{
                 aria-pressed={isSelected}
                 className={`chip-outline ${
                   isSelected
-                    ? 'bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:border-amber-700'
+                    ? 'bg-cs-amber-100 text-cs-amber-900 border-cs-amber-200 dark:bg-cs-amber-900/40 dark:text-cs-amber-100 dark:border-cs-amber-700'
                     : ''
                 }`}
               >
@@ -119,7 +119,7 @@ const DowngradeDialog: React.FC<{
             aria-pressed={destination === 'release'}
             className={`chip-outline ${
               destination === 'release'
-                ? 'bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:border-amber-700'
+                ? 'bg-cs-amber-100 text-cs-amber-900 border-cs-amber-200 dark:bg-cs-amber-900/40 dark:text-cs-amber-100 dark:border-cs-amber-700'
                 : ''
             }`}
           >
@@ -132,7 +132,7 @@ const DowngradeDialog: React.FC<{
             disabled={!canRelink}
             className={`chip-outline ${
               destination === 'relink'
-                ? 'bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:border-amber-700'
+                ? 'bg-cs-amber-100 text-cs-amber-900 border-cs-amber-200 dark:bg-cs-amber-900/40 dark:text-cs-amber-100 dark:border-cs-amber-700'
                 : ''
             } ${
               !canRelink ? 'opacity-60 cursor-not-allowed' : ''
@@ -174,7 +174,7 @@ const DowngradeDialog: React.FC<{
         <button
           onClick={onConfirm}
           disabled={isWorking || (isRelink && !relinkTarget)}
-          className={`px-4 py-2 text-sm rounded-md bg-amber-500 text-white hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-500 transition-colors inline-flex items-center gap-2 ${
+          className={`px-4 py-2 text-sm rounded-md bg-cs-amber-500 text-white hover:bg-cs-amber-600 dark:bg-cs-amber-600 dark:hover:bg-cs-amber-500 transition-colors inline-flex items-center gap-2 ${
             isWorking || (isRelink && !relinkTarget) ? 'opacity-60 cursor-not-allowed' : ''
           }`}
         >
@@ -500,7 +500,7 @@ const QuestionDetail: React.FC = () => {
             label={t('move_to_question')}
             sizeClassName="h-10 w-10"
             onClick={() => openMoveToQuestion(note.id)}
-            className="text-subtle dark:text-subtle-dark hover:text-accent dark:hover:text-accent-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+            className="text-subtle dark:text-subtle-dark hover:text-cs-indigo-600 dark:hover:text-cs-indigo-400 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
           >
             <MoveIcon className="w-4 h-4" />
           </IconButton>

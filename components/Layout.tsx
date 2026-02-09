@@ -99,7 +99,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const hasRunningJobs = jobs.length > 0;
   const hasSuggestions = messages.length > 0;
   const inboxDotClassName = hasRunningJobs
-    ? 'bg-amber-400 dark:bg-amber-300'
+    ? 'bg-cs-amber-400 dark:bg-cs-amber-300'
     : hasSuggestions
       ? 'bg-accent dark:bg-accent-dark'
       : 'bg-line dark:bg-line-dark';
@@ -607,7 +607,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 disabled={isImporting}
                 className={`chip-outline cursor-pointer ${
                   importMode === 'merge'
-                    ? 'bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:border-amber-700'
+                    ? 'bg-cs-amber-100 text-cs-amber-900 border-cs-amber-200 dark:bg-cs-amber-900/40 dark:text-cs-amber-100 dark:border-cs-amber-700'
                     : ''
                 } ${isImporting ? 'opacity-60 cursor-not-allowed' : ''}`}
               >
@@ -620,7 +620,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 disabled={isImporting}
                 className={`chip-outline cursor-pointer ${
                   importMode === 'replace'
-                    ? 'bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:border-amber-700'
+                    ? 'bg-cs-amber-100 text-cs-amber-900 border-cs-amber-200 dark:bg-cs-amber-900/40 dark:text-cs-amber-100 dark:border-cs-amber-700'
                     : ''
                 } ${isImporting ? 'opacity-60 cursor-not-allowed' : ''}`}
               >

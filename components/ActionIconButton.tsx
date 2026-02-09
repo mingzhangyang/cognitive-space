@@ -23,7 +23,7 @@ const actionConfig: Record<ActionKind, { labelKey: string; hoverClassName: strin
   },
   copy: {
     labelKey: 'copy_note',
-    hoverClassName: 'hover:text-amber-500 dark:hover:text-amber-300',
+    hoverClassName: 'hover:text-cs-amber-500 dark:hover:text-cs-amber-300',
     Icon: CopyIcon
   },
   delete: {

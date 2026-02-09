@@ -10,22 +10,12 @@ type ActionSheetButtonProps = {
   disabled?: boolean;
 };
 
+const UNIFIED_TEXT_CLASS = 'text-muted-400 dark:text-muted-500';
+
 const actionConfig: Record<ActionKind, { labelKey: string; textClassName: string; Icon: React.FC<{ className?: string }> }> = {
-  edit: {
-    labelKey: 'edit',
-    textClassName: 'text-accent dark:text-accent-dark',
-    Icon: EditIcon
-  },
-  copy: {
-    labelKey: 'copy_note',
-    textClassName: 'text-amber-600 dark:text-amber-400',
-    Icon: CopyIcon
-  },
-  delete: {
-    labelKey: 'delete',
-    textClassName: 'text-red-600 dark:text-red-400',
-    Icon: TrashIcon
-  }
+  edit: { labelKey: 'edit', textClassName: UNIFIED_TEXT_CLASS, Icon: EditIcon },
+  copy: { labelKey: 'copy_note', textClassName: UNIFIED_TEXT_CLASS, Icon: CopyIcon },
+  delete: { labelKey: 'delete', textClassName: UNIFIED_TEXT_CLASS, Icon: TrashIcon }
 };
 
 const ActionSheetButton: React.FC<ActionSheetButtonProps> = ({

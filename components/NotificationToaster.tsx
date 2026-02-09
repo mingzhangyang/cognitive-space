@@ -17,8 +17,8 @@ const variantStyles = {
   },
   warning: {
     icon: AlertIcon,
-    iconWrap: 'bg-amber-500/10 text-amber-600 dark:bg-amber-400/10 dark:text-amber-300',
-    border: 'border-l-4 border-amber-500/70 dark:border-amber-400/80',
+    iconWrap: 'bg-cs-amber-500/10 text-cs-amber-600 dark:bg-cs-amber-400/10 dark:text-cs-amber-300',
+    border: 'border-l-4 border-cs-amber-500/70 dark:border-cs-amber-400/80',
   },
   error: {
     icon: XIcon,

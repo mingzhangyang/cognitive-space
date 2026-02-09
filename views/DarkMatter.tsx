@@ -54,7 +54,7 @@ const QuestionSelector: React.FC<{
             <button
               key={q.id}
               onClick={() => onSelect(q.id)}
-              className="w-full text-left p-3 rounded-lg border border-line dark:border-line-dark hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors cursor-pointer"
+              className="w-full text-left p-3 rounded-lg border border-line dark:border-line-dark hover:border-cs-amber-300 dark:hover:border-cs-amber-600 hover:bg-cs-amber-50 dark:hover:bg-cs-amber-900/20 transition-colors cursor-pointer"
             >
               <p className="text-body-sm line-clamp-2">{q.content}</p>
             </button>
@@ -708,14 +708,14 @@ const DarkMatter: React.FC = () => {
                   {suggestion.kind === 'new_question' ? (
                     <button
                       onClick={() => requestApplySuggestion('create', suggestion)}
-                      className="chip-outline hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                      className="chip-outline hover:border-cs-amber-300 dark:hover:border-cs-amber-600 hover:bg-cs-amber-50 dark:hover:bg-cs-amber-900/20"
                     >
                       {t('dark_matter_ai_action_create')}
                     </button>
                   ) : (
                     <button
                       onClick={() => requestApplySuggestion('link', suggestion)}
-                      className="chip-outline hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                      className="chip-outline hover:border-cs-amber-300 dark:hover:border-cs-amber-600 hover:bg-cs-amber-50 dark:hover:bg-cs-amber-900/20"
                     >
                       {t('dark_matter_ai_action_link')}
                     </button>
@@ -917,13 +917,13 @@ const DarkMatter: React.FC = () => {
                 <div className="flex flex-wrap gap-2 pt-3 border-t border-line-soft dark:border-line-dark">
                   <button
                     onClick={() => handleLinkToQuestion(note.id)}
-                    className="chip-outline hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                    className="chip-outline hover:border-cs-amber-300 dark:hover:border-cs-amber-600 hover:bg-cs-amber-50 dark:hover:bg-cs-amber-900/20"
                   >
                     {t('link_to_question')}
                   </button>
                   <button
                     onClick={() => handlePromoteToQuestion(note.id)}
-                    className="chip-outline hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                    className="chip-outline hover:border-cs-amber-300 dark:hover:border-cs-amber-600 hover:bg-cs-amber-50 dark:hover:bg-cs-amber-900/20"
                   >
                     {t('promote_to_question')}
                   </button>
@@ -965,13 +965,13 @@ const DarkMatter: React.FC = () => {
           <div className="flex gap-2">
             <button
               onClick={(e) => { e.stopPropagation(); handleBatchLink(); }}
-              className="chip-outline hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+              className="chip-outline hover:border-cs-amber-300 dark:hover:border-cs-amber-600 hover:bg-cs-amber-50 dark:hover:bg-cs-amber-900/20"
             >
               {t('dark_matter_batch_link')}
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); setBatchPromoteConfirm(true); }}
-              className="chip-outline hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+              className="chip-outline hover:border-cs-amber-300 dark:hover:border-cs-amber-600 hover:bg-cs-amber-50 dark:hover:bg-cs-amber-900/20"
             >
               {t('dark_matter_batch_promote')}
             </button>
