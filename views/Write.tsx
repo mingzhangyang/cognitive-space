@@ -306,15 +306,15 @@ const Write: React.FC = () => {
         </span>
 
         {showPreviewToggle && !isProcessing && (
-          <Tooltip content={showPreview ? t('write_edit') : t('write_preview')}>
-           IconButton
+          <IconButton
             label={showPreview ? t('write_edit') : t('write_preview')}
             onClick={handleTogglePreview}
             sizeClassName="h-7 w-7"
             className="text-muted-400 dark:text-muted-500 hover:text-accent dark:hover:text-accent-dark active:scale-95"
           >
             {showPreview ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
-          </IconButton
+          </IconButton>
+        )}
       </div>
 
       <div className="min-h-[4.5rem] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-line-soft dark:border-line-dark mt-2 pt-4">
