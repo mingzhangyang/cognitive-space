@@ -17,13 +17,11 @@ import { Note, NoteType, DarkMatterSuggestion } from '../types';
 import { useAppContext } from '../contexts/AppContext';
 import { useAssistantInbox } from '../contexts/AssistantInboxContext';
 import { useNotifications } from '../contexts/NotificationContext';
-import { LoadingSpinner, CheckIcon, XIcon, MoreIcon, SortDescIcon, SortAscIcon } from '../components/Icons';
-import ActionIconButton from '../components/ActionIconButton';
-import ActionSheetButton from '../components/ActionSheetButton';
+import { LoadingSpinner, CheckIcon, SortDescIcon, SortAscIcon } from '../components/Icons';
+import CardActions from '../components/CardActions';
+import InlineEditForm from '../components/InlineEditForm';
 import ConfirmDialog from '../components/ConfirmDialog';
 import Modal from '../components/Modal';
-import IconButton from '../components/IconButton';
-import MobileActionSheet from '../components/MobileActionSheet';
 import TypeBadge from '../components/TypeBadge';
 import { analyzeDarkMatter } from '../services/aiService';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
@@ -750,28 +748,11 @@ const DarkMatter: React.FC = () => {
             {sortedDarkMatter.map((note) => {
               const isMobileActionsOpen = mobileNoteActionsId === note.id;
               const isSelected = selectedIds.has(note.id);
-              const actionButtons = (
-                <>
-                  <ActionIconButton
-                    action="edit"
-                    onClick={() => handleEdit(note)}
-                    disabled={isSavingEdit}
-                  />
-                  <ActionIconButton
-                    action="copy"
-                    onClick={() => handleCopyNote(note.content)}
-                  />
-                  <ActionIconButton
-                    action="delete"
-                    onClick={() => handleDelete(note.id)}
-                  />
-                </>
-              );
 
               return (
                 <div
                   key={note.id}
-                  className={`group surface-card p-4 sm:p-5 card-interactive ${
+                  className={`group surface-card p-4 sm:p-5 card-interactive hover:border-accent/30 dark:hover:border-accent-dark/30 ${
                     isSelectMode && isSelected
                       ? 'ring-2 ring-accent dark:ring-accent-dark'
                       : ''
@@ -819,96 +800,31 @@ const DarkMatter: React.FC = () => {
                     </span>
                   )}
                 </div>
-                <div className="relative flex items-center gap-1">
-                  {editingId !== note.id && !isSelectMode && (
-                    <>
-                      <IconButton
-                        label={t('actions_show')}
-                        showTooltip={false}
-                        sizeClassName="h-10 w-10"
-                        onClick={() => setMobileNoteActionsId(note.id)}
-                        className="sm:hidden text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                      >
-                        <MoreIcon className="w-4 h-4" />
-                      </IconButton>
-                      <div className="hidden sm:flex gap-1 opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                        {actionButtons}
-                      </div>
-                      <MobileActionSheet
-                        isOpen={isMobileActionsOpen}
-                        onClose={() => setMobileNoteActionsId(null)}
-                      >
-                        <ActionSheetButton
-                          action="edit"
-                          onClick={() => {
-                            setMobileNoteActionsId(null);
-                            handleEdit(note);
-                          }}
-                          disabled={isSavingEdit}
-                        />
-                        <ActionSheetButton
-                          action="copy"
-                          onClick={() => {
-                            setMobileNoteActionsId(null);
-                            handleCopyNote(note.content);
-                          }}
-                        />
-                        <ActionSheetButton
-                          action="delete"
-                          onClick={() => {
-                            setMobileNoteActionsId(null);
-                            handleDelete(note.id);
-                          }}
-                        />
-                      </MobileActionSheet>
-                    </>
-                  )}
-                </div>
+                {editingId !== note.id && !isSelectMode && (
+                  <CardActions
+                    actions={[
+                      { action: 'edit', onClick: () => handleEdit(note), disabled: isSavingEdit },
+                      { action: 'copy', onClick: () => handleCopyNote(note.content) },
+                      { action: 'delete', onClick: () => handleDelete(note.id) },
+                    ]}
+                    isMobileSheetOpen={isMobileActionsOpen}
+                    onMobileSheetOpen={() => setMobileNoteActionsId(note.id)}
+                    onMobileSheetClose={() => setMobileNoteActionsId(null)}
+                  />
+                )}
               </div>
 
               {/* Note content */}
               {editingId === note.id ? (
-                <div className="space-y-2 mb-4">
-                  <textarea
-                    className="textarea-base"
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Escape') {
-                        e.preventDefault();
-                        handleCancelEdit();
-                      }
-                      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-                        e.preventDefault();
-                        void handleSaveEdit();
-                      }
-                    }}
-                    rows={3}
-                    autoFocus
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleSaveEdit}
-                      disabled={isSavingEdit || !editContent.trim()}
-                      className={`flex items-center gap-1 px-3 py-1.5 text-sm bg-accent dark:bg-accent-dark text-white rounded-md hover:opacity-90 transition-opacity ${
-                        isSavingEdit || !editContent.trim() ? 'opacity-60 cursor-not-allowed' : ''
-                      }`}
-                    >
-                      {isSavingEdit ? <LoadingSpinner className="w-3.5 h-3.5 text-white" /> : <CheckIcon className="w-3.5 h-3.5" />}
-                      {isSavingEdit ? t('saving') : t('save')}
-                    </button>
-                    <button
-                      onClick={handleCancelEdit}
-                      disabled={isSavingEdit}
-                      className={`flex items-center gap-1 px-3 py-1.5 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors ${
-                        isSavingEdit ? 'opacity-60 cursor-not-allowed' : ''
-                      }`}
-                    >
-                      <XIcon className="w-3.5 h-3.5" />
-                      {t('cancel')}
-                    </button>
-                  </div>
-                </div>
+                <InlineEditForm
+                  value={editContent}
+                  onChange={setEditContent}
+                  onSave={handleSaveEdit}
+                  onCancel={handleCancelEdit}
+                  isSaving={isSavingEdit}
+                  rows={3}
+                  className="mb-4"
+                />
               ) : (
                 <p className="text-ink dark:text-ink-dark leading-relaxed whitespace-pre-wrap mb-4">
                   {note.content}

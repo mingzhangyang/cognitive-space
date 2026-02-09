@@ -3,12 +3,10 @@ import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { getQuestions, getNotes, deleteNote, getDarkMatterCount, updateNoteContent } from '../services/storageService';
 import { Note } from '../types';
-import { PlusIcon, SearchIcon, XIcon, MoreIcon, CheckIcon, LoadingSpinner, EmptyStateIllustration } from '../components/Icons';
-import ActionIconButton from '../components/ActionIconButton';
-import ActionSheetButton from '../components/ActionSheetButton';
+import { PlusIcon, SearchIcon, EmptyStateIllustration } from '../components/Icons';
+import CardActions from '../components/CardActions';
+import InlineEditForm from '../components/InlineEditForm';
 import ConfirmDialog from '../components/ConfirmDialog';
-import IconButton from '../components/IconButton';
-import MobileActionSheet from '../components/MobileActionSheet';
 import { useAppContext } from '../contexts/AppContext';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import Tooltip from '../components/Tooltip';
@@ -293,113 +291,40 @@ const Home: React.FC = () => {
               <>
                 <div className="flex justify-between items-start">
                   {isEditing ? (
-                    <div className="flex-1 pr-2 space-y-3">
-                      <textarea
-                        className="textarea-base"
-                        value={editContent}
-                        onChange={(e) => setEditContent(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Escape') {
-                            e.preventDefault();
-                            handleCancelEdit();
-                          }
-                          if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-                            e.preventDefault();
-                            void handleSaveEdit();
-                          }
-                        }}
-                        rows={2}
-                        autoFocus
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleSaveEdit}
-                          disabled={isSavingEdit || !editContent.trim()}
-                          className={`flex items-center gap-1 px-3 py-1.5 text-sm bg-accent dark:bg-accent-dark text-white rounded-md hover:opacity-90 transition-opacity ${
-                            isSavingEdit || !editContent.trim() ? 'opacity-60 cursor-not-allowed' : ''
-                          }`}
-                        >
-                          {isSavingEdit ? <LoadingSpinner className="w-3.5 h-3.5 text-white" /> : <CheckIcon className="w-3.5 h-3.5" />}
-                          {isSavingEdit ? t('saving') : t('save')}
-                        </button>
-                        <button
-                          onClick={handleCancelEdit}
-                          disabled={isSavingEdit}
-                          className={`flex items-center gap-1 px-3 py-1.5 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors ${
-                            isSavingEdit ? 'opacity-60 cursor-not-allowed' : ''
-                          }`}
-                        >
-                          <XIcon className="w-3.5 h-3.5" />
-                          {t('cancel')}
-                        </button>
-                      </div>
-                    </div>
+                    <InlineEditForm
+                      value={editContent}
+                      onChange={setEditContent}
+                      onSave={handleSaveEdit}
+                      onCancel={handleCancelEdit}
+                      isSaving={isSavingEdit}
+                      rows={2}
+                      className="flex-1 pr-2 space-y-3"
+                    />
                   ) : (
                     <h3 className="text-lg font-medium text-ink dark:text-ink-dark leading-relaxed flex-1 pr-2">
                       {q.content}
                     </h3>
                   )}
                   {!isEditing && (
-                    <div className="relative flex items-center gap-2 ml-4">
-                      <IconButton
-                        label={t('actions_show')}
-                        showTooltip={false}
-                        sizeClassName="h-10 w-10"
-                        onClick={(e) => {
+                    <div className="ml-4">
+                      <CardActions
+                        actions={[
+                          { action: 'edit', onClick: (e) => handleStartEdit(e, q) },
+                          { action: 'copy', onClick: (e) => handleCopyQuestion(e, q.content) },
+                          { action: 'delete', onClick: (e) => handleDelete(e, q.id) },
+                        ]}
+                        isMobileSheetOpen={isMobileActionsOpen}
+                        onMobileSheetOpen={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
                           setMobileQuestionActionsId(q.id);
                         }}
-                        className="sm:hidden text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
-                      >
-                        <MoreIcon className="w-4 h-4" />
-                      </IconButton>
-                      <MobileActionSheet
-                        isOpen={isMobileActionsOpen}
-                        onClose={() => setMobileQuestionActionsId(null)}
-                      >
-                        <ActionSheetButton
-                          action="edit"
-                          onClick={(e) => {
-                            setMobileQuestionActionsId(null);
-                            handleStartEdit(e, q);
-                          }}
-                        />
-                        <ActionSheetButton
-                          action="copy"
-                          onClick={(e) => {
-                            setMobileQuestionActionsId(null);
-                            handleCopyQuestion(e, q.content);
-                          }}
-                        />
-                        <ActionSheetButton
-                          action="delete"
-                          onClick={(e) => {
-                            setMobileQuestionActionsId(null);
-                            handleDelete(e, q.id);
-                          }}
-                        />
-                      </MobileActionSheet>
-                      <div className="hidden sm:flex items-center gap-2">
-                        <ActionIconButton
-                          action="edit"
-                          onClick={(e) => handleStartEdit(e, q)}
-                          baseClassName="text-muted-400 dark:text-muted-400"
-                          className="opacity-0 sm:group-hover:opacity-100 transition-all"
-                        />
-                        <ActionIconButton
-                          action="copy"
-                          onClick={(e) => handleCopyQuestion(e, q.content)}
-                          baseClassName="text-muted-400 dark:text-muted-400"
-                          className="opacity-0 sm:group-hover:opacity-100 transition-all"
-                        />
-                        <ActionIconButton
-                          action="delete"
-                          onClick={(e) => handleDelete(e, q.id)}
-                          baseClassName="text-muted-400 dark:text-muted-400"
-                          className="opacity-0 sm:group-hover:opacity-100 transition-all"
-                        />
-                      </div>
+                        onMobileSheetClose={() => setMobileQuestionActionsId(null)}
+                        desktopGapClassName="gap-2"
+                        desktopButtonClassName="opacity-0 sm:group-hover:opacity-100 transition-all"
+                        desktopButtonBaseClassName="text-muted-400 dark:text-muted-400"
+                        mobileButtonClassName="text-muted-400 hover:text-ink dark:text-muted-400 dark:hover:text-ink-dark hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
+                      />
                     </div>
                   )}
                 </div>
