@@ -17,7 +17,7 @@ import { Note, NoteType, DarkMatterSuggestion } from '../types';
 import { useAppContext } from '../contexts/AppContext';
 import { useAssistantInbox } from '../contexts/AssistantInboxContext';
 import { useNotifications } from '../contexts/NotificationContext';
-import { LoadingSpinner, CheckIcon, SortDescIcon, SortAscIcon, MoonIcon, SparklesIcon } from '../components/Icons';
+import { LoadingSpinner, CheckIcon, SortDescIcon, SortAscIcon, SparklesIcon } from '../components/Icons';
 import CardActions from '../components/CardActions';
 import InlineEditForm from '../components/InlineEditForm';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -569,7 +569,7 @@ const DarkMatter: React.FC = () => {
       <div className="mb-7 sm:mb-8">
         <div className="flex items-center gap-3 mb-2">
           <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-            <MoonIcon className="text-gray-500 dark:text-gray-400 w-4 h-4" />
+            <span className="text-sm">🌑</span>
           </div>
           <h1 className="page-title">{t('dark_matter')}</h1>
         </div>
