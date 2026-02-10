@@ -45,11 +45,12 @@ const Tooltip: React.FC<TooltipProps> = ({ content, placement = 'top', children 
     return () => media.removeListener(update);
   }, []);
 
-  const shouldShowTooltip = Boolean(content) && canShow;
+  const hasContent = Boolean(content);
+  const shouldShowOnHover = hasContent && canShow;
 
   useEffect(() => {
-    if (!shouldShowTooltip) setOpen(false);
-  }, [shouldShowTooltip]);
+    if (!hasContent) setOpen(false);
+  }, [hasContent]);
 
   const childProps = (children.props ?? {}) as TooltipChildProps;
 
@@ -57,23 +58,23 @@ const Tooltip: React.FC<TooltipProps> = ({ content, placement = 'top', children 
     ref: (node: Element | null) => {
       setRef(childProps.ref, node);
     },
-    'aria-describedby': shouldShowTooltip
+    'aria-describedby': hasContent
       ? [childProps['aria-describedby'], id].filter(Boolean).join(' ')
       : childProps['aria-describedby'],
     onMouseEnter: (e: React.MouseEvent<Element>) => {
-      if (shouldShowTooltip) setOpen(true);
+      if (shouldShowOnHover) setOpen(true);
       childProps.onMouseEnter?.(e);
     },
     onMouseLeave: (e: React.MouseEvent<Element>) => {
-      if (shouldShowTooltip) setOpen(false);
+      if (shouldShowOnHover) setOpen(false);
       childProps.onMouseLeave?.(e);
     },
     onFocus: (e: React.FocusEvent<Element>) => {
-      if (shouldShowTooltip) setOpen(true);
+      if (hasContent) setOpen(true);
       childProps.onFocus?.(e);
     },
     onBlur: (e: React.FocusEvent<Element>) => {
-      if (shouldShowTooltip) setOpen(false);
+      if (hasContent) setOpen(false);
       childProps.onBlur?.(e);
     }
   });
@@ -81,7 +82,7 @@ const Tooltip: React.FC<TooltipProps> = ({ content, placement = 'top', children 
   return (
     <span className="relative inline-flex">
       {merged}
-      {shouldShowTooltip && open && (
+      {hasContent && open && (
         <span
           id={id}
           role="tooltip"
