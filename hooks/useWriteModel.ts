@@ -141,12 +141,17 @@ export const useWriteModel = () => {
 
     removeJob(jobId);
 
-    if (!aiResult) {
+    const clearAnalysisPending = async () => {
       try {
         await updateNoteMeta(newNote.id, { analysisPending: false });
       } catch (error) {
         console.error('Error clearing analysis pending state:', error);
       }
+    };
+
+    await clearAnalysisPending();
+
+    if (!aiResult) {
       return;
     }
 
