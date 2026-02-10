@@ -1,5 +1,6 @@
 import { getNotes } from './storageService';
-import { Language, translations } from '../contexts/AppContext';
+import { Language } from '../contexts/AppContext';
+import { translations } from '../contexts/translations';
 import { Note, NoteType } from '../types';
 
 const SESSION_KEY_PREFIX = 'cs_footer_line_v1';

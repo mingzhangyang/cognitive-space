@@ -46,4 +46,63 @@ describe('parseAppDataExport', () => {
 
     expect(parseAppDataExport(payload)).toBeNull();
   });
+
+  it('rejects payloads with invalid events', () => {
+    const note = {
+      id: 'n1',
+      content: 'Test note',
+      type: NoteType.QUESTION,
+      createdAt: 1,
+      updatedAt: 1,
+      parentId: null
+    };
+
+    const payload = {
+      version: 1,
+      exportedAt: 2,
+      db: { name: 'cognitive_space_db', version: 2 },
+      notes: [note],
+      events: [
+        {
+          id: 'e1',
+          type: 'NOTE_CREATED',
+          createdAt: 1,
+          payload: { note: { id: 'bad' } }
+        }
+      ],
+      meta: {}
+    };
+
+    expect(parseAppDataExport(payload)).toBeNull();
+  });
+
+  it('filters meta to numeric values', () => {
+    const note = {
+      id: 'n1',
+      content: 'Test note',
+      type: NoteType.QUESTION,
+      createdAt: 1,
+      updatedAt: 1,
+      parentId: null
+    };
+
+    const payload = {
+      version: 1,
+      exportedAt: 2,
+      db: { name: 'cognitive_space_db', version: 2 },
+      notes: [note],
+      events: [
+        {
+          id: 'e1',
+          type: 'NOTE_CREATED',
+          createdAt: 1,
+          payload: { note }
+        }
+      ],
+      meta: { lastEventAt: 2, bad: 'nope' }
+    };
+
+    const parsed = parseAppDataExport(payload);
+    expect(parsed?.meta).toEqual({ lastEventAt: 2 });
+  });
 });

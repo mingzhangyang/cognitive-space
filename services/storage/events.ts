@@ -79,16 +79,21 @@ const applyEvent = (state: Map<string, Note>, event: AppEvent): void => {
   }
 };
 
-const rebuildProjectionFromEvents = async (db: IDBPDatabase<CognitiveSpaceDB>): Promise<void> => {
-  const events = await db.getAllFromIndex(STORE_EVENTS, 'by-created');
-  if (events.length === 0) return;
+export const projectNotesFromEvents = (events: AppEvent[]): Note[] => {
   const state = new Map<string, Note>();
   for (const event of events) {
     applyEvent(state, event);
   }
+  return Array.from(state.values());
+};
+
+const rebuildProjectionFromEvents = async (db: IDBPDatabase<CognitiveSpaceDB>): Promise<void> => {
+  const events = await db.getAllFromIndex(STORE_EVENTS, 'by-created');
+  if (events.length === 0) return;
+  const projected = projectNotesFromEvents(events);
   const tx = db.transaction(STORE_NOTES, 'readwrite');
   await tx.store.clear();
-  await Promise.all(Array.from(state.values()).map((note) => tx.store.put(note)));
+  await Promise.all(projected.map((note) => tx.store.put(note)));
   await tx.done;
   await markProjectionUpToDate(db);
 };
