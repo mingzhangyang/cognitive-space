@@ -1,7 +1,7 @@
 {
   "name": "cognitive-space",
   "private": true,
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "engines": {
     "node": ">=18"
@@ -14,7 +14,7 @@
     "lint": "tsc --noEmit",
     "test": "vitest run",
     "preview": "npm run build && wrangler dev",
-    "deploy": "wrangler deploy"
+    "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "idb": "^8.0.3",
