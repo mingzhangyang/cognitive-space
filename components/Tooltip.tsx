@@ -49,8 +49,8 @@ const Tooltip: React.FC<TooltipProps> = ({ content, placement = 'top', children 
   const shouldShowOnHover = hasContent && canShow;
 
   useEffect(() => {
-    if (!hasContent) setOpen(false);
-  }, [hasContent]);
+    if (!hasContent || !canShow) setOpen(false);
+  }, [hasContent, canShow]);
 
   const childProps = (children.props ?? {}) as TooltipChildProps;
 
