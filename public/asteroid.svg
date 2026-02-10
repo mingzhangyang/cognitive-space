@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="140 135 465 403">
+  <defs>
+    <!-- 径向渐变用于主体 -->
+    <radialGradient id="asteroidGradient" cx="40%" cy="35%">
+      <stop offset="0%" style="stop-color:#a89ac4;stop-opacity:1" />
+      <stop offset="40%" style="stop-color:#7a6b8b;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#5a4a6a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3a2a4a;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- 陨石坑渐变 -->
+    <radialGradient id="craterGradient1" cx="50%" cy="50%">
+      <stop offset="0%" style="stop-color:#2a1a3a;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#4a3a5a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#5a4a6a;stop-opacity:0.5" />
+    </radialGradient>
+    
+    <radialGradient id="craterGradient2" cx="50%" cy="50%">
+      <stop offset="0%" style="stop-color:#1a0a2a;stop-opacity:1" />
+      <stop offset="80%" style="stop-color:#3a2a4a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4a3a5a;stop-opacity:0.3" />
+    </radialGradient>
+    
+    <!-- 高光渐变 -->
+    <radialGradient id="highlightGradient" cx="30%" cy="30%">
+      <stop offset="0%" style="stop-color:#d8c8f0;stop-opacity:0.3" />
+      <stop offset="50%" style="stop-color:#b8a8d0;stop-opacity:0.1" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+    </radialGradient>
+    
+    <!-- 阴影滤镜 -->
+    <filter id="shadow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="2" dy="2" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.5"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- 纹理噪声 -->
+    <filter id="noise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" result="turbulence"/>
+      <feColorMatrix in="turbulence" type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="discrete" tableValues="0 0.05"/>
+      </feComponentTransfer>
+      <feBlend in="SourceGraphic" mode="multiply"/>
+    </filter>
+  </defs>
+  
+
+  
+  <!-- 小行星主体 - 粗糙不规则形状 -->
+  <path d="M 400 150 
+           L 435 155 L 465 162 L 490 175 L 515 195 L 535 215 L 548 238 L 558 265 
+           L 565 295 L 568 325 L 565 355 L 558 385 L 545 415 L 528 445 L 508 470 
+           L 485 492 L 458 510 L 428 522 L 395 528 L 362 526 L 330 518 L 300 505 
+           L 272 488 L 248 468 L 228 445 L 212 420 L 200 392 L 192 362 L 188 330 
+           L 190 298 L 198 268 L 210 240 L 227 215 L 248 192 L 272 173 L 300 158 
+           L 330 148 L 365 145 L 400 150 Z"
+        fill="url(#asteroidGradient)"
+        filter="url(#noise)"/>
+  
+  <!-- 小突起和凹陷 -->
+  <ellipse cx="520" cy="280" rx="35" ry="40" fill="#6a5a7a" opacity="0.6" filter="url(#shadow)"/>
+  <ellipse cx="240" cy="420" rx="30" ry="35" fill="#5a4a6a" opacity="0.5" filter="url(#shadow)"/>
+  <ellipse cx="350" cy="210" rx="25" ry="30" fill="#4a3a5a" opacity="0.4"/>
+  
+  <!-- 大陨石坑 -->
+  <circle cx="320" cy="320" r="55" fill="url(#craterGradient1)" filter="url(#shadow)"/>
+  <circle cx="318" cy="318" r="45" fill="#2a2a2a" opacity="0.7"/>
+  <circle cx="330" cy="310" r="15" fill="#3a3a3a" opacity="0.5"/>
+  
+  <!-- 中等陨石坑 -->
+  <circle cx="460" cy="400" r="40" fill="url(#craterGradient2)" filter="url(#shadow)"/>
+  <circle cx="458" cy="398" r="32" fill="#1a1a1a" opacity="0.8"/>
+  <circle cx="468" cy="392" r="12" fill="#2a2a2a" opacity="0.4"/>
+  
+  <circle cx="280" cy="480" r="35" fill="url(#craterGradient1)" opacity="0.9"/>
+  <circle cx="278" cy="478" r="28" fill="#252525" opacity="0.7"/>
+  
+  <!-- 小陨石坑群 -->
+  <circle cx="420" cy="250" r="20" fill="url(#craterGradient2)" opacity="0.8"/>
+  <circle cx="418" cy="248" r="16" fill="#1a1a1a" opacity="0.6"/>
+  
+  <circle cx="500" cy="460" r="18" fill="url(#craterGradient1)" opacity="0.7"/>
+  <circle cx="220" cy="360" r="15" fill="url(#craterGradient2)" opacity="0.7"/>
+  <circle cx="380" cy="500" r="22" fill="url(#craterGradient1)" opacity="0.75"/>
+  <circle cx="530" cy="350" r="16" fill="url(#craterGradient2)" opacity="0.65"/>
+  
+  <!-- 更小的陨石坑 -->
+  <circle cx="360" cy="280" r="10" fill="#2a2a2a" opacity="0.6"/>
+  <circle cx="480" cy="320" r="8" fill="#252525" opacity="0.5"/>
+  <circle cx="300" cy="420" r="9" fill="#2a2a2a" opacity="0.55"/>
+  <circle cx="440" cy="480" r="7" fill="#252525" opacity="0.5"/>
+  <circle cx="260" cy="300" r="6" fill="#2a2a2a" opacity="0.45"/>
+  <circle cx="510" cy="400" r="7" fill="#252525" opacity="0.5"/>
+  
+  <!-- 裂缝和纹理线 -->
+  <path d="M 250 350 Q 300 360, 350 350" stroke="#1a1a1a" stroke-width="2" fill="none" opacity="0.6"/>
+  <path d="M 420 420 Q 460 430, 490 420" stroke="#1a1a1a" stroke-width="1.5" fill="none" opacity="0.5"/>
+  <path d="M 340 500 L 380 520" stroke="#252525" stroke-width="1" fill="none" opacity="0.4"/>
+  <path d="M 500 300 Q 520 320, 530 340" stroke="#1a1a1a" stroke-width="1.5" fill="none" opacity="0.5"/>
+  
+  <!-- 高光效果 -->
+  <ellipse cx="350" cy="280" rx="120" ry="100" fill="url(#highlightGradient)" opacity="0.4"/>
+  
+  <!-- 边缘高光 -->
+  <path d="M 400 150 L 435 155 L 465 162 L 490 175 L 515 195 L 535 215" 
+        stroke="#9a8aaa" 
+        stroke-width="2" 
+        fill="none" 
+        opacity="0.3"/>
+  
+  <!-- 细节阴影增强立体感 -->
+  <ellipse cx="190" cy="450" rx="40" ry="50" fill="#2a2a2a" opacity="0.3"/>
+  <ellipse cx="560" cy="390" rx="35" ry="45" fill="#2a2a2a" opacity="0.25"/>
+</svg>

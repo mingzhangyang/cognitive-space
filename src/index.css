@@ -59,7 +59,7 @@ body {
   font-kerning: normal;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
+  -webkit-font-smoothing: auto;
   -moz-osx-font-smoothing: grayscale;
   background-image:
     radial-gradient(circle at top left, rgba(15, 118, 110, 0.08), transparent 55%),
