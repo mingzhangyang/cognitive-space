@@ -6,17 +6,31 @@ type TooltipProps = {
   children: React.ReactElement;
 };
 
-function setRef(ref: any, node: any) {
+type TooltipChildProps = {
+  ref?: React.Ref<Element>;
+  'aria-describedby'?: string;
+  onMouseEnter?: (event: React.MouseEvent<Element>) => void;
+  onMouseLeave?: (event: React.MouseEvent<Element>) => void;
+  onFocus?: (event: React.FocusEvent<Element>) => void;
+  onBlur?: (event: React.FocusEvent<Element>) => void;
+};
+
+function setRef<T>(ref: React.Ref<T> | undefined, node: T | null) {
   if (!ref) return;
-  if (typeof ref === 'function') ref(node);
-  else ref.current = node;
+  if (typeof ref === 'function') {
+    ref(node);
+    return;
+  }
+  if ('current' in ref) {
+    ref.current = node;
+  }
 }
 
 const Tooltip: React.FC<TooltipProps> = ({ content, placement = 'top', children }) => {
-  const idRef = useRef<string>(() => `tooltip-${Math.random().toString(36).slice(2, 9)}`) as React.MutableRefObject<any>;
-  const id = typeof idRef.current === 'function' ? idRef.current() : idRef.current;
+  const idRef = useRef(`tooltip-${Math.random().toString(36).slice(2, 9)}`);
+  const id = idRef.current;
   const [open, setOpen] = useState(false);
-  const hostRef = useRef<HTMLElement | null>(null);
+  const hostRef = useRef<Element | null>(null);
 
   useEffect(() => {
     const el = hostRef.current;
@@ -35,31 +49,31 @@ const Tooltip: React.FC<TooltipProps> = ({ content, placement = 'top', children 
     };
   }, [content]);
 
-  const childProps = children.props || {};
+  const childProps = (children.props ?? {}) as TooltipChildProps;
 
   const merged = React.cloneElement(children, {
-    ref: (node: any) => {
-      setRef(children.props.ref, node);
+    ref: (node: Element | null) => {
+      setRef(childProps.ref, node);
       hostRef.current = node;
     },
     'aria-describedby': content
       ? [childProps['aria-describedby'], id].filter(Boolean).join(' ')
       : childProps['aria-describedby'],
-    onMouseEnter: (e: any) => {
+    onMouseEnter: (e: React.MouseEvent<Element>) => {
       setOpen(true);
-      if (childProps.onMouseEnter) childProps.onMouseEnter(e);
+      childProps.onMouseEnter?.(e);
     },
-    onMouseLeave: (e: any) => {
+    onMouseLeave: (e: React.MouseEvent<Element>) => {
       setOpen(false);
-      if (childProps.onMouseLeave) childProps.onMouseLeave(e);
+      childProps.onMouseLeave?.(e);
     },
-    onFocus: (e: any) => {
+    onFocus: (e: React.FocusEvent<Element>) => {
       setOpen(true);
-      if (childProps.onFocus) childProps.onFocus(e);
+      childProps.onFocus?.(e);
     },
-    onBlur: (e: any) => {
+    onBlur: (e: React.FocusEvent<Element>) => {
       setOpen(false);
-      if (childProps.onBlur) childProps.onBlur(e);
+      childProps.onBlur?.(e);
     }
   });
 

@@ -3,16 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 export type Language = 'en' | 'zh';
 export type Theme = 'light' | 'dark';
 
-interface AppContextProps {
-  language: Language;
-  setLanguage: (lang: Language) => void;
-  theme: Theme;
-  toggleTheme: () => void;
-  t: (key: keyof typeof translations['en']) => string;
-}
-
-export const translations = {
-  en: {
+const translationsEn = {
     app_name: "Cognitive Space",
     seo_title_home: "Cognitive Space - AI Workspace for Structured Thinking",
     seo_desc_home: "Externalize ideas, then let AI organize them into questions, claims, and evidence. A cognitive workspace for deep thinking.",
@@ -354,8 +345,9 @@ export const translations = {
     undo: "Undo",
     fragment_deleted: "Fragment deleted",
     note_deleted: "Note deleted"
-  },
-  zh: {
+} as const;
+
+const translationsZh: Record<keyof typeof translationsEn, string> = {
     app_name: "认知空间",
     seo_title_home: "认知空间 - 结构化思考的 AI 工作台",
     seo_desc_home: "先外化想法，再让 AI 组织为问题、主张与证据。面向深度思考的认知工作台。",
@@ -697,8 +689,20 @@ export const translations = {
     undo: "撤销",
     fragment_deleted: "碎片已删除",
     note_deleted: "笔记已删除"
-  }
 };
+
+export const translations = {
+  en: translationsEn,
+  zh: translationsZh
+};
+
+interface AppContextProps {
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  theme: Theme;
+  toggleTheme: () => void;
+  t: (key: keyof typeof translationsEn) => string;
+}
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
 

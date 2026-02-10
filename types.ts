@@ -1,12 +1,7 @@
-export enum NoteType {
-  QUESTION = 'question',
-  CLAIM = 'claim',
-  EVIDENCE = 'evidence',
-  TRIGGER = 'trigger',
-  UNCATEGORIZED = 'uncategorized'
-}
+import { NoteType, ConfidenceLabel, DarkMatterSuggestionKind } from './shared/domain';
 
-export type ConfidenceLabel = 'likely' | 'possible' | 'loose';
+export { NoteType };
+export type { ConfidenceLabel, DarkMatterSuggestionKind };
 
 export interface Note {
   id: string;
@@ -30,8 +25,6 @@ export interface AnalysisResult {
   relatedQuestionId?: string | null;
   reasoning: string;
 }
-
-export type DarkMatterSuggestionKind = 'new_question' | 'existing_question';
 
 export interface DarkMatterSuggestion {
   id: string;

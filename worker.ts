@@ -1,3 +1,11 @@
+import { ConfidenceLabel, DarkMatterSuggestionKind } from './shared/domain';
+import {
+  CONFIDENCE_LABELS,
+  confidenceLabelToScore,
+  scoreToConfidenceLabel
+} from './shared/confidence';
+import { normalizeSubType } from './shared/subtypes';
+
 interface Env {
   BIGMODEL_API_KEY: string;
   BIGMODEL_MODEL?: string;
@@ -11,8 +19,6 @@ type AnalyzeRequest = {
   language?: 'en' | 'zh';
   existingQuestions?: Array<{ id: string; content: string }>;
 };
-
-type ConfidenceLabel = 'likely' | 'possible' | 'loose';
 
 type AnalyzeResponse = {
   classification: 'question' | 'claim' | 'evidence' | 'trigger' | 'uncategorized';
@@ -36,7 +42,7 @@ type DarkMatterAnalyzeRequest = {
 
 type DarkMatterSuggestion = {
   id: string;
-  kind: 'new_question' | 'existing_question';
+  kind: DarkMatterSuggestionKind;
   title: string;
   existingQuestionId?: string;
   noteIds: string[];
@@ -63,137 +69,20 @@ const CLASSIFICATIONS = new Set<AnalyzeResponse['classification']>([
   'trigger',
   'uncategorized'
 ]);
-const CONFIDENCE_LABELS = new Set<ConfidenceLabel>(['likely', 'possible', 'loose']);
-const SUBTYPE_KEYS = new Set([
-  'exploratory',
-  'specific',
-  'goal',
-  'concern',
-  'dilemma',
-  'hypothesis',
-  'opinion',
-  'conclusion',
-  'fact',
-  'observation',
-  'anecdote',
-  'citation',
-  'quote',
-  'feeling',
-  'idea',
-  'note',
-  'inspiration',
-  'image',
-  'memory',
-  'task',
-  'fragment',
-  'material',
-  'metaphor',
-  'scene',
-  'statistic',
-  'log',
-  'case',
-  'assumption',
-  'principle',
-  'prediction',
-  'preference',
-  'diagnosis',
-  'proposal'
-]);
-const SUBTYPE_ALIASES: Record<string, string> = {
-  opnion: 'opinion',
-  观点: 'opinion',
-  看法: 'opinion',
-  结论: 'conclusion',
-  假设: 'hypothesis',
-  事实: 'fact',
-  观察: 'observation',
-  轶事: 'anecdote',
-  故事: 'anecdote',
-  引用: 'citation',
-  引文: 'citation',
-  引述: 'quote',
-  感受: 'feeling',
-  情绪: 'feeling',
-  想法: 'idea',
-  念头: 'idea',
-  随记: 'note',
-  笔记: 'note',
-  灵感: 'inspiration',
-  画面: 'image',
-  影像: 'image',
-  回忆: 'memory',
-  记忆: 'memory',
-  待办: 'task',
-  任务: 'task',
-  片段: 'fragment',
-  碎片: 'fragment',
-  素材: 'material',
-  原料: 'material',
-  比喻: 'metaphor',
-  隐喻: 'metaphor',
-  场景: 'scene',
-  画面感: 'scene',
-  统计: 'statistic',
-  统计数据: 'statistic',
-  日志: 'log',
-  记录: 'log',
-  案例: 'case',
-  个案: 'case',
-  前提: 'assumption',
-  原则: 'principle',
-  预测: 'prediction',
-  预判: 'prediction',
-  偏好: 'preference',
-  喜好: 'preference',
-  判断: 'diagnosis',
-  诊断: 'diagnosis',
-  主张: 'proposal',
-  提议: 'proposal',
-  探索: 'exploratory',
-  探索型: 'exploratory',
-  具体: 'specific',
-  目标: 'goal',
-  担忧: 'concern',
-  忧虑: 'concern',
-  两难: 'dilemma',
-  困境: 'dilemma'
-};
 
-function scoreToConfidenceLabel(score: number): ConfidenceLabel {
-  if (score >= 0.7) return 'likely';
-  if (score >= 0.5) return 'possible';
-  return 'loose';
-}
+const asRecord = (value: unknown): Record<string, unknown> | null =>
+  typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : null;
 
-function confidenceLabelToScore(label: ConfidenceLabel): number {
-  switch (label) {
-    case 'likely':
-      return 0.75;
-    case 'possible':
-      return 0.6;
-    default:
-      return 0.4;
-  }
-}
-
-function normalizeConfidenceLabel(input: any): ConfidenceLabel {
-  const labelRaw = typeof input?.confidenceLabel === 'string' ? input.confidenceLabel.toLowerCase() : '';
+function normalizeConfidenceLabel(input: unknown): ConfidenceLabel {
+  const record = asRecord(input);
+  const labelRaw = typeof record?.confidenceLabel === 'string' ? record.confidenceLabel.toLowerCase() : '';
   if (CONFIDENCE_LABELS.has(labelRaw as ConfidenceLabel)) {
     return labelRaw as ConfidenceLabel;
   }
-  if (typeof input?.confidence === 'number') {
-    return scoreToConfidenceLabel(input.confidence);
+  if (typeof record?.confidence === 'number') {
+    return scoreToConfidenceLabel(record.confidence);
   }
   return 'possible';
-}
-
-function normalizeSubType(value: unknown): string | undefined {
-  if (typeof value !== 'string') return undefined;
-  const trimmed = value.trim();
-  if (!trimmed) return undefined;
-  const normalized = trimmed.toLowerCase().replace(/\s+/g, '_');
-  const alias = SUBTYPE_ALIASES[normalized] ?? SUBTYPE_ALIASES[trimmed] ?? normalized;
-  return SUBTYPE_KEYS.has(alias) ? alias : trimmed;
 }
 
 /**
@@ -670,7 +559,7 @@ function extractBigModelText(data: BigModelResponse | null): string {
   return '';
 }
 
-function safeParseJson(text: string): any {
+function safeParseJson(text: string): unknown {
   if (!text) return null;
   try {
     return JSON.parse(text);
@@ -824,15 +713,16 @@ function heuristicClassify(text: string): AnalyzeResponse {
   };
 }
 
-function normalizeResult(input: any, validQuestionIds: Set<string>): AnalyzeResponse {
-  const classificationRaw = typeof input?.classification === 'string'
-    ? input.classification.toLowerCase()
+export function normalizeResult(input: unknown, validQuestionIds: Set<string>): AnalyzeResponse {
+  const record = asRecord(input);
+  const classificationRaw = typeof record?.classification === 'string'
+    ? record.classification.toLowerCase()
     : '';
   const classification = CLASSIFICATIONS.has(classificationRaw as AnalyzeResponse['classification'])
     ? (classificationRaw as AnalyzeResponse['classification'])
     : 'trigger';
 
-  const confidenceLabel = normalizeConfidenceLabel(input);
+  const confidenceLabel = normalizeConfidenceLabel(record);
   const confidenceScore = confidenceLabelToScore(confidenceLabel);
 
   const shouldSuppressClassification = confidenceScore < CLASSIFICATION_CONFIDENCE_THRESHOLD;
@@ -844,17 +734,17 @@ function normalizeResult(input: any, validQuestionIds: Set<string>): AnalyzeResp
     confidenceScore >= RELATION_CONFIDENCE_THRESHOLD &&
     finalClassification !== 'trigger' &&
     finalClassification !== 'uncategorized' &&
-    typeof input?.relatedQuestionId === 'string' &&
-    input.relatedQuestionId
+    typeof record?.relatedQuestionId === 'string' &&
+    record.relatedQuestionId
   ) {
-    if (validQuestionIds.has(input.relatedQuestionId)) {
-      relatedQuestionId = input.relatedQuestionId;
+    if (validQuestionIds.has(record.relatedQuestionId)) {
+      relatedQuestionId = record.relatedQuestionId;
     }
     // If the AI returned an invalid ID, silently ignore it
   }
 
-  const reasoning = typeof input?.reasoning === 'string' && input.reasoning.trim()
-    ? input.reasoning
+  const reasoning = typeof record?.reasoning === 'string' && record.reasoning.trim()
+    ? record.reasoning
     : 'Analyzed by GLM';
 
   return {
@@ -862,7 +752,7 @@ function normalizeResult(input: any, validQuestionIds: Set<string>): AnalyzeResp
     subType:
       finalClassification === 'uncategorized'
         ? undefined
-        : normalizeSubType(input?.subType),
+        : normalizeSubType(record?.subType),
     confidenceLabel,
     relatedQuestionId,
     reasoning
@@ -870,19 +760,20 @@ function normalizeResult(input: any, validQuestionIds: Set<string>): AnalyzeResp
 }
 
 export function normalizeDarkMatterResult(
-  input: any,
+  input: unknown,
   validNoteIds: Set<string>,
   validQuestionIds: Set<string>,
   questionTitleById: Map<string, string>,
   maxClusters: number
 ): DarkMatterAnalyzeResponse {
-  const rawSuggestions = Array.isArray(input?.suggestions) ? input.suggestions : [];
+  const record = asRecord(input);
+  const rawSuggestions = Array.isArray(record?.suggestions) ? record.suggestions : [];
   const suggestions: DarkMatterSuggestion[] = [];
   const usedNoteIds = new Set<string>();
 
   for (let i = 0; i < rawSuggestions.length; i++) {
     if (suggestions.length >= maxClusters) break;
-    const suggestion = rawSuggestions[i];
+    const suggestion = asRecord(rawSuggestions[i]);
     if (!suggestion) continue;
 
     const kindRaw = typeof suggestion.kind === 'string' ? suggestion.kind : '';
@@ -894,7 +785,10 @@ export function normalizeDarkMatterResult(
 
     let existingQuestionId: string | undefined;
     if (kind === 'existing_question') {
-      if (typeof suggestion.existingQuestionId === 'string' && validQuestionIds.has(suggestion.existingQuestionId)) {
+      if (
+        typeof suggestion.existingQuestionId === 'string' &&
+        validQuestionIds.has(suggestion.existingQuestionId)
+      ) {
         existingQuestionId = suggestion.existingQuestionId;
       } else {
         continue;

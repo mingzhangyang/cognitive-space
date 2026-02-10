@@ -21,7 +21,6 @@ import { LoadingSpinner, CheckIcon, SortDescIcon, SortAscIcon, SparklesIcon } fr
 import CardActions from '../components/CardActions';
 import InlineEditForm from '../components/InlineEditForm';
 import ConfirmDialog from '../components/ConfirmDialog';
-import Modal from '../components/Modal';
 import TypeBadge from '../components/TypeBadge';
 import { analyzeDarkMatter } from '../services/aiService';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
@@ -29,48 +28,7 @@ import Tooltip from '../components/Tooltip';
 import { containsCjk, formatTemplate } from '../utils/text';
 import { createMessageId } from '../utils/ids';
 import { coerceConfidenceLabel } from '../utils/confidence';
-
-const QuestionSelector: React.FC<{
-  isOpen: boolean;
-  questions: Note[];
-  onSelect: (questionId: string) => void;
-  onCancel: () => void;
-}> = ({ isOpen, questions, onSelect, onCancel }) => {
-  const { t } = useAppContext();
-
-  if (!isOpen) return null;
-
-  return (
-    <Modal isOpen={isOpen} onClose={onCancel} cardClassName="max-w-md w-full max-h-[70vh] flex flex-col">
-      <h3 className="text-lg font-medium text-ink dark:text-ink-dark mb-4">{t('select_question')}</h3>
-      <div className="overflow-y-auto flex-1 space-y-2">
-        {questions.length === 0 ? (
-          <p className="text-body-sm-muted py-4 text-center">
-            {t('no_questions_available')}
-          </p>
-        ) : (
-          questions.map((q) => (
-            <button
-              key={q.id}
-              onClick={() => onSelect(q.id)}
-              className="w-full text-left p-3 rounded-lg border border-line dark:border-line-dark hover:border-warning/30 dark:hover:border-warning-dark/30 hover:bg-warning/5 dark:hover:bg-warning-dark/10 transition-colors cursor-pointer"
-            >
-              <p className="text-body-sm line-clamp-2">{q.content}</p>
-            </button>
-          ))
-        )}
-      </div>
-      <div className="mt-4 flex justify-end">
-        <button
-          onClick={onCancel}
-          className="px-4 py-2 text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors cursor-pointer"
-        >
-          {t('cancel')}
-        </button>
-      </div>
-    </Modal>
-  );
-};
+import QuestionSelectorModal from '../components/QuestionSelectorModal';
 
 const normalizeSuggestionForCompare = (suggestion: DarkMatterSuggestion) => ({
   ...suggestion,
@@ -542,14 +500,14 @@ const DarkMatter: React.FC = () => {
         onCancel={() => setPendingAction(null)}
       />
 
-      <QuestionSelector
+      <QuestionSelectorModal
         isOpen={linkTarget !== null}
         questions={questions}
         onSelect={confirmLink}
         onCancel={() => setLinkTarget(null)}
       />
 
-      <QuestionSelector
+      <QuestionSelectorModal
         isOpen={batchLinkOpen}
         questions={questions}
         onSelect={confirmBatchLink}

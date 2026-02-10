@@ -3,6 +3,7 @@ import { Note, NoteType } from '../types';
 import { useAppContext } from '../contexts/AppContext';
 import { CrosshairIcon, MinusIcon, PlusIcon } from './Icons';
 import IconButton from './IconButton';
+import { getTypeLabel } from '../utils/notes';
 
 interface QuestionGraphProps {
   question: Note;
@@ -66,27 +67,19 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
   }, []);
 
   const palette = useMemo(() => {
-    if (theme === 'dark') {
-      return {
-        question: '#fbbf24',
-        claim: '#60a5fa',
-        evidence: '#34d399',
-        trigger: '#a78bfa',
-        other: '#94a3b8',
-        line: '#334155',
-        lineSoft: 'rgba(148, 163, 184, 0.25)',
-        lineStrong: '#64748b'
-      };
-    }
+    const pick = (light: string, dark: string) =>
+      theme === 'dark' ? `var(${dark})` : `var(${light})`;
+
     return {
-      question: '#d97706',
-      claim: '#2563eb',
-      evidence: '#059669',
-      trigger: '#7c3aed',
-      other: '#9ca3af',
-      line: '#e5e7eb',
-      lineSoft: 'rgba(148, 163, 184, 0.2)',
-      lineStrong: '#cbd5e1'
+      question: pick('--color-warning', '--color-warning-dark'),
+      claim: pick('--color-note-claim', '--color-note-claim-dark'),
+      evidence: pick('--color-note-evidence', '--color-note-evidence-dark'),
+      trigger: pick('--color-note-trigger', '--color-note-trigger-dark'),
+      other: pick('--color-muted-400', '--color-muted-500'),
+      line: pick('--color-line', '--color-line-dark'),
+      lineSoft: pick('--color-line-soft', '--color-line-dark'),
+      lineStrong: pick('--color-line-muted', '--color-line-strong-dark'),
+      inner: pick('--color-surface', '--color-surface-dark')
     };
   }, [theme]);
 
@@ -387,14 +380,14 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
                   opacity={isDimmed ? 0.45 : 1}
                 />
                 {isQuestionNode && (
-                  <circle
-                    cx={node.x}
-                    cy={node.y}
-                    r={displayRadius - 6}
-                    fill="rgba(255, 255, 255, 0.4)"
-                    opacity={theme === 'dark' ? 0.15 : 0.35}
-                    pointerEvents="none"
-                  />
+                <circle
+                  cx={node.x}
+                  cy={node.y}
+                  r={displayRadius - 6}
+                  fill={palette.inner}
+                  opacity={theme === 'dark' ? 0.15 : 0.35}
+                  pointerEvents="none"
+                />
                 )}
               </g>
             );
@@ -457,13 +450,13 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
               key={`legend-${item.id}`}
               className="flex items-center gap-1.5 rounded-full border border-line/60 dark:border-line-dark/60 bg-surface/70 dark:bg-surface-dark/70 px-2 py-1 shadow-sm backdrop-blur-sm"
             >
-              <span
-                className="inline-flex h-2 w-2 rounded-full"
-                style={{
-                  backgroundColor: item.color,
-                  boxShadow: `0 0 8px ${item.color}55`
-                }}
-              />
+                  <span
+                    className="inline-flex h-2 w-2 rounded-full"
+                    style={{
+                      backgroundColor: item.color,
+                      boxShadow: `0 0 8px color-mix(in srgb, ${item.color} 60%, transparent)`
+                    }}
+                  />
               <span>{item.label}</span>
             </div>
           ))}
@@ -479,9 +472,7 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
           }}
         >
           <div className="font-semibold mb-1">
-            {hoveredNode.note.type === NoteType.QUESTION
-              ? t('type_question')
-              : t(`type_${hoveredNode.note.type}` as any)}
+            {getTypeLabel(hoveredNode.note.type, t)}
           </div>
           <div className="text-subtle dark:text-subtle-dark leading-relaxed">
             {hoveredNode.note.content.length > 100

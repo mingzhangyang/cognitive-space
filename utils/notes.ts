@@ -1,6 +1,7 @@
 import { NoteType } from '../types';
+import type { TranslationKey } from './i18n';
 
-export const getTypeLabel = (type: NoteType, t: (key: string) => string) => {
+export const getTypeLabel = (type: NoteType, t: (key: TranslationKey) => string) => {
   switch (type) {
     case NoteType.QUESTION:
       return t('type_question');
