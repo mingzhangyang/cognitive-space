@@ -203,6 +203,11 @@ export const EmptyStateIllustration = ({ className }: { className?: string }) =>
   <img src="/favison.svg" className={className} alt="" aria-hidden="true" />
 );
 
+// Wandering Planet empty-state illustration: asteroid icon
+export const AsteroidIcon = ({ className }: { className?: string }) => (
+  <img src="/asteroid.svg" className={className} alt="" aria-hidden="true" />
+);
+
 export const ChevronDownIcon = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <polyline points="6 9 12 15 18 9"></polyline>

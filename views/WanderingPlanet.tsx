@@ -1,5 +1,5 @@
 import React from 'react';
-import { LoadingSpinner, CheckIcon, SortDescIcon, SortAscIcon } from '../components/Icons';
+import { LoadingSpinner, CheckIcon, SortDescIcon, SortAscIcon, AsteroidIcon } from '../components/Icons';
 import CardActions from '../components/CardActions';
 import InlineEditForm from '../components/InlineEditForm';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -108,7 +108,7 @@ const WanderingPlanet: React.FC = () => {
       <div className="mb-7 sm:mb-8">
         <div className="flex items-center gap-3 mb-2">
           <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-            <img src="/asteroid.svg" alt="" aria-hidden="true" className="w-4 h-4" />
+            <AsteroidIcon className="w-4 h-4" />
           </div>
           <h1 className="page-title">{t('wandering_planet')}</h1>
         </div>
@@ -268,7 +268,7 @@ const WanderingPlanet: React.FC = () => {
       <div className="space-y-4 pb-8">
         {wanderingPlanet.length === 0 && !isLoadingMore ? (
           <div className="text-center py-14 px-5 surface-empty shadow-[var(--shadow-elev-1)] dark:shadow-[var(--shadow-elev-1-dark)]">
-            <img src="/asteroid.svg" alt="" aria-hidden="true" className="w-28 h-auto mx-auto mb-3" />
+            <AsteroidIcon className="w-28 h-auto mx-auto mb-3" />
             <p className="text-body-sm-muted">{t('no_wandering_planet')}</p>
           </div>
         ) : (
