@@ -268,7 +268,7 @@ const WanderingPlanet: React.FC = () => {
       <div className="space-y-4 pb-8">
         {wanderingPlanet.length === 0 && !isLoadingMore ? (
           <div className="text-center py-14 px-5 surface-empty shadow-[var(--shadow-elev-1)] dark:shadow-[var(--shadow-elev-1-dark)]">
-            <img src="/asteroid.svg" alt="" aria-hidden="true" className="w-28 h-auto mx-auto mb-3" />
+            <AsteroidIcon className="w-28 h-auto mx-auto mb-3" />
             <p className="text-body-sm-muted">{t('no_wandering_planet')}</p>
           </div>
         ) : (
