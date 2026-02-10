@@ -15,7 +15,7 @@ import {
 import { normalizeResult } from '../normalize';
 import { buildPrompt, heuristicClassify } from '../prompts';
 import type { AnalyzeRequest, BigModelResponse, Env } from '../types';
-import { jsonResponse, safeParseJson } from '../utils';
+import { asRecord, jsonResponse, safeParseJson } from '../utils';
 
 export async function handleAnalyze(request: Request, env: Env): Promise<Response> {
   if (!env.BIGMODEL_API_KEY) {
@@ -81,7 +81,13 @@ export async function handleAnalyze(request: Request, env: Env): Promise<Respons
     const data = (await response.json()) as BigModelResponse;
     const rawText = extractBigModelText(data);
     const parsed = safeParseJson(rawText);
-    const normalized = normalizeResult(parsed, validQuestionIds);
+    const parsedRecord = asRecord(parsed);
+    if (!parsedRecord) {
+      const fallback = heuristicClassify(text);
+      return jsonResponse(fallback, 200);
+    }
+
+    const normalized = normalizeResult(parsedRecord, validQuestionIds);
 
     const jsonRes = jsonResponse(normalized, 200);
     jsonRes.headers.set('X-Cache', 'MISS');

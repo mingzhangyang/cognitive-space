@@ -31,7 +31,10 @@ export type ImportMode = 'replace' | 'merge';
 const EXPORT_VERSION = 1;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === 'string' && value.trim().length > 0;
 
 const isNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value);
@@ -41,7 +44,7 @@ const isNoteType = (value: unknown): value is NoteType =>
 
 const isNote = (value: unknown): value is Note => {
   if (!isRecord(value)) return false;
-  if (typeof value.id !== 'string') return false;
+  if (!isNonEmptyString(value.id)) return false;
   if (typeof value.content !== 'string') return false;
   if (!isNoteType(value.type)) return false;
   if (!isNumber(value.createdAt) || !isNumber(value.updatedAt)) return false;
@@ -49,7 +52,11 @@ const isNote = (value: unknown): value is Note => {
   if (typeof value.confidence !== 'undefined' && !isNumber(value.confidence)) return false;
   if (typeof value.confidenceLabel !== 'undefined' && !isConfidenceLabel(value.confidenceLabel)) return false;
   if (typeof value.analysisPending !== 'undefined' && typeof value.analysisPending !== 'boolean') return false;
-  if (typeof value.parentId !== 'undefined' && value.parentId !== null && typeof value.parentId !== 'string') {
+  if (
+    typeof value.parentId !== 'undefined' &&
+    value.parentId !== null &&
+    !isNonEmptyString(value.parentId)
+  ) {
     return false;
   }
   return true;
@@ -57,8 +64,8 @@ const isNote = (value: unknown): value is Note => {
 
 const isNoteEventRecord = (value: unknown): value is NoteEvent => {
   if (!isRecord(value)) return false;
-  if (typeof value.id !== 'string') return false;
-  if (typeof value.type !== 'string') return false;
+  if (!isNonEmptyString(value.id)) return false;
+  if (!isNonEmptyString(value.type)) return false;
   if (!isNumber(value.createdAt)) return false;
   if (!isRecord(value.payload)) return false;
 
@@ -67,7 +74,7 @@ const isNoteEventRecord = (value: unknown): value is NoteEvent => {
       return isRecord(value.payload) && isNote((value.payload as { note?: unknown }).note);
     case 'NOTE_UPDATED': {
       const payload = value.payload as { id?: unknown; content?: unknown; updatedAt?: unknown };
-      return typeof payload.id === 'string' && typeof payload.content === 'string' && isNumber(payload.updatedAt);
+      return isNonEmptyString(payload.id) && typeof payload.content === 'string' && isNumber(payload.updatedAt);
     }
     case 'NOTE_META_UPDATED': {
       const payload = value.payload as {
@@ -75,9 +82,15 @@ const isNoteEventRecord = (value: unknown): value is NoteEvent => {
         updates?: unknown;
         updatedAt?: unknown;
       };
-      if (typeof payload.id !== 'string' || !isNumber(payload.updatedAt) || !isRecord(payload.updates)) return false;
+      if (!isNonEmptyString(payload.id) || !isNumber(payload.updatedAt) || !isRecord(payload.updates)) {
+        return false;
+      }
       const updates = payload.updates as Record<string, unknown>;
-      if (typeof updates.parentId !== 'undefined' && updates.parentId !== null && typeof updates.parentId !== 'string') {
+      if (
+        typeof updates.parentId !== 'undefined' &&
+        updates.parentId !== null &&
+        !isNonEmptyString(updates.parentId)
+      ) {
         return false;
       }
       if (typeof updates.type !== 'undefined' && !isNoteType(updates.type)) return false;
@@ -89,11 +102,11 @@ const isNoteEventRecord = (value: unknown): value is NoteEvent => {
     }
     case 'NOTE_DELETED': {
       const payload = value.payload as { id?: unknown };
-      return typeof payload.id === 'string';
+      return isNonEmptyString(payload.id);
     }
     case 'NOTE_TOUCHED': {
       const payload = value.payload as { id?: unknown; updatedAt?: unknown };
-      return typeof payload.id === 'string' && isNumber(payload.updatedAt);
+      return isNonEmptyString(payload.id) && isNumber(payload.updatedAt);
     }
     default:
       return false;
@@ -102,8 +115,8 @@ const isNoteEventRecord = (value: unknown): value is NoteEvent => {
 
 const isTelemetryEvent = (value: unknown): value is TelemetryEvent => {
   if (!isRecord(value)) return false;
-  if (typeof value.id !== 'string') return false;
-  if (typeof value.type !== 'string') return false;
+  if (!isNonEmptyString(value.id)) return false;
+  if (!isNonEmptyString(value.type)) return false;
   if (!isNumber(value.createdAt)) return false;
   if (!isRecord(value.payload)) return false;
 
@@ -138,6 +151,18 @@ export const parseAppDataExport = (value: unknown): AppDataExport | null => {
   if (!Array.isArray(value.notes) || !value.notes.every(isNote)) return null;
   if (!Array.isArray(value.events) || !value.events.every(isAppEvent)) return null;
   if (!isRecord(value.meta)) return null;
+
+  const noteIds = new Set<string>();
+  for (const note of value.notes) {
+    if (noteIds.has(note.id)) return null;
+    noteIds.add(note.id);
+  }
+
+  const eventIds = new Set<string>();
+  for (const event of value.events) {
+    if (eventIds.has(event.id)) return null;
+    eventIds.add(event.id);
+  }
 
   const meta: Record<string, number> = {};
   Object.entries(value.meta).forEach(([key, metaValue]) => {
@@ -225,11 +250,21 @@ export const importAppData = async (payload: AppDataExport, mode: ImportMode): P
 
       for (const note of payload.notes) {
         normalizeNoteSubTypeInPlace(note);
+        if (mode === 'merge') {
+          const existing = await notesStore.get(note.id);
+          if (existing && typeof existing.updatedAt === 'number' && existing.updatedAt >= note.updatedAt) {
+            continue;
+          }
+        }
         await notesStore.put(note);
       }
 
       for (const event of payload.events) {
         normalizeEventSubTypeInPlace(event);
+        if (mode === 'merge') {
+          const existing = await eventsStore.get(event.id);
+          if (existing) continue;
+        }
         await eventsStore.put(event);
       }
 

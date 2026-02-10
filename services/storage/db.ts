@@ -2,6 +2,7 @@ import { openDB } from 'idb';
 import type { IDBPDatabase } from 'idb';
 import { DB_NAME, DB_VERSION, STORE_EVENTS, STORE_META, STORE_NOTES } from './constants';
 import { logDbError } from './logging';
+import { scheduleEventLogCompaction } from './events';
 import { scheduleSubTypeMigration } from './migrations';
 import { CognitiveSpaceDB } from './schema';
 
@@ -42,6 +43,7 @@ export const getDb = async (): Promise<IDBPDatabase<CognitiveSpaceDB> | null> =>
   try {
     const db = await dbPromise;
     scheduleSubTypeMigration(db);
+    scheduleEventLogCompaction(db);
     return db;
   } catch (error) {
     logDbError('Failed to open IndexedDB', error);

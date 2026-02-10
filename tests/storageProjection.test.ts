@@ -46,4 +46,41 @@ describe('projectNotesFromEvents', () => {
     expect(projected[0].analysisPending).toBe(true);
     expect(projected[0].updatedAt).toBe(4);
   });
+
+  it('ignores updates for unknown or deleted notes', () => {
+    const note1 = {
+      id: 'n1',
+      content: 'Hello',
+      type: NoteType.TRIGGER,
+      createdAt: 2,
+      updatedAt: 2,
+      parentId: null
+    };
+    const note2 = {
+      id: 'n2',
+      content: 'Other',
+      type: NoteType.CLAIM,
+      createdAt: 3,
+      updatedAt: 3,
+      parentId: null
+    };
+
+    const events = [
+      { id: 'e1', type: 'NOTE_UPDATED', createdAt: 1, payload: { id: 'n1', content: 'Ignored', updatedAt: 1 } },
+      { id: 'e2', type: 'NOTE_CREATED', createdAt: 2, payload: { note: note1 } },
+      {
+        id: 'e3',
+        type: 'NOTE_META_UPDATED',
+        createdAt: 3,
+        payload: { id: 'n3', updates: { type: NoteType.EVIDENCE }, updatedAt: 3 }
+      },
+      { id: 'e4', type: 'NOTE_DELETED', createdAt: 4, payload: { id: 'n1' } },
+      { id: 'e5', type: 'NOTE_TOUCHED', createdAt: 5, payload: { id: 'n1', updatedAt: 5 } },
+      { id: 'e6', type: 'NOTE_CREATED', createdAt: 6, payload: { note: note2 } }
+    ] satisfies AppEvent[];
+
+    const projected = projectNotesFromEvents(events);
+    expect(projected).toHaveLength(1);
+    expect(projected[0].id).toBe('n2');
+  });
 });

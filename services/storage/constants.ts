@@ -8,6 +8,7 @@ export const STORE_META = 'meta';
 export const META_LAST_EVENT_AT = 'lastEventAt';
 export const META_LAST_PROJECTION_AT = 'lastProjectionAt';
 export const META_SUBTYPE_MIGRATION_V1 = 'subTypeMigrationV1';
+export const META_EVENT_LOG_COMPACTED_AT = 'eventLogCompactedAt';
 export const NOTE_EVENT_TYPES = new Set<NoteEvent['type']>([
   'NOTE_CREATED',
   'NOTE_UPDATED',

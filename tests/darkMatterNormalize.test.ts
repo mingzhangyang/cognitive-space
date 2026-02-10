@@ -99,4 +99,31 @@ describe('normalizeDarkMatterResult', () => {
     expect(result.suggestions.length).toBe(1);
     expect(result.suggestions[0].noteIds).toEqual(['n1', 'n2']);
   });
+
+  it('trims ids before validation', () => {
+    const result = normalizeDarkMatterResult(
+      {
+        suggestions: [
+          {
+            id: ' s1 ',
+            kind: 'existing_question',
+            title: '',
+            existingQuestionId: ' q1 ',
+            noteIds: [' n1 ', 'n2 '],
+            confidenceLabel: 'likely',
+            reasoning: 'Trim'
+          }
+        ]
+      },
+      new Set(['n1', 'n2']),
+      new Set(['q1']),
+      new Map([['q1', 'Existing Q']]),
+      5
+    );
+
+    expect(result.suggestions.length).toBe(1);
+    expect(result.suggestions[0].id).toBe('s1');
+    expect(result.suggestions[0].existingQuestionId).toBe('q1');
+    expect(result.suggestions[0].noteIds).toEqual(['n1', 'n2']);
+  });
 });

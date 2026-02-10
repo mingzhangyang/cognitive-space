@@ -1,10 +1,10 @@
-import type { IDBPDatabase } from 'idb';
+import type { IDBPTransaction } from 'idb';
 import { Note, NoteEvent, NoteType } from '../../types';
 import { normalizeSubType } from '../../utils/subtypes';
 import { withDb } from './db';
-import { appendEvent, ensureProjection, markProjectionUpToDate } from './events';
+import { appendEventTx, ensureProjection, markProjectionUpToDateTx } from './events';
 import { emitNoteEvent } from './noteEvents';
-import { STORE_NOTES } from './constants';
+import { STORE_EVENTS, STORE_META, STORE_NOTES } from './constants';
 import { CognitiveSpaceDB } from './schema';
 
 export interface DarkMatterPage {
@@ -23,11 +23,16 @@ export interface QuestionConstellationStats {
 }
 
 const touchNoteUpdatedAt = async (
-  db: IDBPDatabase<CognitiveSpaceDB>,
+  tx: IDBPTransaction<
+    CognitiveSpaceDB,
+    [typeof STORE_NOTES, typeof STORE_EVENTS, typeof STORE_META],
+    'readwrite'
+  >,
   noteId: string
-): Promise<void> => {
-  const note = await db.get(STORE_NOTES, noteId);
-  if (!note) return;
+): Promise<boolean> => {
+  const notesStore = tx.objectStore(STORE_NOTES);
+  const note = await notesStore.get(noteId);
+  if (!note) return false;
   const updatedAt = Date.now();
   const event: NoteEvent = {
     id: crypto.randomUUID(),
@@ -35,10 +40,10 @@ const touchNoteUpdatedAt = async (
     createdAt: updatedAt,
     payload: { id: noteId, updatedAt }
   };
-  await appendEvent(db, event);
+  await appendEventTx(tx, event);
   note.updatedAt = updatedAt;
-  await db.put(STORE_NOTES, note);
-  emitNoteEvent({ id: noteId, kind: 'touched' });
+  await notesStore.put(note);
+  return true;
 };
 
 export const getNotes = async (): Promise<Note[]> => {
@@ -56,19 +61,28 @@ export const saveNote = async (note: Note): Promise<void> => {
   await withDb<void>(
     undefined,
     async (db) => {
+      await ensureProjection(db);
+      const tx = db.transaction([STORE_NOTES, STORE_EVENTS, STORE_META], 'readwrite');
+      const notesStore = tx.objectStore(STORE_NOTES);
+      const eventsToEmit: Array<{ id: string; kind: 'created' | 'touched' }> = [];
       const event: NoteEvent = {
         id: crypto.randomUUID(),
         type: 'NOTE_CREATED',
         createdAt: note.createdAt,
         payload: { note }
       };
-      await appendEvent(db, event);
-      await db.put(STORE_NOTES, note);
+      await appendEventTx(tx, event);
+      await notesStore.put(note);
+      eventsToEmit.push({ id: note.id, kind: 'created' });
       if (note.parentId) {
-        await touchNoteUpdatedAt(db, note.parentId);
+        const touched = await touchNoteUpdatedAt(tx, note.parentId);
+        if (touched) {
+          eventsToEmit.push({ id: note.parentId, kind: 'touched' });
+        }
       }
-      await markProjectionUpToDate(db);
-      emitNoteEvent({ id: note.id, kind: 'created' });
+      await markProjectionUpToDateTx(tx);
+      await tx.done;
+      eventsToEmit.forEach(emitNoteEvent);
     },
     'Failed to save note'
   );
@@ -124,7 +138,10 @@ export const deleteNote = async (noteId: string): Promise<void> => {
   await withDb<void>(
     undefined,
     async (db) => {
-      const childNotes = await db.getAllFromIndex(STORE_NOTES, 'by-parent', noteId);
+      await ensureProjection(db);
+      const tx = db.transaction([STORE_NOTES, STORE_EVENTS, STORE_META], 'readwrite');
+      const notesStore = tx.objectStore(STORE_NOTES);
+      const childNotes = await notesStore.index('by-parent').getAll(noteId);
       const idsToDelete = [noteId, ...childNotes.map((note) => note.id)];
       const deletedAt = Date.now();
 
@@ -135,15 +152,14 @@ export const deleteNote = async (noteId: string): Promise<void> => {
           createdAt: deletedAt,
           payload: { id }
         };
-        await appendEvent(db, event);
+        await appendEventTx(tx, event);
       }
 
-      const tx = db.transaction(STORE_NOTES, 'readwrite');
       for (const id of idsToDelete) {
-        await tx.store.delete(id);
+        await notesStore.delete(id);
       }
+      await markProjectionUpToDateTx(tx);
       await tx.done;
-      await markProjectionUpToDate(db);
       for (const id of idsToDelete) {
         emitNoteEvent({ id, kind: 'deleted' });
       }
@@ -156,8 +172,12 @@ export const updateNoteContent = async (noteId: string, newContent: string): Pro
   await withDb<void>(
     undefined,
     async (db) => {
-      const note = await db.get(STORE_NOTES, noteId);
+      await ensureProjection(db);
+      const tx = db.transaction([STORE_NOTES, STORE_EVENTS, STORE_META], 'readwrite');
+      const notesStore = tx.objectStore(STORE_NOTES);
+      const note = await notesStore.get(noteId);
       if (note) {
+        const eventsToEmit: Array<{ id: string; kind: 'updated' | 'touched' }> = [];
         const updatedAt = Date.now();
         const event: NoteEvent = {
           id: crypto.randomUUID(),
@@ -165,15 +185,22 @@ export const updateNoteContent = async (noteId: string, newContent: string): Pro
           createdAt: updatedAt,
           payload: { id: noteId, content: newContent, updatedAt }
         };
-        await appendEvent(db, event);
+        await appendEventTx(tx, event);
         note.content = newContent;
         note.updatedAt = updatedAt;
-        await db.put(STORE_NOTES, note);
+        await notesStore.put(note);
+        eventsToEmit.push({ id: noteId, kind: 'updated' });
         if (note.parentId) {
-          await touchNoteUpdatedAt(db, note.parentId);
+          const touched = await touchNoteUpdatedAt(tx, note.parentId);
+          if (touched) {
+            eventsToEmit.push({ id: note.parentId, kind: 'touched' });
+          }
         }
-        await markProjectionUpToDate(db);
-        emitNoteEvent({ id: noteId, kind: 'updated' });
+        await markProjectionUpToDateTx(tx);
+        await tx.done;
+        eventsToEmit.forEach(emitNoteEvent);
+      } else {
+        await tx.done;
       }
     },
     'Failed to update note content'
@@ -194,8 +221,12 @@ export const updateNoteMeta = async (
   await withDb<void>(
     undefined,
     async (db) => {
-      const note = await db.get(STORE_NOTES, noteId);
+      await ensureProjection(db);
+      const tx = db.transaction([STORE_NOTES, STORE_EVENTS, STORE_META], 'readwrite');
+      const notesStore = tx.objectStore(STORE_NOTES);
+      const note = await notesStore.get(noteId);
       if (note) {
+        const eventsToEmit: Array<{ id: string; kind: 'meta_updated' | 'touched' }> = [];
         const updatedAt = Date.now();
         const event: NoteEvent = {
           id: crypto.randomUUID(),
@@ -203,7 +234,7 @@ export const updateNoteMeta = async (
           createdAt: updatedAt,
           payload: { id: noteId, updates: normalizedUpdates, updatedAt }
         };
-        await appendEvent(db, event);
+        await appendEventTx(tx, event);
         if (typeof normalizedUpdates.parentId !== 'undefined') note.parentId = normalizedUpdates.parentId;
         if (typeof normalizedUpdates.type !== 'undefined') note.type = normalizedUpdates.type;
         if (typeof normalizedUpdates.subType !== 'undefined') note.subType = normalizedUpdates.subType;
@@ -215,14 +246,21 @@ export const updateNoteMeta = async (
           note.analysisPending = normalizedUpdates.analysisPending;
         }
         note.updatedAt = updatedAt;
-        await db.put(STORE_NOTES, note);
+        await notesStore.put(note);
+        eventsToEmit.push({ id: noteId, kind: 'meta_updated' });
         const newParentId =
           typeof normalizedUpdates.parentId !== 'undefined' ? normalizedUpdates.parentId : note.parentId;
         if (newParentId) {
-          await touchNoteUpdatedAt(db, newParentId);
+          const touched = await touchNoteUpdatedAt(tx, newParentId);
+          if (touched) {
+            eventsToEmit.push({ id: newParentId, kind: 'touched' });
+          }
         }
-        await markProjectionUpToDate(db);
-        emitNoteEvent({ id: noteId, kind: 'meta_updated' });
+        await markProjectionUpToDateTx(tx);
+        await tx.done;
+        eventsToEmit.forEach(emitNoteEvent);
+      } else {
+        await tx.done;
       }
     },
     'Failed to update note metadata'
@@ -241,13 +279,19 @@ export const demoteQuestion = async (
   await withDb<void>(
     undefined,
     async (db) => {
-      const relatedNotes = await db.getAllFromIndex(STORE_NOTES, 'by-parent', questionId);
+      await ensureProjection(db);
+      const tx = db.transaction([STORE_NOTES, STORE_EVENTS, STORE_META], 'readwrite');
+      const notesStore = tx.objectStore(STORE_NOTES);
+      const relatedNotes = await notesStore.index('by-parent').getAll(questionId);
       const allNotes: { id: string; updates: Pick<Partial<Note>, 'parentId' | 'type'> }[] = [
         { id: questionId, updates: { type: targetType, parentId: includeSelf ? nextParentId : null } },
         ...relatedNotes.map((n) => ({ id: n.id, updates: { parentId: nextParentId } }))
       ];
+      const eventsToEmit: Array<{ id: string; kind: 'meta_updated' | 'touched' }> = [];
       for (const { id, updates } of allNotes) {
-        const note = id === questionId ? await db.get(STORE_NOTES, id) : relatedNotes.find((n) => n.id === id);
+        const note = id === questionId
+          ? await notesStore.get(id)
+          : relatedNotes.find((n) => n.id === id);
         if (!note) continue;
         const updatedAt = Date.now();
         const event: NoteEvent = {
@@ -256,17 +300,22 @@ export const demoteQuestion = async (
           createdAt: updatedAt,
           payload: { id, updates, updatedAt }
         };
-        await appendEvent(db, event);
+        await appendEventTx(tx, event);
         if (typeof updates.parentId !== 'undefined') note.parentId = updates.parentId;
         if (typeof updates.type !== 'undefined') note.type = updates.type;
         note.updatedAt = updatedAt;
-        await db.put(STORE_NOTES, note);
+        await notesStore.put(note);
+        eventsToEmit.push({ id, kind: 'meta_updated' });
         if (note.parentId) {
-          await touchNoteUpdatedAt(db, note.parentId);
+          const touched = await touchNoteUpdatedAt(tx, note.parentId);
+          if (touched) {
+            eventsToEmit.push({ id: note.parentId, kind: 'touched' });
+          }
         }
-        emitNoteEvent({ id, kind: 'meta_updated' });
       }
-      await markProjectionUpToDate(db);
+      await markProjectionUpToDateTx(tx);
+      await tx.done;
+      eventsToEmit.forEach(emitNoteEvent);
     },
     'Failed to demote question'
   );

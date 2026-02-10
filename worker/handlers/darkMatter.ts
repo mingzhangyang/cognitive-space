@@ -16,7 +16,7 @@ import {
 import { normalizeDarkMatterResult } from '../normalize';
 import { buildDarkMatterPrompt } from '../prompts';
 import type { BigModelResponse, DarkMatterAnalyzeRequest, Env } from '../types';
-import { jsonResponse, safeParseJson } from '../utils';
+import { asRecord, jsonResponse, safeParseJson } from '../utils';
 
 export async function handleDarkMatterAnalyze(request: Request, env: Env): Promise<Response> {
   if (!env.BIGMODEL_API_KEY) {
@@ -116,8 +116,13 @@ export async function handleDarkMatterAnalyze(request: Request, env: Env): Promi
     const data = (await response.json()) as BigModelResponse;
     const rawText = extractBigModelText(data);
     const parsed = safeParseJson(rawText);
+    const parsedRecord = asRecord(parsed);
+    if (!parsedRecord) {
+      return jsonResponse({ suggestions: [] }, 200);
+    }
+
     const normalized = normalizeDarkMatterResult(
-      parsed,
+      parsedRecord,
       validNoteIds,
       validQuestionIds,
       questionTitleById,

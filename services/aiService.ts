@@ -1,5 +1,5 @@
 import { Note, NoteType, AnalysisResult, DarkMatterAnalysisResult } from "../types";
-import { coerceConfidenceLabel } from "../utils/confidence";
+import { normalizeAnalysisResult, normalizeDarkMatterResult } from "../shared/aiNormalize";
 
 export const analyzeText = async (
   text: string, 
@@ -24,31 +24,9 @@ export const analyzeText = async (
       throw new Error(`Analyze request failed: ${response.status}`);
     }
 
-    const result = (await response.json()) as Record<string, unknown>;
-
-    const classificationValue =
-      typeof result.classification === 'string' ? result.classification : undefined;
-    const classification = Object.values(NoteType).includes(
-      classificationValue as NoteType
-    )
-      ? (classificationValue as NoteType)
-      : NoteType.TRIGGER;
-    const subType = typeof result.subType === 'string' ? result.subType : undefined;
-    const confidenceLabel = coerceConfidenceLabel(
-      (result as { confidenceLabel?: unknown }).confidenceLabel,
-      (result as { confidence?: unknown }).confidence
-    );
-    const relatedQuestionId =
-      typeof result.relatedQuestionId === 'string' ? result.relatedQuestionId : null;
-    const reasoning = typeof result.reasoning === 'string' ? result.reasoning : 'Analyzed by GLM';
-
-    return {
-      classification,
-      subType,
-      confidenceLabel,
-      relatedQuestionId,
-      reasoning
-    };
+    const result = await response.json();
+    const validQuestionIds = new Set(existingQuestions.map((question) => question.id));
+    return normalizeAnalysisResult(result, validQuestionIds);
 
   } catch (error) {
     console.error("AI analysis failed:", error);
@@ -90,17 +68,11 @@ export const analyzeDarkMatter = async (
       throw new Error(`Dark matter analyze request failed: ${response.status}`);
     }
 
-    const result = (await response.json()) as DarkMatterAnalysisResult;
-    const suggestions = Array.isArray(result?.suggestions)
-      ? result.suggestions.map((suggestion) => ({
-          ...suggestion,
-          confidenceLabel: coerceConfidenceLabel(
-            (suggestion as { confidenceLabel?: unknown }).confidenceLabel,
-            (suggestion as { confidence?: unknown }).confidence
-          )
-        }))
-      : [];
-    return { suggestions };
+    const result = await response.json();
+    const validNoteIds = new Set(notes.map((note) => note.id));
+    const validQuestionIds = new Set(existingQuestions.map((question) => question.id));
+    const questionTitleById = new Map(existingQuestions.map((question) => [question.id, question.content]));
+    return normalizeDarkMatterResult(result, validNoteIds, validQuestionIds, questionTitleById, maxClusters);
   } catch (error) {
     console.error("Dark matter AI analysis failed:", error);
     return { suggestions: [] };

@@ -40,4 +40,24 @@ describe('normalizeResult', () => {
 
     expect(result.confidenceLabel).toBe('likely');
   });
+
+  it('defaults to uncategorized on malformed input', () => {
+    const result = normalizeResult('not-json', new Set(['q1']));
+
+    expect(result.classification).toBe('uncategorized');
+    expect(result.relatedQuestionId).toBeNull();
+  });
+
+  it('trims relatedQuestionId before validation', () => {
+    const result = normalizeResult(
+      {
+        classification: 'claim',
+        confidenceLabel: 'likely',
+        relatedQuestionId: '  q1  '
+      },
+      new Set(['q1'])
+    );
+
+    expect(result.relatedQuestionId).toBe('q1');
+  });
 });
