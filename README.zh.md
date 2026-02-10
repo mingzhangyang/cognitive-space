@@ -73,6 +73,7 @@
 
 - `BIGMODEL_API_KEY`: 必需，AI模型的API密钥。
 - `BIGMODEL_MODEL`: 可选，默认为`glm-4.7-flashx`。如需使用其它模型，请指定。
+- `VITE_BUILD_ID`: 可选。构建脚本会自动注入用于 Service Worker 缓存版本控制，可手动覆盖以固定缓存标签。
 
 ## 脚本
 

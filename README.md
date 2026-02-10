@@ -73,6 +73,7 @@ For more details, see [Product Design](docs/product_design.md) and [Visualizatio
 
 - `BIGMODEL_API_KEY`: Required. Your API key for the AI model.
 - `BIGMODEL_MODEL`: Optional. Defaults to `glm-4.7-flashx`. Specify a different model if needed.
+- `VITE_BUILD_ID`: Optional. Injected by build scripts for service worker cache versioning. Override to control the cache tag.
 
 ## Scripts
 
@@ -89,4 +90,3 @@ Contributions are welcome! Please read the contributing guidelines (if any) befo
 ## License
 
 This project is licensed under the MIT License.
-
