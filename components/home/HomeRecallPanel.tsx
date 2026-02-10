@@ -47,7 +47,7 @@ const HomeRecallPanel: React.FC<HomeRecallPanelProps> = ({
             to="/wandering-planet"
             className="btn-pill btn-outline muted-label w-full sm:w-auto"
           >
-            <span className="text-sm">🌑</span>
+            <img src="/asteroid.svg" alt="" aria-hidden="true" className="w-4 h-4" />
             <span>{t('wandering_planet')}</span>
             <span className="ml-1 px-1.5 py-0.5 bg-line dark:bg-line-dark rounded-full text-micro">
               {wanderingPlanetCount}
