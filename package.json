@@ -3,14 +3,17 @@
   "private": true,
   "version": "0.0.2",
   "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "npm run build && wrangler dev",
-    "dev:ui": "vite",
-    "build": "vite build",
+    "dev:ui": "node scripts/run-with-build-id.mjs vite",
+    "build": "node scripts/run-with-build-id.mjs vite build",
     "favicons": "node scripts/generate-favicons.mjs",
     "lint": "tsc --noEmit",
     "test": "vitest run",
-    "preview": "wrangler dev",
+    "preview": "npm run build && wrangler dev",
     "deploy": "wrangler deploy"
   },
   "dependencies": {

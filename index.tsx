@@ -17,7 +17,9 @@ root.render(
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((error) => {
+    const buildId = import.meta.env.VITE_BUILD_ID;
+    const swUrl = buildId ? `/sw.js?v=${encodeURIComponent(buildId)}` : '/sw.js';
+    navigator.serviceWorker.register(swUrl).catch((error) => {
       console.error('Service worker registration failed:', error);
     });
   });

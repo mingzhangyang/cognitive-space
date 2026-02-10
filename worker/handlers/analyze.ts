@@ -17,7 +17,11 @@ import { buildPrompt, heuristicClassify } from '../prompts';
 import type { AnalyzeRequest, BigModelResponse, Env } from '../types';
 import { asRecord, jsonResponse, safeParseJson } from '../utils';
 
-export async function handleAnalyze(request: Request, env: Env): Promise<Response> {
+export async function handleAnalyze(
+  request: Request,
+  env: Env,
+  ctx?: ExecutionContext
+): Promise<Response> {
   if (!env.BIGMODEL_API_KEY) {
     return jsonResponse({ error: 'BIGMODEL_API_KEY is not configured' }, 500);
   }
@@ -35,10 +39,17 @@ export async function handleAnalyze(request: Request, env: Env): Promise<Respons
   }
 
   const language = body.language === 'zh' ? 'zh' : 'en';
-  const existingQuestions = Array.isArray(body.existingQuestions) ? body.existingQuestions : [];
+  const existingQuestionsRaw = Array.isArray(body.existingQuestions) ? body.existingQuestions : [];
+  const existingQuestions = existingQuestionsRaw
+    .map((q) => {
+      const id = typeof q?.id === 'string' ? q.id.trim() : '';
+      const content = typeof q?.content === 'string' ? q.content.trim() : '';
+      return id && content ? { id, content } : null;
+    })
+    .filter((q): q is { id: string; content: string } => Boolean(q));
   const questionIds = existingQuestions.map((q) => q.id);
 
-  const cacheKey = getAnalyzeCacheKey(text, language, questionIds);
+  const cacheKey = getAnalyzeCacheKey(text, language, existingQuestions);
   const cache = getCacheClient();
   const cacheRequest = buildCacheRequest(request, cacheKey);
 
@@ -93,7 +104,7 @@ export async function handleAnalyze(request: Request, env: Env): Promise<Respons
     jsonRes.headers.set('X-Cache', 'MISS');
     jsonRes.headers.set('Cache-Control', `public, max-age=${CACHE_TTL_SECONDS}`);
 
-    storeInCache(cache, cacheRequest, jsonRes);
+    storeInCache(cache, cacheRequest, jsonRes, ctx);
 
     return jsonRes;
   } catch {

@@ -18,7 +18,11 @@ import { buildWanderingPlanetPrompt } from '../prompts';
 import type { BigModelResponse, WanderingPlanetAnalyzeRequest, Env } from '../types';
 import { asRecord, jsonResponse, safeParseJson } from '../utils';
 
-export async function handleWanderingPlanetAnalyze(request: Request, env: Env): Promise<Response> {
+export async function handleWanderingPlanetAnalyze(
+  request: Request,
+  env: Env,
+  ctx?: ExecutionContext
+): Promise<Response> {
   if (!env.BIGMODEL_API_KEY) {
     return jsonResponse({ error: 'BIGMODEL_API_KEY is not configured' }, 500);
   }
@@ -133,7 +137,7 @@ export async function handleWanderingPlanetAnalyze(request: Request, env: Env): 
     jsonRes.headers.set('X-Cache', 'MISS');
     jsonRes.headers.set('Cache-Control', `public, max-age=${CACHE_TTL_SECONDS}`);
 
-    storeInCache(cache, cacheRequest, jsonRes);
+    storeInCache(cache, cacheRequest, jsonRes, ctx);
 
     return jsonRes;
   } catch {

@@ -24,7 +24,7 @@
 24| 
 25| ## Prerequisites
 26| 
-27| - Node.js (version 16 or higher)
+27| - Node.js (version 18 or higher)
 28| - Cloudflare Wrangler CLI (`npm install -g wrangler`)
 29| 
 30| ## Installation
@@ -72,20 +72,21 @@
 72| ## Configuration
 73| 
 74| - `BIGMODEL_API_KEY`: Required. Your API key for the AI model.
-75| - `BIGMODEL_MODEL`: Optional. Defaults to `glm-4.5-flash`. Specify a different model if needed.
+75| - `BIGMODEL_MODEL`: Optional. Defaults to `glm-4.7-flashx`. Specify a different model if needed.
 76| 
 77| ## Scripts
 78| 
 79| - `npm run build`: Builds the static assets.
 80| - `npm run dev`: Runs the Worker locally.
 81| - `npm run dev:ui`: Runs the UI dev server.
-82| - `npm run deploy`: Deploys to Cloudflare.
-83| 
-84| ## Contributing
-85| 
-86| Contributions are welcome! Please read the contributing guidelines (if any) before submitting a pull request.
-87| 
-88| ## License
-89| 
-90| This project is licensed under the MIT License.
-91| 
+82| - `npm run preview`: Builds the assets and runs the Worker locally.
+83| - `npm run deploy`: Deploys to Cloudflare.
+84| 
+85| ## Contributing
+86| 
+87| Contributions are welcome! Please read the contributing guidelines (if any) before submitting a pull request.
+88| 
+89| ## License
+90| 
+91| This project is licensed under the MIT License.
+92| 

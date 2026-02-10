@@ -5,7 +5,7 @@ import { handleWanderingPlanetAnalyze } from './worker/handlers/wanderingPlanet'
 export { normalizeWanderingPlanetResult, normalizeResult } from './worker/normalize';
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
     if (url.pathname === '/api/analyze') {
@@ -18,7 +18,7 @@ export default {
           headers: { 'Content-Type': 'application/json' }
         });
       }
-      return handleAnalyze(request, env);
+      return handleAnalyze(request, env, ctx);
     }
 
     if (url.pathname === '/api/wandering-planet/analyze') {
@@ -31,7 +31,7 @@ export default {
           headers: { 'Content-Type': 'application/json' }
         });
       }
-      return handleWanderingPlanetAnalyze(request, env);
+      return handleWanderingPlanetAnalyze(request, env, ctx);
     }
 
     if (env.ASSETS) {

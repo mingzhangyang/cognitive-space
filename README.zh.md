@@ -24,7 +24,7 @@
 
 ## 先决条件
 
-- Node.js（版本16或更高）
+- Node.js（版本18或更高）
 - Cloudflare Wrangler CLI（`npm install -g wrangler`）
 
 ## 安装
@@ -72,13 +72,14 @@
 ## 配置
 
 - `BIGMODEL_API_KEY`: 必需，AI模型的API密钥。
-- `BIGMODEL_MODEL`: 可选，默认为`glm-4.5-flash`。如需使用其它模型，请指定。
+- `BIGMODEL_MODEL`: 可选，默认为`glm-4.7-flashx`。如需使用其它模型，请指定。
 
 ## 脚本
 
 - `npm run build`: 构建静态资源。
 - `npm run dev`: 本地运行Worker服务。
 - `npm run dev:ui`: 运行UI开发服务器。
+- `npm run preview`: 构建资源并本地运行Worker服务。
 - `npm run deploy`: 部署到Cloudflare。
 
 ## 贡献

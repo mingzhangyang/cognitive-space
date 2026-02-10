@@ -1,6 +1,7 @@
-const CACHE_VERSION = 'v5';
-const PRECACHE = `precache-${CACHE_VERSION}`;
-const RUNTIME = `runtime-${CACHE_VERSION}`;
+const CACHE_VERSION = new URL(self.location.href).searchParams.get('v') || 'v1';
+const CACHE_TAG = CACHE_VERSION.startsWith('v') ? CACHE_VERSION : `v-${CACHE_VERSION}`;
+const PRECACHE = `precache-${CACHE_TAG}`;
+const RUNTIME = `runtime-${CACHE_TAG}`;
 
 const PRECACHE_URLS = [
   '/',
