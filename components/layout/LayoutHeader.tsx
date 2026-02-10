@@ -1,19 +1,12 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  DatabaseIcon,
-  HomeIcon,
-  InboxIcon,
-  InfoIcon,
-  MenuIcon,
-  MoonIcon,
-  SunIcon
-} from '../Icons';
+import { HomeIcon, InboxIcon, MenuIcon } from '../Icons';
 import IconButton from '../IconButton';
 import Tooltip from '../Tooltip';
 import { useAppContext } from '../../contexts/AppContext';
 import { useAssistantInbox } from '../../contexts/AssistantInboxContext';
 import { useMenuFocus } from '../../hooks/useMenuFocus';
+import LayoutMenu from './LayoutMenu';
 
 interface LayoutHeaderProps {
   isHome: boolean;
@@ -51,7 +44,25 @@ const LayoutHeader: React.FC<LayoutHeaderProps> = ({
       ? 'bg-accent dark:bg-accent-dark'
       : 'bg-line dark:bg-line-dark';
 
-  const aboutIndex = isHome ? 3 : 2;
+  const handleToggleLanguage = () => {
+    setLanguage(language === 'en' ? 'zh' : 'en');
+    setMenuOpen(false);
+  };
+
+  const handleToggleTheme = () => {
+    toggleTheme();
+    setMenuOpen(false);
+  };
+
+  const handleOpenDataMenu = () => {
+    setMenuOpen(false);
+    onOpenDataMenu();
+  };
+
+  const handleNavigateAbout = () => {
+    setMenuOpen(false);
+    navigate('/about');
+  };
 
   return (
     <header className="relative z-20 mb-8 sm:mb-10 flex flex-wrap items-center justify-between gap-3">
@@ -98,135 +109,21 @@ const LayoutHeader: React.FC<LayoutHeaderProps> = ({
           >
             <MenuIcon className="w-4 h-4" />
           </IconButton>
-          {menuOpen && (
-            <div
-              id="app-menu"
-              role="menu"
-              className="menu-popover animate-fade-in motion-reduce:animate-none"
-              onKeyDown={handleMenuKeyDown}
-            >
-              <span aria-hidden="true" className="menu-caret" />
-              <button
-                role="menuitem"
-                ref={(el) => {
-                  menuItemRefs.current[0] = el;
-                }}
-                onClick={() => {
-                  setLanguage(language === 'en' ? 'zh' : 'en');
-                  setMenuOpen(false);
-                }}
-                className="menu-item"
-                tabIndex={activeIndex === 0 ? 0 : -1}
-                onMouseEnter={() => setActiveIndex(0)}
-                onFocus={() => setActiveIndex(0)}
-              >
-                <span className="h-9 w-9 rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 grid place-items-center text-subtle dark:text-subtle-dark">
-                  <svg
-                    className="w-4 h-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <circle cx="12" cy="12" r="9" />
-                    <path d="M3 12h18" />
-                    <path d="M12 3a16 16 0 0 1 0 18" />
-                    <path d="M12 3a16 16 0 0 0 0 18" />
-                  </svg>
-                </span>
-                <span className="flex-1">
-                  <span className="block text-body-sm font-medium">{t('menu_language_label')}</span>
-                  <span className="block text-mini text-subtle dark:text-subtle-dark">
-                    {language === 'en' ? t('menu_language_action_en') : t('menu_language_action_zh')}
-                  </span>
-                </span>
-                <span className="text-micro uppercase tracking-[0.2em] text-muted-400 dark:text-muted-400">
-                  {language === 'en' ? t('menu_language_en') : t('menu_language_zh')}
-                </span>
-              </button>
-              <button
-                role="menuitem"
-                ref={(el) => {
-                  menuItemRefs.current[1] = el;
-                }}
-                onClick={() => {
-                  toggleTheme();
-                  setMenuOpen(false);
-                }}
-                className="menu-item"
-                tabIndex={activeIndex === 1 ? 0 : -1}
-                onMouseEnter={() => setActiveIndex(1)}
-                onFocus={() => setActiveIndex(1)}
-              >
-                <span className="h-9 w-9 rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 grid place-items-center text-subtle dark:text-subtle-dark">
-                  {theme === 'light' ? (
-                    <MoonIcon className="w-4 h-4" />
-                  ) : (
-                    <SunIcon className="w-4 h-4" />
-                  )}
-                </span>
-                <span className="flex-1">
-                  <span className="block text-body-sm font-medium">{t('menu_theme_label')}</span>
-                  <span className="block text-mini text-subtle dark:text-subtle-dark">
-                    {theme === 'light' ? t('menu_theme_action_light') : t('menu_theme_action_dark')}
-                  </span>
-                </span>
-              </button>
-              {isHome && (
-                <button
-                  role="menuitem"
-                  ref={(el) => {
-                    menuItemRefs.current[2] = el;
-                  }}
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onOpenDataMenu();
-                  }}
-                  className="menu-item"
-                  tabIndex={activeIndex === 2 ? 0 : -1}
-                  onMouseEnter={() => setActiveIndex(2)}
-                  onFocus={() => setActiveIndex(2)}
-                >
-                  <span className="h-9 w-9 rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 grid place-items-center text-subtle dark:text-subtle-dark">
-                    <DatabaseIcon className="w-4 h-4" />
-                  </span>
-                  <span className="flex-1">
-                    <span className="block text-body-sm font-medium">{t('menu_data_label')}</span>
-                    <span className="block text-mini text-subtle dark:text-subtle-dark">
-                      {t('menu_data_action')}
-                    </span>
-                  </span>
-                </button>
-              )}
-              <button
-                role="menuitem"
-                ref={(el) => {
-                  menuItemRefs.current[aboutIndex] = el;
-                }}
-                onClick={() => {
-                  setMenuOpen(false);
-                  navigate('/about');
-                }}
-                className="menu-item"
-                tabIndex={activeIndex === aboutIndex ? 0 : -1}
-                onMouseEnter={() => setActiveIndex(aboutIndex)}
-                onFocus={() => setActiveIndex(aboutIndex)}
-              >
-                <span className="h-9 w-9 rounded-full border border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/60 grid place-items-center text-subtle dark:text-subtle-dark">
-                  <InfoIcon className="w-4 h-4" />
-                </span>
-                <span className="flex-1">
-                  <span className="block text-body-sm font-medium">{t('menu_about_label')}</span>
-                  <span className="block text-mini text-subtle dark:text-subtle-dark">
-                    {t('menu_about_action')}
-                  </span>
-                </span>
-              </button>
-            </div>
-          )}
+          <LayoutMenu
+            isOpen={menuOpen}
+            isHome={isHome}
+            language={language}
+            theme={theme}
+            activeIndex={activeIndex}
+            setActiveIndex={setActiveIndex}
+            menuItemRefs={menuItemRefs}
+            onKeyDown={handleMenuKeyDown}
+            onToggleLanguage={handleToggleLanguage}
+            onToggleTheme={handleToggleTheme}
+            onOpenDataMenu={handleOpenDataMenu}
+            onNavigateAbout={handleNavigateAbout}
+            t={t}
+          />
         </div>
       </div>
     </header>

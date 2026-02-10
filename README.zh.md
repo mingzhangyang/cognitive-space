@@ -9,7 +9,7 @@
 - **想法捕捉**: 快速记录没有结构的想法。
 - **问题整理**: 将想法提升为问题，并添加支持元素。
 - **可视化**: 图形化地探索问题之间的关系。
-- **暗物质恢复**: 拯救孤立的想法并将它们重新链接起来。
+- **流浪天体恢复**: 拯救孤立的想法并将它们重新链接起来。
 - **PWA支持**: 可安装为渐进式Web应用。
 
 ## 使用指南
@@ -18,13 +18,13 @@
 2. 当主题明确时，通过标记或提升想法，创建一个新的问题。
 3. 随着时间的推移，添加论点、证据或触发器等支持内容来构建背景。
 4. 使用“Visualize”功能探索相关问题，找到新出现的聚集点。
-5. 访问“Dark Matter”版块，拯救孤立的碎片并将它们链接到一个问题。
+5. 访问“流浪天体”版块，拯救孤立的碎片并将它们链接到一个问题。
 
 更多详情，请参考[产品设计](docs/product_design.md)和[可视化提案](docs/visualization_proposal.md)。
 
 ## 先决条件
 
-- Node.js（版本16或更高）
+- Node.js（版本18或更高）
 - Cloudflare Wrangler CLI（`npm install -g wrangler`）
 
 ## 安装
@@ -72,13 +72,15 @@
 ## 配置
 
 - `BIGMODEL_API_KEY`: 必需，AI模型的API密钥。
-- `BIGMODEL_MODEL`: 可选，默认为`glm-4.5-flash`。如需使用其它模型，请指定。
+- `BIGMODEL_MODEL`: 可选，默认为`glm-4.7-flashx`。如需使用其它模型，请指定。
+- `VITE_BUILD_ID`: 可选。构建脚本会自动注入用于 Service Worker 缓存版本控制，可手动覆盖以固定缓存标签。
 
 ## 脚本
 
 - `npm run build`: 构建静态资源。
 - `npm run dev`: 本地运行Worker服务。
 - `npm run dev:ui`: 运行UI开发服务器。
+- `npm run preview`: 构建资源并本地运行Worker服务。
 - `npm run deploy`: 部署到Cloudflare。
 
 ## 贡献

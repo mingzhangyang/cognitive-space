@@ -19,8 +19,8 @@ This folder contains the Cloudflare Worker server logic, split into focused modu
 ## Handlers
 
 `worker/handlers/analyze.ts` handles `POST /api/analyze`.
-`worker/handlers/darkMatter.ts` handles `POST /api/dark-matter/analyze`.
+`worker/handlers/wanderingPlanet.ts` handles `POST /api/wandering-planet/analyze`.
 
 ## Testing
 
-Unit tests import `normalizeResult` and `normalizeDarkMatterResult` from `worker.ts`, which re-exports them from `worker/normalize.ts`.
+Unit tests import `normalizeResult` and `normalizeWanderingPlanetResult` from `worker.ts`, which re-exports them from `worker/normalize.ts`.

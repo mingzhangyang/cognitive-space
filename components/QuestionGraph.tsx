@@ -1,8 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Note, NoteType } from '../types';
+import React, { useEffect, useRef, useState } from 'react';
+import { Note } from '../types';
 import { useAppContext } from '../contexts/AppContext';
 import QuestionGraphControls from './questionGraph/QuestionGraphControls';
 import QuestionGraphLegend from './questionGraph/QuestionGraphLegend';
+import QuestionGraphTooltip from './questionGraph/QuestionGraphTooltip';
+import { useQuestionGraphLayout, type GraphNode } from './questionGraph/useQuestionGraphLayout';
 import { getTypeLabel } from '../utils/notes';
 
 interface QuestionGraphProps {
@@ -10,16 +12,6 @@ interface QuestionGraphProps {
   notes: Note[];
   selectedNoteId?: string | null;
   onSelectNote?: (note: Note) => void;
-}
-
-interface GraphNode {
-  id: string;
-  note: Note;
-  x: number;
-  y: number;
-  radius: number;
-  color: string;
-  stroke: string;
 }
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
@@ -48,11 +40,6 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
   });
   const pressedNodeIdRef = useRef<string | null>(null);
 
-  const idPrefix = useMemo(() => {
-    const sanitized = String(question.id ?? '').replace(/[^a-zA-Z0-9]/g, '');
-    return `qg-${sanitized.slice(0, 8) || 'graph'}`;
-  }, [question.id]);
-
   useEffect(() => {
     if (!containerRef.current) return;
     const element = containerRef.current;
@@ -66,117 +53,13 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
     return () => observer.disconnect();
   }, []);
 
-  const palette = useMemo(() => {
-    const pick = (light: string, dark: string) =>
-      theme === 'dark' ? `var(${dark})` : `var(${light})`;
-
-    return {
-      question: pick('--color-warning', '--color-warning-dark'),
-      claim: pick('--color-note-claim', '--color-note-claim-dark'),
-      evidence: pick('--color-note-evidence', '--color-note-evidence-dark'),
-      trigger: pick('--color-note-trigger', '--color-note-trigger-dark'),
-      other: pick('--color-muted-400', '--color-muted-500'),
-      line: pick('--color-line', '--color-line-dark'),
-      lineSoft: pick('--color-line-soft', '--color-line-dark'),
-      lineStrong: pick('--color-line-muted', '--color-line-strong-dark'),
-      inner: pick('--color-surface', '--color-surface-dark')
-    };
-  }, [theme]);
-
-  const layout = useMemo(() => {
-    if (!size.width || !size.height) return null;
-
-    const centerX = size.width / 2;
-    const centerY = size.height / 2;
-    const minDim = Math.min(size.width, size.height);
-    const baseRadius = Math.max(90, minDim * 0.22);
-    const ringGap = Math.max(55, minDim * 0.12);
-    const maxRadius = minDim / 2 - 28;
-
-    const claimNotes = notes.filter((note) => note.type === NoteType.CLAIM);
-    const evidenceNotes = notes.filter((note) => note.type === NoteType.EVIDENCE);
-    const triggerNotes = notes.filter((note) => note.type === NoteType.TRIGGER);
-    const otherNotes = notes.filter(
-      (note) =>
-        ![NoteType.CLAIM, NoteType.EVIDENCE, NoteType.TRIGGER].includes(note.type)
-    );
-
-    const ringConfigs = [
-      {
-        id: NoteType.CLAIM,
-        label: t('type_claim'),
-        list: claimNotes,
-        radius: Math.min(baseRadius, maxRadius),
-        color: palette.claim,
-        size: 12
-      },
-      {
-        id: NoteType.EVIDENCE,
-        label: t('type_evidence'),
-        list: evidenceNotes,
-        radius: Math.min(baseRadius + ringGap, maxRadius),
-        color: palette.evidence,
-        size: 10
-      },
-      {
-        id: NoteType.TRIGGER,
-        label: t('type_trigger'),
-        list: triggerNotes,
-        radius: Math.min(baseRadius + ringGap * 2, maxRadius),
-        color: palette.trigger,
-        size: 9
-      },
-      {
-        id: NoteType.UNCATEGORIZED,
-        label: t('type_uncategorized'),
-        list: otherNotes,
-        radius: Math.min(baseRadius + ringGap * 3, maxRadius),
-        color: palette.other,
-        size: 8
-      }
-    ];
-
-    const ringNodes: GraphNode[] = [];
-    ringConfigs.forEach((ring, ringIndex) => {
-      const count = ring.list.length;
-      if (!count) return;
-      const angleStep = (Math.PI * 2) / count;
-      const startAngle = (Math.PI / 6) * ringIndex;
-      ring.list.forEach((note, index) => {
-        const angle = startAngle + angleStep * index;
-        ringNodes.push({
-          id: note.id,
-          note,
-          x: centerX + Math.cos(angle) * ring.radius,
-          y: centerY + Math.sin(angle) * ring.radius,
-          radius: ring.size,
-          color: ring.color,
-          stroke: palette.line
-        });
-      });
-    });
-
-    const questionNode: GraphNode = {
-      id: question.id,
-      note: question,
-      x: centerX,
-      y: centerY,
-      radius: 18,
-      color: palette.question,
-      stroke: palette.line
-    };
-
-    return {
-      centerX,
-      centerY,
-      minDim,
-      baseRadius,
-      ringGap,
-      maxRadius,
-      nodes: [questionNode, ...ringNodes],
-      rings: ringConfigs
-    };
-  }, [notes, palette, question, size.height, size.width, t]);
+  const { idPrefix, palette, layout, legendItems, showLegend } = useQuestionGraphLayout({
+    theme,
+    t,
+    question,
+    notes,
+    size
+  });
 
   const handlePointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
     const target = event.target as Element | null;
@@ -248,13 +131,6 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
   }
 
   const focusId = hoveredNode?.id ?? selectedNoteId ?? null;
-  const showLegend = notes.length > 0;
-  const legendItems = [
-    { id: 'question', label: t('type_question'), color: palette.question },
-    ...layout.rings
-      .filter((ring) => ring.list.length > 0)
-      .map((ring) => ({ id: ring.id, label: ring.label, color: ring.color }))
-  ];
   const zoomIn = () => setView((prev) => ({ ...prev, scale: clamp(prev.scale + 0.15, 0.6, 2.4) }));
   const zoomOut = () => setView((prev) => ({ ...prev, scale: clamp(prev.scale - 0.15, 0.6, 2.4) }));
   const resetView = () => setView({ x: 0, y: 0, scale: 1 });
@@ -414,22 +290,18 @@ const QuestionGraph: React.FC<QuestionGraphProps> = ({
       {showLegend && <QuestionGraphLegend items={legendItems} />}
 
       {hoveredNode && (
-        <div
-          className="absolute z-10 max-w-xs rounded-lg border border-line dark:border-line-dark bg-surface dark:bg-surface-dark shadow-lg p-3 text-caption-ink"
+        <QuestionGraphTooltip
+          title={getTypeLabel(hoveredNode.note.type, t)}
+          content={
+            hoveredNode.note.content.length > 100
+              ? `${hoveredNode.note.content.slice(0, 100)}...`
+              : hoveredNode.note.content
+          }
           style={{
             left: clamp(hoverPosition.x + 12, 8, Math.max(8, size.width - 260)),
             top: clamp(hoverPosition.y + 12, 8, Math.max(8, size.height - 120))
           }}
-        >
-          <div className="font-semibold mb-1">
-            {getTypeLabel(hoveredNode.note.type, t)}
-          </div>
-          <div className="text-subtle dark:text-subtle-dark leading-relaxed">
-            {hoveredNode.note.content.length > 100
-              ? `${hoveredNode.note.content.slice(0, 100)}...`
-              : hoveredNode.note.content}
-          </div>
-        </div>
+        />
       )}
     </div>
   );

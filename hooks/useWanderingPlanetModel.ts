@@ -10,16 +10,16 @@ import { useAppContext } from '../contexts/AppContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useCopyToClipboard } from './useCopyToClipboard';
 import { formatTemplate } from '../utils/text';
-import { useDarkMatterData } from './darkMatter/useDarkMatterData';
-import { useDarkMatterSelection } from './darkMatter/useDarkMatterSelection';
-import { useDarkMatterAnalysis } from './darkMatter/useDarkMatterAnalysis';
+import { useWanderingPlanetData } from './wanderingPlanet/useWanderingPlanetData';
+import { useWanderingPlanetSelection } from './wanderingPlanet/useWanderingPlanetSelection';
+import { useWanderingPlanetAnalysis } from './wanderingPlanet/useWanderingPlanetAnalysis';
 
-export const useDarkMatterModel = () => {
+export const useWanderingPlanetModel = () => {
   const { t, language } = useAppContext();
   const { copyText } = useCopyToClipboard();
   const { notify } = useNotifications();
 
-  const data = useDarkMatterData();
+  const data = useWanderingPlanetData();
 
   const [linkTarget, setLinkTarget] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -27,20 +27,20 @@ export const useDarkMatterModel = () => {
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [mobileNoteActionsId, setMobileNoteActionsId] = useState<string | null>(null);
 
-  const selection = useDarkMatterSelection({
-    sortedDarkMatter: data.sortedDarkMatter,
+  const selection = useWanderingPlanetSelection({
+    sortedWanderingPlanet: data.sortedWanderingPlanet,
     onClearEditing: () => {
       setEditingId(null);
       setEditContent('');
     }
   });
 
-  const analysis = useDarkMatterAnalysis({
+  const analysis = useWanderingPlanetAnalysis({
     t,
     language,
-    darkMatter: data.darkMatter,
+    wanderingPlanet: data.wanderingPlanet,
     analysisNotes: data.analysisNotes,
-    darkMatterCount: data.darkMatterCount,
+    wanderingPlanetCount: data.wanderingPlanetCount,
     aiRevealThreshold: data.aiRevealThreshold,
     loadInitial: data.loadInitial,
     setAnalysisNotes: data.setAnalysisNotes,
@@ -50,7 +50,7 @@ export const useDarkMatterModel = () => {
 
   const handleDelete = useCallback(async (noteId: string) => {
     setMobileNoteActionsId(null);
-    const note = data.darkMatter.find((n) => n.id === noteId)
+    const note = data.wanderingPlanet.find((n) => n.id === noteId)
       || data.analysisNotes.find((n) => n.id === noteId);
     if (!note) return;
     const savedNote = { ...note };
@@ -114,7 +114,7 @@ export const useDarkMatterModel = () => {
     if (!editingId || !trimmed || isSavingEdit) return;
     setIsSavingEdit(true);
     const optimisticUpdatedAt = Date.now();
-    data.updateDarkMatterOptimistic(editingId, trimmed, optimisticUpdatedAt);
+    data.updateWanderingPlanetOptimistic(editingId, trimmed, optimisticUpdatedAt);
     try {
       await updateNoteContent(editingId, trimmed);
       setEditingId(null);
@@ -170,8 +170,8 @@ export const useDarkMatterModel = () => {
   return {
     t,
     language,
-    darkMatter: data.darkMatter,
-    darkMatterCount: data.darkMatterCount,
+    wanderingPlanet: data.wanderingPlanet,
+    wanderingPlanetCount: data.wanderingPlanetCount,
     questions: data.questions,
     analysisNotes: data.analysisNotes,
     linkTarget,
@@ -192,7 +192,7 @@ export const useDarkMatterModel = () => {
     batchPromoteConfirm: selection.batchPromoteConfirm,
     sortOrder: data.sortOrder,
     noteById: data.noteById,
-    sortedDarkMatter: data.sortedDarkMatter,
+    sortedWanderingPlanet: data.sortedWanderingPlanet,
     confirmMessage: analysis.confirmMessage,
     confirmLabel: analysis.confirmLabel,
     shouldShowAiCard: analysis.shouldShowAiCard,

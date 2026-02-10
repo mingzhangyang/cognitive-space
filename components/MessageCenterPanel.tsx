@@ -12,13 +12,13 @@ import { coerceConfidenceLabel } from '../utils/confidence';
 const isNoteSuggestion = (message: AssistantMessage): message is Extract<AssistantMessage, { kind: 'note_suggestion' }> =>
   message.kind === 'note_suggestion';
 
-const isDarkMatterReady = (message: AssistantMessage): message is Extract<AssistantMessage, { kind: 'dark_matter_ready' }> =>
-  message.kind === 'dark_matter_ready';
+const isWanderingPlanetReady = (message: AssistantMessage): message is Extract<AssistantMessage, { kind: 'wandering_planet_ready' }> =>
+  message.kind === 'wandering_planet_ready';
 
 const getConfidenceLabelText = (label: string, t: (key: string) => string) => {
-  if (label === 'likely') return t('dark_matter_ai_confidence_likely');
-  if (label === 'possible') return t('dark_matter_ai_confidence_possible');
-  return t('dark_matter_ai_confidence_loose');
+  if (label === 'likely') return t('wandering_planet_ai_confidence_likely');
+  if (label === 'possible') return t('wandering_planet_ai_confidence_possible');
+  return t('wandering_planet_ai_confidence_loose');
 };
 
 const buildNoteSuggestionDetails = (payload: NoteSuggestionPayload, t: (key: string) => string) => {
@@ -109,7 +109,7 @@ const MessageCenterPanel: React.FC<{ isOpen: boolean; onClose: () => void }> = (
               {runningJobs.map((job) => {
                 const jobLabel = job.kind === 'note_analysis'
                   ? translate('assistant_job_note')
-                  : formatTemplate(translate('assistant_job_dark_matter'), { count: job.meta?.noteCount ?? 0 });
+                  : formatTemplate(translate('assistant_job_wandering_planet'), { count: job.meta?.noteCount ?? 0 });
                 return (
                   <div key={job.id} className="surface-card p-3 flex items-start gap-3">
                     <LoadingSpinner className="w-4 h-4 text-accent dark:text-accent-dark mt-0.5" />
@@ -184,26 +184,26 @@ const MessageCenterPanel: React.FC<{ isOpen: boolean; onClose: () => void }> = (
                   );
                 }
 
-                if (isDarkMatterReady(message)) {
+                if (isWanderingPlanetReady(message)) {
                   const count = message.payload.suggestionCount;
                   return (
                     <div key={message.id} className="surface-card p-4 space-y-3">
                       <div>
-                        <p className="text-body-sm-muted">{translate('assistant_suggestion_dark_matter')}</p>
+                        <p className="text-body-sm-muted">{translate('assistant_suggestion_wandering_planet')}</p>
                         <p className="text-ink dark:text-ink-dark text-base font-medium">
-                          {formatTemplate(translate('assistant_dark_matter_ready_title'), { count })}
+                          {formatTemplate(translate('assistant_wandering_planet_ready_title'), { count })}
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-2 pt-2">
                         <button
                           type="button"
                           onClick={() => {
-                            navigate('/dark-matter');
+                            navigate('/wandering-planet');
                             onClose();
                           }}
                           className="px-3 py-1.5 rounded-full bg-ink text-white dark:bg-muted-600 hover:opacity-90 transition-opacity text-xs"
                         >
-                          {translate('assistant_suggestion_open_dark_matter')}
+                          {translate('assistant_suggestion_open_wandering_planet')}
                         </button>
                         <button
                           type="button"

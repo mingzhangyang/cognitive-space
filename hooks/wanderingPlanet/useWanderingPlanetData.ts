@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { getDarkMatterCount, getDarkMatterPage, getQuestions } from '../../services/storageService';
+import { getWanderingPlanetCount, getWanderingPlanetPage, getQuestions } from '../../services/storageService';
 import { Note } from '../../types';
 
-export const useDarkMatterData = () => {
-  const [darkMatter, setDarkMatter] = useState<Note[]>([]);
-  const [darkMatterCount, setDarkMatterCount] = useState(0);
+export const useWanderingPlanetData = () => {
+  const [wanderingPlanet, setWanderingPlanet] = useState<Note[]>([]);
+  const [wanderingPlanetCount, setWanderingPlanetCount] = useState(0);
   const [questions, setQuestions] = useState<Note[]>([]);
   const [analysisNotes, setAnalysisNotes] = useState<Note[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -17,30 +17,30 @@ export const useDarkMatterData = () => {
 
   const noteById = useMemo(() => {
     const map = new Map<string, Note>();
-    darkMatter.forEach((note) => map.set(note.id, note));
+    wanderingPlanet.forEach((note) => map.set(note.id, note));
     analysisNotes.forEach((note) => {
       if (!map.has(note.id)) map.set(note.id, note);
     });
     return map;
-  }, [darkMatter, analysisNotes]);
+  }, [wanderingPlanet, analysisNotes]);
 
-  const sortedDarkMatter = useMemo(() => {
-    if (sortOrder === 'newest') return darkMatter;
-    return [...darkMatter].sort((a, b) => a.createdAt - b.createdAt);
-  }, [darkMatter, sortOrder]);
+  const sortedWanderingPlanet = useMemo(() => {
+    if (sortOrder === 'newest') return wanderingPlanet;
+    return [...wanderingPlanet].sort((a, b) => a.createdAt - b.createdAt);
+  }, [wanderingPlanet, sortOrder]);
 
   const loadInitial = useCallback(async () => {
     setIsLoadingMore(true);
     try {
       const [page, qs, totalCount] = await Promise.all([
-        getDarkMatterPage(pageSize),
+        getWanderingPlanetPage(pageSize),
         getQuestions(),
-        getDarkMatterCount()
+        getWanderingPlanetCount()
       ]);
-      setDarkMatter(page.notes);
+      setWanderingPlanet(page.notes);
       setNextCursor(page.nextCursor);
       setHasMore(page.hasMore);
-      setDarkMatterCount(totalCount);
+      setWanderingPlanetCount(totalCount);
       setQuestions(qs.sort((a, b) => b.updatedAt - a.updatedAt));
     } finally {
       setIsLoadingMore(false);
@@ -51,8 +51,8 @@ export const useDarkMatterData = () => {
     if (isLoadingMore || !hasMore || nextCursor === null) return;
     setIsLoadingMore(true);
     try {
-      const page = await getDarkMatterPage(pageSize, nextCursor);
-      setDarkMatter((prev) => {
+      const page = await getWanderingPlanetPage(pageSize, nextCursor);
+      setWanderingPlanet((prev) => {
         const existingIds = new Set(prev.map((note) => note.id));
         const merged = [...prev];
         for (const note of page.notes) {
@@ -80,8 +80,8 @@ export const useDarkMatterData = () => {
     setQuestions(nextQuestions.sort((a, b) => b.updatedAt - a.updatedAt));
   }, []);
 
-  const updateDarkMatterOptimistic = useCallback((noteId: string, content: string, updatedAt: number) => {
-    setDarkMatter((prev) =>
+  const updateWanderingPlanetOptimistic = useCallback((noteId: string, content: string, updatedAt: number) => {
+    setWanderingPlanet((prev) =>
       prev.map((note) => (note.id === noteId ? { ...note, content, updatedAt } : note))
     );
   }, []);
@@ -95,22 +95,22 @@ export const useDarkMatterData = () => {
   }, [loadInitial]);
 
   return {
-    darkMatter,
-    darkMatterCount,
+    wanderingPlanet,
+    wanderingPlanetCount,
     questions,
     analysisNotes,
     isLoadingMore,
     hasMore,
     sortOrder,
     noteById,
-    sortedDarkMatter,
+    sortedWanderingPlanet,
     aiRevealThreshold,
     loadInitial,
     loadMore,
     setAnalysisNotes,
     setQuestionsSorted,
     removeAnalysisNotes,
-    updateDarkMatterOptimistic,
+    updateWanderingPlanetOptimistic,
     toggleSortOrder
   };
 };

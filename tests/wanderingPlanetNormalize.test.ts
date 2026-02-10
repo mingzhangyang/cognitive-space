@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeDarkMatterResult } from '../worker';
+import { normalizeWanderingPlanetResult } from '../worker';
 
-describe('normalizeDarkMatterResult', () => {
+describe('normalizeWanderingPlanetResult', () => {
   it('drops invalid notes and enforces minimum size', () => {
-    const result = normalizeDarkMatterResult(
+    const result = normalizeWanderingPlanetResult(
       {
         suggestions: [
           {
@@ -35,7 +35,7 @@ describe('normalizeDarkMatterResult', () => {
   });
 
   it('requires valid existing question id and fills title from map', () => {
-    const result = normalizeDarkMatterResult(
+    const result = normalizeWanderingPlanetResult(
       {
         suggestions: [
           {
@@ -69,7 +69,7 @@ describe('normalizeDarkMatterResult', () => {
   });
 
   it('prevents notes from appearing in multiple suggestions', () => {
-    const result = normalizeDarkMatterResult(
+    const result = normalizeWanderingPlanetResult(
       {
         suggestions: [
           {
@@ -101,7 +101,7 @@ describe('normalizeDarkMatterResult', () => {
   });
 
   it('trims ids before validation', () => {
-    const result = normalizeDarkMatterResult(
+    const result = normalizeWanderingPlanetResult(
       {
         suggestions: [
           {

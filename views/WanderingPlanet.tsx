@@ -7,13 +7,13 @@ import TypeBadge from '../components/TypeBadge';
 import Tooltip from '../components/Tooltip';
 import QuestionSelectorModal from '../components/QuestionSelectorModal';
 import { formatTemplate } from '../utils/text';
-import { useDarkMatterModel } from '../hooks/useDarkMatterModel';
+import { useWanderingPlanetModel } from '../hooks/useWanderingPlanetModel';
 
-const DarkMatter: React.FC = () => {
+const WanderingPlanet: React.FC = () => {
   const {
     t,
-    darkMatter,
-    darkMatterCount,
+    wanderingPlanet,
+    wanderingPlanetCount,
     questions,
     linkTarget,
     editingId,
@@ -33,7 +33,7 @@ const DarkMatter: React.FC = () => {
     batchPromoteConfirm,
     sortOrder,
     noteById,
-    sortedDarkMatter,
+    sortedWanderingPlanet,
     confirmMessage,
     confirmLabel,
     shouldShowAiCard,
@@ -68,7 +68,7 @@ const DarkMatter: React.FC = () => {
     formatRelativeTime,
     getSuggestionReasoning,
     getSuggestionConfidenceLabel
-  } = useDarkMatterModel();
+  } = useWanderingPlanetModel();
 
   return (
     <div className="flex flex-col h-full relative">
@@ -97,8 +97,8 @@ const DarkMatter: React.FC = () => {
 
       <ConfirmDialog
         isOpen={batchPromoteConfirm}
-        message={formatTemplate(t('dark_matter_batch_promote_confirm'), { count: selectedIds.size })}
-        confirmLabel={t('dark_matter_batch_promote')}
+        message={formatTemplate(t('wandering_planet_batch_promote_confirm'), { count: selectedIds.size })}
+        confirmLabel={t('wandering_planet_batch_promote')}
         confirmTone="primary"
         onConfirm={handleBatchPromote}
         onCancel={() => setBatchPromoteConfirm(false)}
@@ -110,22 +110,22 @@ const DarkMatter: React.FC = () => {
           <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
             <span className="text-sm">🌑</span>
           </div>
-          <h1 className="page-title">{t('dark_matter')}</h1>
+          <h1 className="page-title">{t('wandering_planet')}</h1>
         </div>
-        <p className="page-subtitle">{t('dark_matter_desc')}</p>
-        {darkMatterCount > 0 && (
+        <p className="page-subtitle">{t('wandering_planet_desc')}</p>
+        {wanderingPlanetCount > 0 && (
           <div className="mt-2 flex items-center gap-3 flex-wrap">
             <p className="text-caption-upper">
-              {darkMatterCount} {t('dark_matter_count')}
+              {wanderingPlanetCount} {t('wandering_planet_count')}
             </p>
-            <Tooltip content={sortOrder === 'newest' ? t('dark_matter_sort_oldest') : t('dark_matter_sort_newest')}>
+            <Tooltip content={sortOrder === 'newest' ? t('wandering_planet_sort_oldest') : t('wandering_planet_sort_newest')}>
             <button
               onClick={toggleSortOrder}
               className="inline-flex items-center gap-1 text-xs text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark transition-colors cursor-pointer"
-              aria-label={sortOrder === 'newest' ? t('dark_matter_sort_oldest') : t('dark_matter_sort_newest')}
+              aria-label={sortOrder === 'newest' ? t('wandering_planet_sort_oldest') : t('wandering_planet_sort_newest')}
             >
               {sortOrder === 'newest' ? <SortDescIcon className="w-3.5 h-3.5" /> : <SortAscIcon className="w-3.5 h-3.5" />}
-              <span>{sortOrder === 'newest' ? t('dark_matter_sort_newest') : t('dark_matter_sort_oldest')}</span>
+              <span>{sortOrder === 'newest' ? t('wandering_planet_sort_newest') : t('wandering_planet_sort_oldest')}</span>
             </button>
             </Tooltip>
             <button
@@ -136,29 +136,29 @@ const DarkMatter: React.FC = () => {
                   : 'border-line dark:border-line-dark text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark hover:border-ink/30 dark:hover:border-ink-dark/30'
               }`}
             >
-              {isSelectMode ? t('dark_matter_select_done') : t('dark_matter_select')}
+              {isSelectMode ? t('wandering_planet_select_done') : t('wandering_planet_select')}
             </button>
-            {isSelectMode && sortedDarkMatter.length > 0 && (
+            {isSelectMode && sortedWanderingPlanet.length > 0 && (
               <button
                 onClick={toggleSelectAll}
                 className="text-xs text-subtle dark:text-subtle-dark hover:text-ink dark:hover:text-ink-dark transition-colors cursor-pointer"
               >
-                {selectedIds.size === sortedDarkMatter.length
-                  ? t('dark_matter_deselect_all')
-                  : t('dark_matter_select_all')}
+                {selectedIds.size === sortedWanderingPlanet.length
+                  ? t('wandering_planet_deselect_all')
+                  : t('wandering_planet_select_all')}
               </button>
             )}
           </div>
         )}
       </div>
 
-      {darkMatterCount > 0 && darkMatterCount < aiRevealThreshold && !isAiPanelOpen && (
+      {wanderingPlanetCount > 0 && wanderingPlanetCount < aiRevealThreshold && !isAiPanelOpen && (
         <div className="mb-4">
           <button
             onClick={() => setIsAiPanelOpen(true)}
             className="text-body-sm-muted hover:text-ink dark:hover:text-ink-dark transition-colors"
           >
-            {t('dark_matter_ai_action')}
+            {t('wandering_planet_ai_action')}
           </button>
         </div>
       )}
@@ -167,13 +167,13 @@ const DarkMatter: React.FC = () => {
         <div className="mb-6 surface-card p-4 sm:p-5">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <p className="text-caption-upper">{t('dark_matter_ai_title')}</p>
-              <p className="text-body-sm-muted mt-1">{t('dark_matter_ai_desc')}</p>
+              <p className="text-caption-upper">{t('wandering_planet_ai_title')}</p>
+              <p className="text-body-sm-muted mt-1">{t('wandering_planet_ai_desc')}</p>
             </div>
             <button
               onClick={handleAnalyze}
-              disabled={isAnalyzing || darkMatterCount < 2}
-              className={`btn-pill ${(isAnalyzing || darkMatterCount < 2)
+              disabled={isAnalyzing || wanderingPlanetCount < 2}
+              className={`btn-pill ${(isAnalyzing || wanderingPlanetCount < 2)
                 ? 'bg-line dark:bg-surface-hover-dark text-muted-400 cursor-not-allowed'
                 : 'bg-action dark:bg-action text-white hover:bg-action-hover dark:hover:bg-action-hover-dark shadow-md'
               }`}
@@ -181,22 +181,22 @@ const DarkMatter: React.FC = () => {
               {isAnalyzing ? (
                 <>
                   <LoadingSpinner className="w-4 h-4 text-white" />
-                  <span>{t('dark_matter_ai_running')}</span>
+                  <span>{t('wandering_planet_ai_running')}</span>
                 </>
               ) : (
-                t('dark_matter_ai_action')
+                t('wandering_planet_ai_action')
               )}
             </button>
           </div>
           {hasAnalyzed && !isAnalyzing && suggestions.length === 0 && (
-            <p className="mt-4 text-body-sm-muted">{t('dark_matter_ai_empty')}</p>
+            <p className="mt-4 text-body-sm-muted">{t('wandering_planet_ai_empty')}</p>
           )}
         </div>
       )}
 
       {suggestions.length > 0 && (
         <div className="mb-6 space-y-3">
-          <p className="text-caption-upper">{t('dark_matter_ai_suggestions')}</p>
+          <p className="text-caption-upper">{t('wandering_planet_ai_suggestions')}</p>
           {suggestions.map((suggestion) => {
             const reasoning = getSuggestionReasoning(suggestion);
             return (
@@ -208,8 +208,8 @@ const DarkMatter: React.FC = () => {
                     </p>
                     <p className="text-body-sm-muted">
                       {suggestion.kind === 'new_question'
-                        ? t('dark_matter_ai_kind_new')
-                        : t('dark_matter_ai_kind_existing')}
+                        ? t('wandering_planet_ai_kind_new')
+                        : t('wandering_planet_ai_kind_existing')}
                     </p>
                   </div>
                   <span className="text-mini-up text-muted-500 dark:text-muted-400">
@@ -241,21 +241,21 @@ const DarkMatter: React.FC = () => {
                       onClick={() => requestApplySuggestion('create', suggestion)}
                       className="chip-outline hover:border-accent/30 dark:hover:border-accent-dark/30 hover:bg-accent/5 dark:hover:bg-accent-dark/5"
                     >
-                      {t('dark_matter_ai_action_create')}
+                      {t('wandering_planet_ai_action_create')}
                     </button>
                   ) : (
                     <button
                       onClick={() => requestApplySuggestion('link', suggestion)}
                       className="chip-outline hover:border-accent/30 dark:hover:border-accent-dark/30 hover:bg-accent/5 dark:hover:bg-accent-dark/5"
                     >
-                      {t('dark_matter_ai_action_link')}
+                      {t('wandering_planet_ai_action_link')}
                     </button>
                   )}
                   <button
                     onClick={() => dismissSuggestion(suggestion.id)}
                     className="chip-outline hover:border-line-muted dark:hover:border-muted-600 hover:bg-surface-hover dark:hover:bg-surface-hover-dark"
                   >
-                    {t('dark_matter_ai_action_dismiss')}
+                    {t('wandering_planet_ai_action_dismiss')}
                   </button>
                 </div>
               </div>
@@ -266,14 +266,14 @@ const DarkMatter: React.FC = () => {
 
       {/* Content */}
       <div className="space-y-4 pb-8">
-        {darkMatter.length === 0 && !isLoadingMore ? (
+        {wanderingPlanet.length === 0 && !isLoadingMore ? (
           <div className="text-center py-14 px-5 surface-empty shadow-[var(--shadow-elev-1)] dark:shadow-[var(--shadow-elev-1-dark)]">
             <SparklesIcon className="text-gray-500 dark:text-gray-400 w-6 h-6 mx-auto mb-2" />
-            <p className="text-body-sm-muted">{t('no_dark_matter')}</p>
+            <p className="text-body-sm-muted">{t('no_wandering_planet')}</p>
           </div>
         ) : (
           <>
-            {sortedDarkMatter.map((note) => {
+            {sortedWanderingPlanet.map((note) => {
               const isMobileActionsOpen = mobileNoteActionsId === note.id;
               const isSelected = selectedIds.has(note.id);
 
@@ -407,20 +407,20 @@ const DarkMatter: React.FC = () => {
       {isSelectMode && selectedIds.size > 0 && (
         <div className="sticky bottom-0 left-0 right-0 bg-surface dark:bg-surface-dark border-t border-line dark:border-line-dark px-4 py-3 flex items-center justify-between gap-3 z-10 shadow-[var(--shadow-elev-2)] dark:shadow-[var(--shadow-elev-2-dark)]">
           <span className="text-body-sm tabular-nums text-subtle dark:text-subtle-dark">
-            {formatTemplate(t('dark_matter_selected_count'), { count: selectedIds.size })}
+            {formatTemplate(t('wandering_planet_selected_count'), { count: selectedIds.size })}
           </span>
           <div className="flex gap-2">
             <button
               onClick={(e) => { e.stopPropagation(); handleBatchLink(); }}
               className="chip-outline hover:border-accent/30 dark:hover:border-accent-dark/30 hover:bg-accent/5 dark:hover:bg-accent-dark/5"
             >
-              {t('dark_matter_batch_link')}
+              {t('wandering_planet_batch_link')}
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); setBatchPromoteConfirm(true); }}
               className="chip-outline hover:border-accent/30 dark:hover:border-accent-dark/30 hover:bg-accent/5 dark:hover:bg-accent-dark/5"
             >
-              {t('dark_matter_batch_promote')}
+              {t('wandering_planet_batch_promote')}
             </button>
           </div>
         </div>
@@ -429,4 +429,4 @@ const DarkMatter: React.FC = () => {
   );
 };
 
-export default DarkMatter;
+export default WanderingPlanet;

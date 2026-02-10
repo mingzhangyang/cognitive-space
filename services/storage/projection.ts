@@ -38,9 +38,9 @@ export const applyEvent = (state: Map<string, Note>, event: AppEvent): void => {
       state.delete(event.payload.id);
       return;
     }
-    case 'AI_DARK_MATTER_ANALYSIS_REQUESTED':
-    case 'AI_DARK_MATTER_SUGGESTION_APPLIED':
-    case 'AI_DARK_MATTER_SUGGESTION_DISMISSED':
+    case 'AI_WANDERING_PLANET_ANALYSIS_REQUESTED':
+    case 'AI_WANDERING_PLANET_SUGGESTION_APPLIED':
+    case 'AI_WANDERING_PLANET_SUGGESTION_DISMISSED':
     default:
       return;
   }

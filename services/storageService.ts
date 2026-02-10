@@ -8,9 +8,9 @@ export {
   createNoteObject,
   deleteNote,
   demoteQuestion,
-  getDarkMatter,
-  getDarkMatterCount,
-  getDarkMatterPage,
+  getWanderingPlanet,
+  getWanderingPlanetCount,
+  getWanderingPlanetPage,
   getNoteById,
   getNotes,
   getQuestions,
@@ -19,7 +19,7 @@ export {
   saveNote,
   updateNoteContent,
   updateNoteMeta,
-  type DarkMatterPage,
+  type WanderingPlanetPage,
   type QuestionConstellationStats
 } from './storage/notes';
 
@@ -33,7 +33,7 @@ export {
 } from './storage/importExport';
 
 export {
-  recordDarkMatterAnalysisRequested,
-  recordDarkMatterSuggestionApplied,
-  recordDarkMatterSuggestionDismissed
+  recordWanderingPlanetAnalysisRequested,
+  recordWanderingPlanetSuggestionApplied,
+  recordWanderingPlanetSuggestionDismissed
 } from './storage/telemetry';

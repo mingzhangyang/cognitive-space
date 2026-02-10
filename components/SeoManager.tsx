@@ -72,10 +72,10 @@ const SeoManager = () => {
               title: t('seo_title_write'),
               description: t('seo_desc_write')
             };
-          case '/dark-matter':
+          case '/wandering-planet':
             return {
-              title: t('seo_title_dark_matter'),
-              description: t('seo_desc_dark_matter')
+              title: t('seo_title_wandering_planet'),
+              description: t('seo_desc_wandering_planet')
             };
           case '/privacy':
             return {

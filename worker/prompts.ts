@@ -65,7 +65,7 @@ Reasoning should be phrased as a suggestion so the user can decide whether to ac
 `.trim();
 }
 
-export function buildDarkMatterPrompt(
+export function buildWanderingPlanetPrompt(
   notes: Array<{ id: string; content: string; type?: string; createdAt?: number }>,
   existingQuestions: Array<{ id: string; content: string }>,
   language: Language,
@@ -89,7 +89,7 @@ export function buildDarkMatterPrompt(
       : "Return 'title' and 'reasoning' in English.";
 
   return `
-You are a cognitive assistant. These are "dark matter" notes: they are unlinked fragments.
+You are a cognitive assistant. These are "Wandering Planet" notes: they are unlinked fragments.
 
 Your task: suggest gentle groupings only when semantic overlap is clear. If there are no strong groupings, return an empty list.
 
@@ -102,7 +102,7 @@ Constraints:
 - Use only provided note IDs and question IDs.
 - If you're not confident, do not suggest a grouping.
 
-Dark Matter Notes:
+Wandering Planet Notes:
 ${noteContext}
 
 Existing Questions:

@@ -1,4 +1,4 @@
-# Cognitive Space: Question Visualization & Dark Matter Proposal
+# Cognitive Space: Question Visualization & Wandering Planet Proposal
 
 > 让思考的结构可见，让孤岛浮出水面。
 
@@ -9,7 +9,7 @@
 本提案为 Cognitive Space 引入两个相关功能：
 
 1. **问题内可视化**（Question Constellation）—— 在问题详情页中可选开启，呈现该问题与其相关笔记的关系网络
-2. **暗物质视图**（Dark Matter View）—— 专门展示尚未与任何问题建立联系的孤立笔记
+2. **流浪天体视图**（Wandering Planet View）—— 专门展示尚未与任何问题建立联系的孤立笔记
 
 这两个功能延续产品"延迟显现结构"的核心理念，不强迫用户整理，而是帮助用户**发现**已经存在的结构与遗漏。
 
@@ -27,7 +27,7 @@
 | **判断（Claim）** | 行星 —— 围绕问题形成轨道 |
 | **证据（Evidence）** | 卫星 —— 支撑或挑战判断的附属物 |
 | **触发物（Trigger）** | 彗星 —— 偶尔掠过，可能被捕获 |
-| **暗物质（Dark Matter）** | 孤立的星体 —— 尚未被任何引力场捕获的思绪 |
+| **流浪天体（Wandering Planet）** | 孤立的星体 —— 尚未被任何引力场捕获的思绪 |
 
 这个隐喻服务于产品哲学：**问题是引力中心，思绪围绕问题自然聚合**。
 
@@ -85,26 +85,26 @@
 
 ---
 
-### 3.2 暗物质视图（Dark Matter View）
+### 3.2 流浪天体视图（Wandering Planet View）
 
 #### 定义
-**暗物质**指满足以下条件的笔记：
+**流浪天体**指满足以下条件的笔记：
 - `parentId` 为 `null` 或 `undefined`
 - 类型不是 `QUESTION`
 
 这些是用户写下但尚未与任何问题建立联系的思绪碎片。
-暗物质视图是**全局列表**，不依附于任何单一问题。
+流浪天体视图是**全局列表**，不依附于任何单一问题。
 
 #### 入口
-- 主页增加「暗物质」入口（可选）
-- 路由：`/dark-matter`
+- 主页增加「流浪天体」入口（可选）
+- 路由：`/wandering-planet`
 
 #### 视图设计
 
 ##### 列表模式（默认）
 ```
 ┌─────────────────────────────────────────────────┐
-│  🌑 暗物质 · 12 fragments                        │
+│  🌑 流浪天体 · 12 fragments                        │
 │  思绪碎片，尚未与任何问题产生联系                   │
 ├─────────────────────────────────────────────────┤
 │                                                 │
@@ -130,7 +130,7 @@
 ```
 
 ##### 散点模式（可选）
-将暗物质以散点形式展示，按时间或语义聚类：
+将流浪天体以散点形式展示，按时间或语义聚类：
 - X轴：创建时间
 - Y轴：随机分布（或按类型）
 - 悬停查看内容
@@ -140,14 +140,14 @@
 1. **关联到问题**
    - 点击后显示现有问题列表
    - 选择后将 `parentId` 设为该问题的 ID
-   - 笔记从暗物质中"消失"，进入问题引力场
+   - 笔记从流浪天体中"消失"，进入问题引力场
 
 2. **升级为问题**
    - 将当前笔记转换为问题（修改 `type` 为 `QUESTION`，清除 `parentId`）
    - 在主页出现为新的"鲜活问题"
 
 3. **批量操作**
-   - 多选暗物质
+   - 多选流浪天体
    - 批量关联到同一问题
    - 批量删除
 
@@ -156,17 +156,17 @@
    - 按时间排序（最新 / 最旧）
    - 按内容长度排序
 
-#### 暗物质健康指标
+#### 流浪天体健康指标
 
 在视图顶部显示：
 
 | 指标 | 健康状态 |
 |------|----------|
-| 暗物质占比 < 20% | 🟢 健康 —— 思绪都在围绕问题 |
-| 暗物质占比 20-50% | 🟡 正常 —— 有些碎片等待整合 |
-| 暗物质占比 > 50% | 🟠 关注 —— 大量思绪游离在外 |
+| 流浪天体占比 < 20% | 🟢 健康 —— 思绪都在围绕问题 |
+| 流浪天体占比 20-50% | 🟡 正常 —— 有些碎片等待整合 |
+| 流浪天体占比 > 50% | 🟠 关注 —— 大量思绪游离在外 |
 
-> **设计说明**：这不是要制造焦虑，而是提供一个温和的提醒。产品哲学允许暗物质长期存在。
+> **设计说明**：这不是要制造焦虑，而是提供一个温和的提醒。产品哲学允许流浪天体长期存在。
 
 ---
 
@@ -177,8 +177,8 @@
 ```typescript
 // storageService.ts 新增
 
-// 获取暗物质（孤立笔记）
-export const getDarkMatter = async (): Promise<Note[]> => {
+// 获取流浪天体（孤立笔记）
+export const getWanderingPlanet = async (): Promise<Note[]> => {
   const allNotes = await getNotes();
   return allNotes.filter(note => 
     note.type !== NoteType.QUESTION && 
@@ -234,11 +234,11 @@ export const getQuestionConstellationStats = async (
 ```
 views/
 ├── QuestionDetail.tsx    # 问题详情（内嵌可视化入口）
-├── DarkMatter.tsx        # 暗物质视图
+├── WanderingPlanet.tsx        # 流浪天体视图
 components/
 ├── QuestionGraph.tsx         # 问题可视化组件
 ├── QuestionStatsPanel.tsx    # 问题统计面板
-├── DarkMatterList.tsx        # 暗物质列表组件
+├── WanderingPlanetList.tsx        # 流浪天体列表组件
 ├── NotePreview.tsx           # 笔记预览卡片
 ```
 
@@ -250,7 +250,7 @@ components/
   <Route path="/" element={<Home />} />
   <Route path="/write" element={<Write />} />
   <Route path="/question/:id" element={<QuestionDetail />} />
-  <Route path="/dark-matter" element={<DarkMatter />} />
+  <Route path="/wandering-planet" element={<WanderingPlanet />} />
 </Routes>
 ```
 
@@ -266,14 +266,14 @@ components/
 | Claim | `#2563eb` (blue) | `#60a5fa` |
 | Evidence | `#059669` (emerald) | `#34d399` |
 | Trigger | `#7c3aed` (violet) | `#a78bfa` |
-| Dark Matter | `#9ca3af` (gray) | `#6b7280` |
+| Wandering Planet | `#9ca3af` (gray) | `#6b7280` |
 | 连接线 | `#e5e7eb` | `#374151` |
 
 ### 5.2 动画与过渡
 
 - 进入星图时：节点从中心扩散
 - 点击节点时：其他节点淡出，焦点节点居中
-- 暗物质被关联时：节点移动到目标问题附近后消失
+- 流浪天体被关联时：节点移动到目标问题附近后消失
 - 切换视图：平滑过渡（300ms）
 
 ### 5.3 响应式设计
@@ -295,37 +295,37 @@ components/
 visualize: "Visualize",
 hide_visualization: "Hide visualization",
 question_constellation: "Question Constellation",
-dark_matter: "Dark Matter",
-dark_matter_desc: "Fragments not yet connected to any question.",
-dark_matter_count: "{count} fragments",
+wandering_planet: "Wandering Planet",
+wandering_planet_desc: "Fragments not yet connected to any question.",
+wandering_planet_count: "{count} fragments",
 link_to_question: "Link to question",
 promote_to_question: "Promote to question",
-dark_matter_healthy: "Your thoughts are well-connected.",
-dark_matter_moderate: "Some fragments await integration.",
-dark_matter_attention: "Many thoughts are floating freely.",
+wandering_planet_healthy: "Your thoughts are well-connected.",
+wandering_planet_moderate: "Some fragments await integration.",
+wandering_planet_attention: "Many thoughts are floating freely.",
 stats_related_notes: "Related notes",
 stats_type_distribution: "Type distribution",
 stats_last_updated: "Last updated",
 stats_relation_density: "Relation density",
-no_dark_matter: "No dark matter. All thoughts are connected.",
+no_wandering_planet: "No Wandering Planet. All thoughts are connected.",
 
 // Chinese
 visualize: "可视化",
 hide_visualization: "收起可视化",
 question_constellation: "问题星图",
-dark_matter: "暗物质",
-dark_matter_desc: "尚未与任何问题产生联系的思绪碎片。",
-dark_matter_count: "{count} 个碎片",
+wandering_planet: "流浪天体",
+wandering_planet_desc: "尚未与任何问题产生联系的思绪碎片。",
+wandering_planet_count: "{count} 个碎片",
 link_to_question: "关联到问题",
 promote_to_question: "升级为问题",
-dark_matter_healthy: "你的思绪已经很好地聚合了。",
-dark_matter_moderate: "有些碎片等待整合。",
-dark_matter_attention: "许多思绪正在自由漂浮。",
+wandering_planet_healthy: "你的思绪已经很好地聚合了。",
+wandering_planet_moderate: "有些碎片等待整合。",
+wandering_planet_attention: "许多思绪正在自由漂浮。",
 stats_related_notes: "关联笔记数",
 stats_type_distribution: "类型分布",
 stats_last_updated: "最近更新",
 stats_relation_density: "关联密度",
-no_dark_matter: "没有暗物质。所有思绪都已连接。",
+no_wandering_planet: "没有流浪天体。所有思绪都已连接。",
 ```
 
 ---
@@ -341,9 +341,9 @@ no_dark_matter: "没有暗物质。所有思绪都已连接。",
 
 **预计工时**：2-3 天
 
-### Phase 2：暗物质视图
-1. ✅ 实现 `getDarkMatter()` 查询
-2. ✅ 创建 `/dark-matter` 路由和视图
+### Phase 2：流浪天体视图
+1. ✅ 实现 `getWanderingPlanet()` 查询
+2. ✅ 创建 `/wandering-planet` 路由和视图
 3. ✅ 列表展示孤立笔记
 4. ✅ "关联到问题"功能
 5. ✅ 主页增加入口
@@ -354,7 +354,7 @@ no_dark_matter: "没有暗物质。所有思绪都已连接。",
 1. 动画效果
 2. 更丰富的节点样式
 3. 可选的关系过滤（按类型）
-4. 暗物质批量操作
+4. 流浪天体批量操作
 
 **预计工时**：3-4 天
 
@@ -375,17 +375,17 @@ no_dark_matter: "没有暗物质。所有思绪都已连接。",
 | 大量笔记时性能问题 | 星图卡顿 | 分页加载、WebGL渲染、虚拟化 |
 | 移动端体验差 | 用户流失 | 提供简化的列表视图替代 |
 | 可视化过于复杂 | 违背产品理念 | 保持简约，只展示必要信息 |
-| 暗物质过多让用户焦虑 | 负面情绪 | 强调"允许存在"的产品哲学 |
+| 流浪天体过多让用户焦虑 | 负面情绪 | 强调"允许存在"的产品哲学 |
 
 ---
 
 ## 九、未来扩展可能
 
-1. **语义聚类**：AI 分析暗物质，建议潜在的问题归属
+1. **语义聚类**：AI 分析流浪天体，建议潜在的问题归属
 2. **时间线视图**：按时间维度观察思考演化
 3. **问题合并建议**：识别语义相近的问题
 4. **导出功能**：将星图导出为图片
-5. **思考回顾**：定期回顾暗物质，轻推整理
+5. **思考回顾**：定期回顾流浪天体，轻推整理
 
 ---
 
@@ -394,11 +394,11 @@ no_dark_matter: "没有暗物质。所有思绪都已连接。",
 这个提案为 Cognitive Space 增加了两个互补的功能：
 
 - **问题星图（Question Constellation）**让用户在单个问题内观察认知结构
-- **暗物质（Dark Matter）**帮助用户发现被遗忘的思绪碎片
+- **流浪天体（Wandering Planet）**帮助用户发现被遗忘的思绪碎片
 
 两者都遵循产品的核心理念：**不强迫整理，只帮助发现**。
 
-> "暗物质不是问题，它是思考的自然状态。
+> "流浪天体不是问题，它是思考的自然状态。
 > 可视化不是为了修复什么，而是为了看见。"
 
 ---

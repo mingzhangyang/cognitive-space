@@ -1,4 +1,4 @@
-import { DarkMatterSuggestionKind, TelemetryEvent } from '../../types';
+import { WanderingPlanetSuggestionKind, TelemetryEvent } from '../../types';
 import { withDb } from './db';
 import { appendEvent } from './events';
 
@@ -12,38 +12,38 @@ const logTelemetryEvent = async (event: TelemetryEvent): Promise<void> => {
   );
 };
 
-export const recordDarkMatterAnalysisRequested = async (
+export const recordWanderingPlanetAnalysisRequested = async (
   noteCount: number,
   questionCount: number
 ): Promise<void> => {
   const createdAt = Date.now();
   await logTelemetryEvent({
     id: crypto.randomUUID(),
-    type: 'AI_DARK_MATTER_ANALYSIS_REQUESTED',
+    type: 'AI_WANDERING_PLANET_ANALYSIS_REQUESTED',
     createdAt,
     payload: { noteCount, questionCount }
   });
 };
 
-export const recordDarkMatterSuggestionApplied = async (
-  kind: DarkMatterSuggestionKind,
+export const recordWanderingPlanetSuggestionApplied = async (
+  kind: WanderingPlanetSuggestionKind,
   noteCount: number,
   suggestionId?: string
 ): Promise<void> => {
   const createdAt = Date.now();
   await logTelemetryEvent({
     id: crypto.randomUUID(),
-    type: 'AI_DARK_MATTER_SUGGESTION_APPLIED',
+    type: 'AI_WANDERING_PLANET_SUGGESTION_APPLIED',
     createdAt,
     payload: { kind, noteCount, suggestionId }
   });
 };
 
-export const recordDarkMatterSuggestionDismissed = async (suggestionId?: string): Promise<void> => {
+export const recordWanderingPlanetSuggestionDismissed = async (suggestionId?: string): Promise<void> => {
   const createdAt = Date.now();
   await logTelemetryEvent({
     id: crypto.randomUUID(),
-    type: 'AI_DARK_MATTER_SUGGESTION_DISMISSED',
+    type: 'AI_WANDERING_PLANET_SUGGESTION_DISMISSED',
     createdAt,
     payload: { suggestionId }
   });

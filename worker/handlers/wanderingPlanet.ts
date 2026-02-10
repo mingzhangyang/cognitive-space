@@ -3,27 +3,31 @@ import {
   API_TIMEOUT_MS,
   BIGMODEL_BASE_URL,
   CACHE_TTL_SECONDS,
-  DARK_MATTER_MAX_CLUSTERS,
+  WANDERING_PLANET_MAX_CLUSTERS,
   DEFAULT_BIGMODEL_MODEL
 } from '../constants';
 import {
   buildCacheRequest,
   getCacheClient,
-  getDarkMatterCacheKey,
+  getWanderingPlanetCacheKey,
   storeInCache,
   withCacheHitResponse
 } from '../cache';
-import { normalizeDarkMatterResult } from '../normalize';
-import { buildDarkMatterPrompt } from '../prompts';
-import type { BigModelResponse, DarkMatterAnalyzeRequest, Env } from '../types';
+import { normalizeWanderingPlanetResult } from '../normalize';
+import { buildWanderingPlanetPrompt } from '../prompts';
+import type { BigModelResponse, WanderingPlanetAnalyzeRequest, Env } from '../types';
 import { asRecord, jsonResponse, safeParseJson } from '../utils';
 
-export async function handleDarkMatterAnalyze(request: Request, env: Env): Promise<Response> {
+export async function handleWanderingPlanetAnalyze(
+  request: Request,
+  env: Env,
+  ctx?: ExecutionContext
+): Promise<Response> {
   if (!env.BIGMODEL_API_KEY) {
     return jsonResponse({ error: 'BIGMODEL_API_KEY is not configured' }, 500);
   }
 
-  let body: DarkMatterAnalyzeRequest;
+  let body: WanderingPlanetAnalyzeRequest;
   try {
     body = await request.json();
   } catch {
@@ -32,7 +36,7 @@ export async function handleDarkMatterAnalyze(request: Request, env: Env): Promi
 
   const language = body.language === 'zh' ? 'zh' : 'en';
   const maxClustersRaw = typeof body.maxClusters === 'number' ? body.maxClusters : 5;
-  const maxClusters = Math.max(1, Math.min(DARK_MATTER_MAX_CLUSTERS, Math.round(maxClustersRaw)));
+  const maxClusters = Math.max(1, Math.min(WANDERING_PLANET_MAX_CLUSTERS, Math.round(maxClustersRaw)));
 
   const rawNotes = Array.isArray(body.notes) ? body.notes : [];
   const noteMap = new Map<string, { id: string; content: string; type?: string; createdAt?: number }>();
@@ -66,7 +70,7 @@ export async function handleDarkMatterAnalyze(request: Request, env: Env): Promi
     }
   }
 
-  const cacheKey = getDarkMatterCacheKey(
+  const cacheKey = getWanderingPlanetCacheKey(
     language,
     maxClusters,
     notes,
@@ -82,7 +86,7 @@ export async function handleDarkMatterAnalyze(request: Request, env: Env): Promi
     return withCacheHitResponse(cachedResponse);
   }
 
-  const prompt = buildDarkMatterPrompt(notes, existingQuestions, language, maxClusters);
+  const prompt = buildWanderingPlanetPrompt(notes, existingQuestions, language, maxClusters);
   const model = env.BIGMODEL_MODEL || env.MODEL_ID || DEFAULT_BIGMODEL_MODEL;
   const baseUrl = env.BIGMODEL_BASE_URL || BIGMODEL_BASE_URL;
   const validNoteIds = new Set(notes.map((note) => note.id));
@@ -121,7 +125,7 @@ export async function handleDarkMatterAnalyze(request: Request, env: Env): Promi
       return jsonResponse({ suggestions: [] }, 200);
     }
 
-    const normalized = normalizeDarkMatterResult(
+    const normalized = normalizeWanderingPlanetResult(
       parsedRecord,
       validNoteIds,
       validQuestionIds,
@@ -133,7 +137,7 @@ export async function handleDarkMatterAnalyze(request: Request, env: Env): Promi
     jsonRes.headers.set('X-Cache', 'MISS');
     jsonRes.headers.set('Cache-Control', `public, max-age=${CACHE_TTL_SECONDS}`);
 
-    storeInCache(cache, cacheRequest, jsonRes);
+    storeInCache(cache, cacheRequest, jsonRes, ctx);
 
     return jsonRes;
   } catch {

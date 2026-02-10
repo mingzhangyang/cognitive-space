@@ -11,6 +11,8 @@ interface MoveToQuestionModalProps {
   onSelectQuestion: (questionId: string) => void;
   onConfirm: () => void;
   onCancel: () => void;
+  titleKey?: TranslationKey;
+  confirmKey?: TranslationKey;
   t: (key: TranslationKey) => string;
 }
 
@@ -22,6 +24,8 @@ const MoveToQuestionModal: React.FC<MoveToQuestionModalProps> = ({
   onSelectQuestion,
   onConfirm,
   onCancel,
+  titleKey = 'move_to_question_title',
+  confirmKey = 'move_to_question_confirm',
   t
 }) => {
   return (
@@ -32,7 +36,7 @@ const MoveToQuestionModal: React.FC<MoveToQuestionModalProps> = ({
       isDismissable={!isWorking}
     >
       <div className="space-y-2 mb-5">
-        <p className="text-ink dark:text-ink-dark text-lg font-medium">{t('move_to_question_title')}</p>
+        <p className="text-ink dark:text-ink-dark text-lg font-medium">{t(titleKey)}</p>
       </div>
       <div className="mb-6">
         <select
@@ -66,7 +70,7 @@ const MoveToQuestionModal: React.FC<MoveToQuestionModalProps> = ({
           }`}
         >
           {isWorking && <LoadingSpinner className="w-3.5 h-3.5 text-white" />}
-          {t('move_to_question_confirm')}
+          {t(confirmKey)}
         </button>
       </div>
     </Modal>

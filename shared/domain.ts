@@ -8,4 +8,4 @@ export enum NoteType {
 
 export type ConfidenceLabel = 'likely' | 'possible' | 'loose';
 
-export type DarkMatterSuggestionKind = 'new_question' | 'existing_question';
+export type WanderingPlanetSuggestionKind = 'new_question' | 'existing_question';

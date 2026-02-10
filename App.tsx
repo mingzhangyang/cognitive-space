@@ -4,7 +4,7 @@ import Layout from './components/Layout';
 import Home from './views/Home';
 import Write from './views/Write';
 import QuestionDetail from './views/QuestionDetail';
-import DarkMatter from './views/DarkMatter';
+import WanderingPlanet from './views/WanderingPlanet';
 import Privacy from './views/Privacy';
 import About from './views/About';
 import { AppProvider } from './contexts/AppContext';
@@ -21,7 +21,7 @@ const AnimatedRoutes: React.FC = () => {
         <Route path="/" element={<Home />} />
         <Route path="/write" element={<Write />} />
         <Route path="/question/:id" element={<QuestionDetail />} />
-        <Route path="/dark-matter" element={<DarkMatter />} />
+        <Route path="/wandering-planet" element={<WanderingPlanet />} />
         <Route path="/about" element={<About />} />
         <Route path="/privacy" element={<Privacy />} />
       </Routes>
