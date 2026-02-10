@@ -31,7 +31,6 @@ const Tooltip: React.FC<TooltipProps> = ({ content, placement = 'top', children 
   const id = idRef.current;
   const [open, setOpen] = useState(false);
   const [canShow, setCanShow] = useState(true);
-  const hostRef = useRef<Element | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -57,7 +56,6 @@ const Tooltip: React.FC<TooltipProps> = ({ content, placement = 'top', children 
   const merged = React.cloneElement(children, {
     ref: (node: Element | null) => {
       setRef(childProps.ref, node);
-      hostRef.current = node;
     },
     'aria-describedby': shouldShowTooltip
       ? [childProps['aria-describedby'], id].filter(Boolean).join(' ')
