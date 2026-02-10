@@ -1,15 +1,15 @@
 import { useCallback, useState } from 'react';
 import { Note } from '../../types';
 
-interface DarkMatterSelectionOptions {
-  sortedDarkMatter: Note[];
+interface WanderingPlanetSelectionOptions {
+  sortedWanderingPlanet: Note[];
   onClearEditing: () => void;
 }
 
-export const useDarkMatterSelection = ({
-  sortedDarkMatter,
+export const useWanderingPlanetSelection = ({
+  sortedWanderingPlanet,
   onClearEditing
-}: DarkMatterSelectionOptions) => {
+}: WanderingPlanetSelectionOptions) => {
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [batchLinkOpen, setBatchLinkOpen] = useState(false);
@@ -40,11 +40,11 @@ export const useDarkMatterSelection = ({
 
   const toggleSelectAll = useCallback(() => {
     setSelectedIds((prev) =>
-      prev.size === sortedDarkMatter.length
+      prev.size === sortedWanderingPlanet.length
         ? new Set()
-        : new Set(sortedDarkMatter.map((note) => note.id))
+        : new Set(sortedWanderingPlanet.map((note) => note.id))
     );
-  }, [sortedDarkMatter]);
+  }, [sortedWanderingPlanet]);
 
   const handleBatchLink = useCallback(() => {
     if (selectedIds.size === 0) return;

@@ -31,6 +31,9 @@ const QuestionDetail: React.FC = () => {
     moveNoteId,
     moveTargetQuestionId,
     isMoving,
+    copyNoteId,
+    copyTargetQuestionId,
+    isCopying,
     downgradeOptions,
     claims,
     evidence,
@@ -47,14 +50,18 @@ const QuestionDetail: React.FC = () => {
     setMobileNoteActionsId,
     setMoveNoteId,
     setMoveTargetQuestionId,
+    setCopyNoteId,
+    setCopyTargetQuestionId,
     toggleSection,
     handleEdit,
     handleCopyNote,
     handleSaveEdit,
     handleCancelEdit,
     handleDelete,
+    openCopyToQuestion,
     openMoveToQuestion,
     handleConfirmMove,
+    handleConfirmCopy,
     getOrderedNotes,
     handleDragStart,
     handleDragEnter,
@@ -82,6 +89,7 @@ const QuestionDetail: React.FC = () => {
     handleSaveEdit,
     handleCancelEdit,
     handleDelete,
+    openCopyToQuestion,
     openMoveToQuestion,
     handleDragStart,
     handleDragEnter,
@@ -121,6 +129,13 @@ const QuestionDetail: React.FC = () => {
         onSelectQuestion={setMoveTargetQuestionId}
         onConfirmMove={handleConfirmMove}
         onCancelMove={() => setMoveNoteId(null)}
+        isCopyOpen={copyNoteId !== null}
+        isCopying={isCopying}
+        copyQuestions={availableQuestions.map((q) => ({ id: q.id, title: q.content }))}
+        selectedCopyQuestionId={copyTargetQuestionId}
+        onSelectCopyQuestion={setCopyTargetQuestionId}
+        onConfirmCopy={handleConfirmCopy}
+        onCancelCopy={() => setCopyNoteId(null)}
       />
 
       <QuestionDetailHeader

@@ -8,6 +8,7 @@ import { useQuestionDetailEditing } from './questionDetail/useQuestionDetailEdit
 import { useQuestionDetailDelete } from './questionDetail/useQuestionDetailDelete';
 import { useQuestionDetailMove } from './questionDetail/useQuestionDetailMove';
 import { useQuestionDetailDowngrade } from './questionDetail/useQuestionDetailDowngrade';
+import { useQuestionDetailCopyTo } from './questionDetail/useQuestionDetailCopyTo';
 
 export const useQuestionDetailModel = () => {
   const { id } = useParams<{ id: string }>();
@@ -47,6 +48,13 @@ export const useQuestionDetailModel = () => {
 
   const move = useQuestionDetailMove({
     availableQuestions: data.availableQuestions,
+    loadData: data.loadData,
+    setMobileNoteActionsId
+  });
+
+  const copyTo = useQuestionDetailCopyTo({
+    availableQuestions: data.availableQuestions,
+    relatedNotes: data.relatedNotes,
     loadData: data.loadData,
     setMobileNoteActionsId
   });
@@ -108,6 +116,9 @@ export const useQuestionDetailModel = () => {
     moveNoteId: move.moveNoteId,
     moveTargetQuestionId: move.moveTargetQuestionId,
     isMoving: move.isMoving,
+    copyNoteId: copyTo.copyNoteId,
+    copyTargetQuestionId: copyTo.copyTargetQuestionId,
+    isCopying: copyTo.isCopying,
     downgradeOptions: downgrade.downgradeOptions,
     claims,
     evidence,
@@ -126,6 +137,8 @@ export const useQuestionDetailModel = () => {
     setSectionOrder: sections.setSectionOrder,
     setMoveNoteId: move.setMoveNoteId,
     setMoveTargetQuestionId: move.setMoveTargetQuestionId,
+    setCopyNoteId: copyTo.setCopyNoteId,
+    setCopyTargetQuestionId: copyTo.setCopyTargetQuestionId,
     toggleSection: sections.toggleSection,
     loadData: data.loadData,
     handleEdit: editing.handleEdit,
@@ -133,8 +146,10 @@ export const useQuestionDetailModel = () => {
     handleSaveEdit: editing.handleSaveEdit,
     handleCancelEdit: editing.handleCancelEdit,
     handleDelete: deletion.handleDelete,
+    openCopyToQuestion: copyTo.openCopyToQuestion,
     openMoveToQuestion: move.openMoveToQuestion,
     handleConfirmMove: move.handleConfirmMove,
+    handleConfirmCopy: copyTo.handleConfirmCopy,
     getOrderedNotes: sections.getOrderedNotes,
     handleDragStart: sections.handleDragStart,
     handleDragEnter: sections.handleDragEnter,

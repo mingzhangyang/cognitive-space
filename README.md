@@ -9,7 +9,7 @@
 9| - **Thought Capture**: Quickly jot down ideas without structure.
 10| - **Question Organization**: Promote thoughts into questions and add supporting elements.
 11| - **Visualization**: Explore relationships between questions graphically.
-12| - **Dark Matter Recovery**: Rescue orphaned thoughts and link them back.
+12| - **Wandering Planet Recovery**: Rescue orphaned thoughts and link them back.
 13| - **PWA Support**: Installable as a progressive web app.
 14| 
 15| ## Guide
@@ -18,7 +18,7 @@
 18| 2. Create a new Question by tagging or promoting a thought when the theme becomes clear.
 19| 3. Add supporting notes as Claims, Evidence, or Triggers to build context over time.
 20| 4. Use `Visualize` to explore related questions and spot emerging clusters.
-21| 5. Visit `Dark Matter` to rescue orphaned fragments and link them to a question.
+21| 5. Visit `Wandering Planet` to rescue orphaned fragments and link them to a question.
 22| 
 23| For more details, see [Product Design](docs/product_design.md) and [Visualization Proposal](docs/visualization_proposal.md).
 24| 

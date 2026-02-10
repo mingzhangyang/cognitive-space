@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAppContext } from '../contexts/AppContext';
-import { CopyIcon, EditIcon, TrashIcon, MoveIcon } from './Icons';
+import { CopyIcon, CopyToIcon, EditIcon, TrashIcon, MoveIcon } from './Icons';
 
 /**
  * CSS class used for action sheet option text to ensure a unified muted color
@@ -12,10 +12,11 @@ export const UNIFIED_TEXT_CLASS = 'text-muted-400 dark:text-muted-500';
  * Action kinds supported by the action sheet.
  * - `edit`: edit the item
  * - `copy`: copy the item content
+ * - `copy_to`: copy the item to another question
  * - `delete`: remove the item
  * - `move`: move the item to another question
  */
-export type ActionKind = 'edit' | 'copy' | 'delete' | 'move';
+export type ActionKind = 'edit' | 'copy' | 'copy_to' | 'delete' | 'move';
 
 /**
  * Props for `ActionSheetButton`.
@@ -39,6 +40,7 @@ const actionConfig: Record<
 > = {
   edit: { labelKey: 'edit', textClassName: UNIFIED_TEXT_CLASS, Icon: EditIcon },
   copy: { labelKey: 'copy_note', textClassName: UNIFIED_TEXT_CLASS, Icon: CopyIcon },
+  copy_to: { labelKey: 'copy_to_question', textClassName: UNIFIED_TEXT_CLASS, Icon: CopyToIcon },
   delete: { labelKey: 'delete', textClassName: UNIFIED_TEXT_CLASS, Icon: TrashIcon },
   move: { labelKey: 'move_to_question', textClassName: UNIFIED_TEXT_CLASS, Icon: MoveIcon }
 };

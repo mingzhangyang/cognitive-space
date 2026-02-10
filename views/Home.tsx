@@ -12,7 +12,7 @@ const Home: React.FC = () => {
     t,
     questions,
     hasNotes,
-    darkMatterCount,
+    wanderingPlanetCount,
     deleteTarget,
     mobileQuestionActionsId,
     editingQuestionId,
@@ -65,7 +65,7 @@ const Home: React.FC = () => {
       <div className="space-y-4 sm:space-y-5 pb-28 sm:pb-24">
         <HomeRecallPanel
           t={t}
-          darkMatterCount={darkMatterCount}
+          wanderingPlanetCount={wanderingPlanetCount}
           isRecallOpen={isRecallOpen}
           query={query}
           isFiltering={isFiltering}

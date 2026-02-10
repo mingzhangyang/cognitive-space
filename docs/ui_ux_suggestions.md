@@ -45,11 +45,11 @@ e.g. "Claims (3)" so users can scan density at a glance without counting.
 Notes are currently ordered by creation time. Letting users drag to reorder (or at least pin a key note) supports deliberate review — what the product doc calls "the cross-section of a thinking scene."
 
 ### 11. Quick-link a note to another question
-If a note under Question A feels more relevant to Question B, a "Move to..." action (already exposed in Dark Matter) would reduce friction.
+If a note under Question A feels more relevant to Question B, a "Move to..." action (already exposed in Wandering Planet) would reduce friction.
 
 ---
 
-## Dark Matter (`/dark-matter`)
+## Wandering Planet (`/wandering-planet`)
 
 ### 12. Multi-select for batch actions
 When many fragments accumulate, linking them one-by-one is tedious. A checkbox mode (`Select` pill button) + batch "Link all to..." or "Promote to question" would drastically speed up triage.

@@ -1,5 +1,5 @@
-import { Note, NoteType, AnalysisResult, DarkMatterAnalysisResult } from "../types";
-import { normalizeAnalysisResult, normalizeDarkMatterResult } from "../shared/aiNormalize";
+import { Note, NoteType, AnalysisResult, WanderingPlanetAnalysisResult } from "../types";
+import { normalizeAnalysisResult, normalizeWanderingPlanetResult } from "../shared/aiNormalize";
 
 export const analyzeText = async (
   text: string, 
@@ -38,14 +38,14 @@ export const analyzeText = async (
   }
 };
 
-export const analyzeDarkMatter = async (
+export const analyzeWanderingPlanet = async (
   notes: Note[],
   existingQuestions: Note[],
   language: 'en' | 'zh' = 'en',
   maxClusters = 5
-): Promise<DarkMatterAnalysisResult> => {
+): Promise<WanderingPlanetAnalysisResult> => {
   try {
-    const response = await fetch('/api/dark-matter/analyze', {
+    const response = await fetch('/api/wandering-planet/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -65,16 +65,16 @@ export const analyzeDarkMatter = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Dark matter analyze request failed: ${response.status}`);
+      throw new Error(`Wandering Planet analysis request failed: ${response.status}`);
     }
 
     const result = await response.json();
     const validNoteIds = new Set(notes.map((note) => note.id));
     const validQuestionIds = new Set(existingQuestions.map((question) => question.id));
     const questionTitleById = new Map(existingQuestions.map((question) => [question.id, question.content]));
-    return normalizeDarkMatterResult(result, validNoteIds, validQuestionIds, questionTitleById, maxClusters);
+    return normalizeWanderingPlanetResult(result, validNoteIds, validQuestionIds, questionTitleById, maxClusters);
   } catch (error) {
-    console.error("Dark matter AI analysis failed:", error);
+    console.error("Wandering Planet AI analysis failed:", error);
     return { suggestions: [] };
   }
 };

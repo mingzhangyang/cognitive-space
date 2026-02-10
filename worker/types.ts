@@ -1,4 +1,4 @@
-import { ConfidenceLabel, DarkMatterSuggestionKind } from '../shared/domain';
+import { ConfidenceLabel, WanderingPlanetSuggestionKind } from '../shared/domain';
 
 export interface Env {
   BIGMODEL_API_KEY: string;
@@ -24,7 +24,7 @@ export type AnalyzeResponse = {
   reasoning: string;
 };
 
-export type DarkMatterAnalyzeRequest = {
+export type WanderingPlanetAnalyzeRequest = {
   language?: Language;
   notes?: Array<{
     id: string;
@@ -36,9 +36,9 @@ export type DarkMatterAnalyzeRequest = {
   maxClusters?: number;
 };
 
-export type DarkMatterSuggestion = {
+export type WanderingPlanetSuggestion = {
   id: string;
-  kind: DarkMatterSuggestionKind;
+  kind: WanderingPlanetSuggestionKind;
   title: string;
   existingQuestionId?: string;
   noteIds: string[];
@@ -46,8 +46,8 @@ export type DarkMatterSuggestion = {
   reasoning: string;
 };
 
-export type DarkMatterAnalyzeResponse = {
-  suggestions: DarkMatterSuggestion[];
+export type WanderingPlanetAnalyzeResponse = {
+  suggestions: WanderingPlanetSuggestion[];
 };
 
 export interface BigModelResponse {

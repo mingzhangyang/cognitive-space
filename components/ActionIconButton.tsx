@@ -1,9 +1,9 @@
 import React from 'react';
 import { useAppContext } from '../contexts/AppContext';
-import { CopyIcon, EditIcon, TrashIcon } from './Icons';
+import { CopyIcon, CopyToIcon, EditIcon, MoveIcon, TrashIcon } from './Icons';
 import Tooltip from './Tooltip';
 
-type ActionKind = 'edit' | 'copy' | 'delete';
+type ActionKind = 'edit' | 'copy' | 'copy_to' | 'delete' | 'move';
 
 type ActionIconButtonProps = {
   action: ActionKind;
@@ -27,10 +27,20 @@ const actionConfig: Record<ActionKind, { labelKey: string; hoverClassName: strin
     hoverClassName: 'hover:text-warning dark:hover:text-warning-dark',
     Icon: CopyIcon
   },
+  copy_to: {
+    labelKey: 'copy_to_question',
+    hoverClassName: 'hover:text-accent dark:hover:text-accent-dark',
+    Icon: CopyToIcon
+  },
   delete: {
     labelKey: 'delete',
     hoverClassName: 'hover:text-red-500 dark:hover:text-red-400',
     Icon: TrashIcon
+  },
+  move: {
+    labelKey: 'move_to_question',
+    hoverClassName: 'hover:text-accent dark:hover:text-accent-dark',
+    Icon: MoveIcon
   }
 };
 

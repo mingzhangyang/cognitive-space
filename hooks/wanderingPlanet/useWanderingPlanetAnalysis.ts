@@ -1,29 +1,29 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { analyzeDarkMatter } from '../../services/aiService';
+import { analyzeWanderingPlanet } from '../../services/aiService';
 import {
   createNoteObject,
-  getDarkMatter,
+  getWanderingPlanet,
   getQuestions,
-  recordDarkMatterAnalysisRequested,
-  recordDarkMatterSuggestionApplied,
-  recordDarkMatterSuggestionDismissed,
+  recordWanderingPlanetAnalysisRequested,
+  recordWanderingPlanetSuggestionApplied,
+  recordWanderingPlanetSuggestionDismissed,
   saveNote,
   updateNoteMeta
 } from '../../services/storageService';
-import { DarkMatterSuggestion, Note, NoteType } from '../../types';
+import { WanderingPlanetSuggestion, Note, NoteType } from '../../types';
 import { useAssistantInbox } from '../../contexts/AssistantInboxContext';
 import { createMessageId } from '../../utils/ids';
 import { coerceConfidenceLabel } from '../../utils/confidence';
 import { containsCjk, formatTemplate } from '../../utils/text';
 import type { TranslationKey } from '../../contexts/translations';
 
-interface DarkMatterAnalysisOptions {
+interface WanderingPlanetAnalysisOptions {
   t: (key: TranslationKey) => string;
   language: 'en' | 'zh';
-  darkMatter: Note[];
+  wanderingPlanet: Note[];
   analysisNotes: Note[];
-  darkMatterCount: number;
+  wanderingPlanetCount: number;
   aiRevealThreshold: number;
   loadInitial: () => Promise<void>;
   setAnalysisNotes: Dispatch<SetStateAction<Note[]>>;
@@ -33,10 +33,10 @@ interface DarkMatterAnalysisOptions {
 
 type PendingAction = {
   type: 'create' | 'link';
-  suggestion: DarkMatterSuggestion;
+  suggestion: WanderingPlanetSuggestion;
 } | null;
 
-const normalizeSuggestionForCompare = (suggestion: DarkMatterSuggestion) => ({
+const normalizeSuggestionForCompare = (suggestion: WanderingPlanetSuggestion) => ({
   ...suggestion,
   confidenceLabel: coerceConfidenceLabel(
     (suggestion as { confidenceLabel?: unknown }).confidenceLabel,
@@ -46,7 +46,7 @@ const normalizeSuggestionForCompare = (suggestion: DarkMatterSuggestion) => ({
   noteIds: [...suggestion.noteIds].sort()
 });
 
-const areSuggestionsEqual = (left: DarkMatterSuggestion[], right: DarkMatterSuggestion[]) => {
+const areSuggestionsEqual = (left: WanderingPlanetSuggestion[], right: WanderingPlanetSuggestion[]) => {
   if (left === right) return true;
   if (left.length !== right.length) return false;
   const normalizedLeft = left.map(normalizeSuggestionForCompare);
@@ -72,29 +72,29 @@ const areSuggestionsEqual = (left: DarkMatterSuggestion[], right: DarkMatterSugg
   return true;
 };
 
-export const useDarkMatterAnalysis = ({
+export const useWanderingPlanetAnalysis = ({
   t,
   language,
-  darkMatter,
+  wanderingPlanet,
   analysisNotes,
-  darkMatterCount,
+  wanderingPlanetCount,
   aiRevealThreshold,
   loadInitial,
   setAnalysisNotes,
   setQuestionsSorted,
   removeAnalysisNotes
-}: DarkMatterAnalysisOptions) => {
+}: WanderingPlanetAnalysisOptions) => {
   const {
     createJob,
     removeJob,
     addMessage,
     dismissMessagesByKind,
-    setDarkMatterAnalysis,
-    updateDarkMatterSuggestions,
-    darkMatterAnalysis
+    setWanderingPlanetAnalysis,
+    updateWanderingPlanetSuggestions,
+    wanderingPlanetAnalysis
   } = useAssistantInbox();
 
-  const [suggestions, setSuggestions] = useState<DarkMatterSuggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<WanderingPlanetSuggestion[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
@@ -102,31 +102,31 @@ export const useDarkMatterAnalysis = ({
 
   useEffect(() => {
     if (isAnalyzing) return;
-    if (!darkMatterAnalysis) return;
+    if (!wanderingPlanetAnalysis) return;
     setHasAnalyzed(true);
-    setSuggestions(darkMatterAnalysis.suggestions);
-    if (darkMatterAnalysis.noteIds.length === 0) {
+    setSuggestions(wanderingPlanetAnalysis.suggestions);
+    if (wanderingPlanetAnalysis.noteIds.length === 0) {
       setAnalysisNotes([]);
       return;
     }
     let isActive = true;
-    void getDarkMatter().then((allNotes) => {
+    void getWanderingPlanet().then((allNotes) => {
       if (!isActive) return;
-      const noteIdSet = new Set(darkMatterAnalysis.noteIds);
+      const noteIdSet = new Set(wanderingPlanetAnalysis.noteIds);
       setAnalysisNotes(allNotes.filter((note) => noteIdSet.has(note.id)));
     });
     return () => {
       isActive = false;
     };
-  }, [darkMatterAnalysis, isAnalyzing, setAnalysisNotes]);
+  }, [wanderingPlanetAnalysis, isAnalyzing, setAnalysisNotes]);
 
   useEffect(() => {
-    const suggestionSource = analysisNotes.length > 0 ? analysisNotes : darkMatter;
+    const suggestionSource = analysisNotes.length > 0 ? analysisNotes : wanderingPlanet;
     if (suggestionSource.length === 0) {
       setSuggestions((prev) => {
         if (prev.length === 0) return prev;
-        updateDarkMatterSuggestions([]);
-        dismissMessagesByKind('dark_matter_ready');
+        updateWanderingPlanetSuggestions([]);
+        dismissMessagesByKind('wandering_planet_ready');
         return [];
       });
       return;
@@ -140,58 +140,58 @@ export const useDarkMatterAnalysis = ({
         }))
         .filter((suggestion) => suggestion.noteIds.length >= 2);
       if (areSuggestionsEqual(prev, next)) return prev;
-      updateDarkMatterSuggestions(next);
-      if (next.length === 0 && prev.length > 0) dismissMessagesByKind('dark_matter_ready');
+      updateWanderingPlanetSuggestions(next);
+      if (next.length === 0 && prev.length > 0) dismissMessagesByKind('wandering_planet_ready');
       return next;
     });
-  }, [analysisNotes, darkMatter, dismissMessagesByKind, updateDarkMatterSuggestions]);
+  }, [analysisNotes, wanderingPlanet, dismissMessagesByKind, updateWanderingPlanetSuggestions]);
 
-  const getSuggestionReasoning = useCallback((suggestion: DarkMatterSuggestion) => {
+  const getSuggestionReasoning = useCallback((suggestion: WanderingPlanetSuggestion) => {
     const raw = typeof suggestion.reasoning === 'string' ? suggestion.reasoning.trim() : '';
     if (!raw || (language === 'zh' && !containsCjk(raw))) {
       if (language !== 'zh') return raw;
-      return formatTemplate(t('dark_matter_suggestion_reasoning_fallback'), { title: suggestion.title });
+      return formatTemplate(t('wandering_planet_suggestion_reasoning_fallback'), { title: suggestion.title });
     }
     return raw;
   }, [language, t]);
 
-  const getSuggestionConfidenceLabel = useCallback((suggestion: DarkMatterSuggestion) => {
+  const getSuggestionConfidenceLabel = useCallback((suggestion: WanderingPlanetSuggestion) => {
     const label = coerceConfidenceLabel(
       (suggestion as { confidenceLabel?: unknown }).confidenceLabel,
       (suggestion as { confidence?: unknown }).confidence
     );
-    if (label === 'likely') return t('dark_matter_ai_confidence_likely');
-    if (label === 'possible') return t('dark_matter_ai_confidence_possible');
-    return t('dark_matter_ai_confidence_loose');
+    if (label === 'likely') return t('wandering_planet_ai_confidence_likely');
+    if (label === 'possible') return t('wandering_planet_ai_confidence_possible');
+    return t('wandering_planet_ai_confidence_loose');
   }, [t]);
 
   const handleAnalyze = useCallback(async () => {
     if (isAnalyzing) return;
     setIsAnalyzing(true);
     setHasAnalyzed(true);
-    const [allDarkMatter, allQuestions] = await Promise.all([
-      getDarkMatter(),
+    const [allWanderingPlanet, allQuestions] = await Promise.all([
+      getWanderingPlanet(),
       getQuestions()
     ]);
-    setAnalysisNotes(allDarkMatter);
+    setAnalysisNotes(allWanderingPlanet);
     setQuestionsSorted(allQuestions);
-    void recordDarkMatterAnalysisRequested(allDarkMatter.length, allQuestions.length);
-    const jobId = createJob('dark_matter_analysis', { noteCount: allDarkMatter.length });
-    const result = await analyzeDarkMatter(allDarkMatter, allQuestions, language, 5);
+    void recordWanderingPlanetAnalysisRequested(allWanderingPlanet.length, allQuestions.length);
+    const jobId = createJob('wandering_planet_analysis', { noteCount: allWanderingPlanet.length });
+    const result = await analyzeWanderingPlanet(allWanderingPlanet, allQuestions, language, 5);
     setSuggestions(result.suggestions);
     setIsAnalyzing(false);
     removeJob(jobId);
-    setDarkMatterAnalysis({
+    setWanderingPlanetAnalysis({
       suggestions: result.suggestions,
-      noteIds: allDarkMatter.map((note) => note.id),
+      noteIds: allWanderingPlanet.map((note) => note.id),
       createdAt: Date.now()
     });
-    dismissMessagesByKind('dark_matter_ready');
+    dismissMessagesByKind('wandering_planet_ready');
     if (result.suggestions.length > 0) {
       addMessage({
         id: createMessageId(),
-        kind: 'dark_matter_ready',
-        title: t('assistant_dark_matter_ready_title'),
+        kind: 'wandering_planet_ready',
+        title: t('assistant_wandering_planet_ready_title'),
         createdAt: Date.now(),
         payload: { suggestionCount: result.suggestions.length }
       });
@@ -204,7 +204,7 @@ export const useDarkMatterAnalysis = ({
     language,
     removeJob,
     setAnalysisNotes,
-    setDarkMatterAnalysis,
+    setWanderingPlanetAnalysis,
     setQuestionsSorted,
     t
   ]);
@@ -212,14 +212,14 @@ export const useDarkMatterAnalysis = ({
   const dismissSuggestion = useCallback((id: string) => {
     setSuggestions((prev) => {
       const next = prev.filter((suggestion) => suggestion.id !== id);
-      updateDarkMatterSuggestions(next);
-      if (next.length === 0) dismissMessagesByKind('dark_matter_ready');
+      updateWanderingPlanetSuggestions(next);
+      if (next.length === 0) dismissMessagesByKind('wandering_planet_ready');
       return next;
     });
-    void recordDarkMatterSuggestionDismissed(id);
-  }, [dismissMessagesByKind, updateDarkMatterSuggestions]);
+    void recordWanderingPlanetSuggestionDismissed(id);
+  }, [dismissMessagesByKind, updateWanderingPlanetSuggestions]);
 
-  const requestApplySuggestion = useCallback((type: 'create' | 'link', suggestion: DarkMatterSuggestion) => {
+  const requestApplySuggestion = useCallback((type: 'create' | 'link', suggestion: WanderingPlanetSuggestion) => {
     setPendingAction({ type, suggestion });
   }, []);
 
@@ -247,7 +247,7 @@ export const useDarkMatterAnalysis = ({
         );
       }
 
-      await recordDarkMatterSuggestionApplied(
+      await recordWanderingPlanetSuggestionApplied(
         suggestion.kind,
         suggestion.noteIds.length,
         suggestion.id
@@ -255,8 +255,8 @@ export const useDarkMatterAnalysis = ({
       removeAnalysisNotes(suggestion.noteIds);
       setSuggestions((prev) => {
         const next = prev.filter((item) => item.id !== suggestion.id);
-        updateDarkMatterSuggestions(next);
-        if (next.length === 0) dismissMessagesByKind('dark_matter_ready');
+        updateWanderingPlanetSuggestions(next);
+        if (next.length === 0) dismissMessagesByKind('wandering_planet_ready');
         return next;
       });
     } catch (error) {
@@ -264,11 +264,11 @@ export const useDarkMatterAnalysis = ({
     } finally {
       await loadInitial();
     }
-  }, [dismissMessagesByKind, loadInitial, pendingAction, removeAnalysisNotes, updateDarkMatterSuggestions]);
+  }, [dismissMessagesByKind, loadInitial, pendingAction, removeAnalysisNotes, updateWanderingPlanetSuggestions]);
 
   const confirmMessage = pendingAction
     ? formatTemplate(
-      pendingAction.type === 'create' ? t('dark_matter_confirm_create') : t('dark_matter_confirm_link'),
+      pendingAction.type === 'create' ? t('wandering_planet_confirm_create') : t('wandering_planet_confirm_link'),
       {
         title: pendingAction.suggestion.title,
         count: pendingAction.suggestion.noteIds.length
@@ -276,11 +276,11 @@ export const useDarkMatterAnalysis = ({
     )
     : '';
   const confirmLabel = pendingAction
-    ? (pendingAction.type === 'create' ? t('dark_matter_ai_action_create') : t('dark_matter_ai_action_link'))
+    ? (pendingAction.type === 'create' ? t('wandering_planet_ai_action_create') : t('wandering_planet_ai_action_link'))
     : t('confirm');
 
-  const shouldShowAiCard = darkMatterCount > 0
-    && (darkMatterCount >= aiRevealThreshold || isAiPanelOpen);
+  const shouldShowAiCard = wanderingPlanetCount > 0
+    && (wanderingPlanetCount >= aiRevealThreshold || isAiPanelOpen);
 
   return {
     suggestions,

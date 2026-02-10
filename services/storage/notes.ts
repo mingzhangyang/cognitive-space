@@ -7,7 +7,7 @@ import { emitNoteEvent } from './noteEvents';
 import { STORE_EVENTS, STORE_META, STORE_NOTES } from './constants';
 import { CognitiveSpaceDB } from './schema';
 
-export interface DarkMatterPage {
+export interface WanderingPlanetPage {
   notes: Note[];
   nextCursor: number | null;
   hasMore: boolean;
@@ -321,10 +321,10 @@ export const demoteQuestion = async (
   );
 };
 
-export const getDarkMatterPage = async (
+export const getWanderingPlanetPage = async (
   limit: number,
   cursorUpdatedAt?: number
-): Promise<DarkMatterPage> => {
+): Promise<WanderingPlanetPage> => {
   return await withDb(
     { notes: [], nextCursor: null, hasMore: false },
     async (db) => {
@@ -339,17 +339,17 @@ export const getDarkMatterPage = async (
       let lastIncludedUpdatedAt: number | null = null;
       let hasMore = false;
 
-      const isDarkMatterNote = (note: Note) =>
+      const isWanderingPlanetNote = (note: Note) =>
         note.type !== NoteType.QUESTION && (note.parentId === null || note.parentId === undefined);
 
       while (cursor) {
-        if (isDarkMatterNote(cursor.value)) {
+        if (isWanderingPlanetNote(cursor.value)) {
           notes.push(cursor.value);
           lastIncludedUpdatedAt = cursor.value.updatedAt;
           if (notes.length >= limit) {
             cursor = await cursor.continue();
             while (cursor) {
-              if (isDarkMatterNote(cursor.value)) {
+              if (isWanderingPlanetNote(cursor.value)) {
                 hasMore = true;
                 break;
               }
@@ -364,11 +364,11 @@ export const getDarkMatterPage = async (
       await tx.done;
       return { notes, nextCursor: lastIncludedUpdatedAt, hasMore };
     },
-    'Failed to load dark matter page'
+    'Failed to load Wandering Planet page'
   );
 };
 
-export const getDarkMatterCount = async (): Promise<number> => {
+export const getWanderingPlanetCount = async (): Promise<number> => {
   return await withDb(
     0,
     async (db) => {
@@ -392,11 +392,11 @@ export const getDarkMatterCount = async (): Promise<number> => {
       await tx.done;
       return orphanCount - orphanQuestions;
     },
-    'Failed to count dark matter'
+    'Failed to count Wandering Planet'
   );
 };
 
-export const getDarkMatter = async (): Promise<Note[]> => {
+export const getWanderingPlanet = async (): Promise<Note[]> => {
   return await withDb(
     [],
     async (db) => {
@@ -408,7 +408,7 @@ export const getDarkMatter = async (): Promise<Note[]> => {
           (note.parentId === null || note.parentId === undefined)
       );
     },
-    'Failed to load dark matter'
+    'Failed to load Wandering Planet'
   );
 };
 

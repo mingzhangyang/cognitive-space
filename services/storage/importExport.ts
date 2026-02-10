@@ -121,17 +121,17 @@ const isTelemetryEvent = (value: unknown): value is TelemetryEvent => {
   if (!isRecord(value.payload)) return false;
 
   switch (value.type) {
-    case 'AI_DARK_MATTER_ANALYSIS_REQUESTED': {
+    case 'AI_WANDERING_PLANET_ANALYSIS_REQUESTED': {
       const payload = value.payload as { noteCount?: unknown; questionCount?: unknown };
       return isNumber(payload.noteCount) && isNumber(payload.questionCount);
     }
-    case 'AI_DARK_MATTER_SUGGESTION_APPLIED': {
+    case 'AI_WANDERING_PLANET_SUGGESTION_APPLIED': {
       const payload = value.payload as { kind?: unknown; noteCount?: unknown; suggestionId?: unknown };
       const validKind = payload.kind === 'new_question' || payload.kind === 'existing_question';
       return validKind && isNumber(payload.noteCount) &&
         (typeof payload.suggestionId === 'undefined' || typeof payload.suggestionId === 'string');
     }
-    case 'AI_DARK_MATTER_SUGGESTION_DISMISSED': {
+    case 'AI_WANDERING_PLANET_SUGGESTION_DISMISSED': {
       const payload = value.payload as { suggestionId?: unknown };
       return typeof payload.suggestionId === 'undefined' || typeof payload.suggestionId === 'string';
     }

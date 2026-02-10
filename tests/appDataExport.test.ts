@@ -73,13 +73,13 @@ describe('parseAppDataExport', () => {
         },
         {
           id: 'e2',
-          type: 'AI_DARK_MATTER_ANALYSIS_REQUESTED',
+          type: 'AI_WANDERING_PLANET_ANALYSIS_REQUESTED',
           createdAt: 2,
           payload: { noteCount: 3, questionCount: 1 }
         },
         {
           id: 'e3',
-          type: 'AI_DARK_MATTER_SUGGESTION_APPLIED',
+          type: 'AI_WANDERING_PLANET_SUGGESTION_APPLIED',
           createdAt: 3,
           payload: { kind: 'new_question', noteCount: 2, suggestionId: 's1' }
         }
@@ -94,7 +94,7 @@ describe('parseAppDataExport', () => {
       events: [
         {
           id: 'e1',
-          type: 'AI_DARK_MATTER_ANALYSIS_REQUESTED',
+          type: 'AI_WANDERING_PLANET_ANALYSIS_REQUESTED',
           createdAt: 2,
           payload: { noteCount: 'bad', questionCount: 1 }
         }
@@ -233,7 +233,7 @@ describe('parseAppDataExport', () => {
       events: [
         {
           id: 'e1',
-          type: 'AI_DARK_MATTER_SUGGESTION_APPLIED',
+          type: 'AI_WANDERING_PLANET_SUGGESTION_APPLIED',
           createdAt: 1,
           payload: { kind: 'maybe', noteCount: 2 }
         }

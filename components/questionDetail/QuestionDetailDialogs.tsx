@@ -33,6 +33,13 @@ interface QuestionDetailDialogsProps {
   onSelectQuestion: (id: string) => void;
   onConfirmMove: () => void;
   onCancelMove: () => void;
+  isCopyOpen: boolean;
+  isCopying: boolean;
+  copyQuestions: RelinkTarget[];
+  selectedCopyQuestionId: string | null;
+  onSelectCopyQuestion: (id: string) => void;
+  onConfirmCopy: () => void;
+  onCancelCopy: () => void;
 }
 
 const QuestionDetailDialogs: React.FC<QuestionDetailDialogsProps> = ({
@@ -59,7 +66,14 @@ const QuestionDetailDialogs: React.FC<QuestionDetailDialogsProps> = ({
   selectedQuestionId,
   onSelectQuestion,
   onConfirmMove,
-  onCancelMove
+  onCancelMove,
+  isCopyOpen,
+  isCopying,
+  copyQuestions,
+  selectedCopyQuestionId,
+  onSelectCopyQuestion,
+  onConfirmCopy,
+  onCancelCopy
 }) => {
   return (
     <>
@@ -93,6 +107,18 @@ const QuestionDetailDialogs: React.FC<QuestionDetailDialogsProps> = ({
         onSelectQuestion={onSelectQuestion}
         onConfirm={onConfirmMove}
         onCancel={onCancelMove}
+        t={t}
+      />
+      <MoveToQuestionModal
+        isOpen={isCopyOpen}
+        isWorking={isCopying}
+        questions={copyQuestions}
+        selectedQuestionId={selectedCopyQuestionId}
+        onSelectQuestion={onSelectCopyQuestion}
+        onConfirm={onConfirmCopy}
+        onCancel={onCancelCopy}
+        titleKey="copy_to_question_title"
+        confirmKey="copy_to_question_confirm"
         t={t}
       />
     </>

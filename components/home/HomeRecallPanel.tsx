@@ -5,7 +5,7 @@ import IconButton from '../IconButton';
 
 interface HomeRecallPanelProps {
   t: (key: string) => string;
-  darkMatterCount: number;
+  wanderingPlanetCount: number;
   isRecallOpen: boolean;
   query: string;
   isFiltering: boolean;
@@ -18,7 +18,7 @@ interface HomeRecallPanelProps {
 
 const HomeRecallPanel: React.FC<HomeRecallPanelProps> = ({
   t,
-  darkMatterCount,
+  wanderingPlanetCount,
   isRecallOpen,
   query,
   isFiltering,
@@ -42,15 +42,15 @@ const HomeRecallPanel: React.FC<HomeRecallPanelProps> = ({
             <span>{t('recall_label')}</span>
           </button>
         ) : null}
-        {darkMatterCount > 0 && (
+        {wanderingPlanetCount > 0 && (
           <Link
-            to="/dark-matter"
+            to="/wandering-planet"
             className="btn-pill btn-outline muted-label w-full sm:w-auto"
           >
             <span className="text-sm">🌑</span>
-            <span>{t('dark_matter')}</span>
+            <span>{t('wandering_planet')}</span>
             <span className="ml-1 px-1.5 py-0.5 bg-line dark:bg-line-dark rounded-full text-micro">
-              {darkMatterCount}
+              {wanderingPlanetCount}
             </span>
           </Link>
         )}

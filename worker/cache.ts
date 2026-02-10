@@ -6,7 +6,7 @@ export function getAnalyzeCacheKey(text: string, language: string, questionIds: 
   return raw;
 }
 
-export function getDarkMatterCacheKey(
+export function getWanderingPlanetCacheKey(
   language: string,
   maxClusters: number,
   notes: Array<{ id: string; content: string }>,
@@ -22,8 +22,8 @@ export function getDarkMatterCacheKey(
     .map((q) => `${q.id}:${q.content.length}:${hashString(q.content)}`)
     .join('|');
 
-  const raw = `dark-matter:v2:${language}:${maxClusters}:notes:${noteDigest}:questions:${questionDigest}`;
-  return `dm:${hashString(raw)}`;
+  const raw = `wandering-planet:v2:${language}:${maxClusters}:notes:${noteDigest}:questions:${questionDigest}`;
+  return `wp:${hashString(raw)}`;
 }
 
 export function getCacheClient(): Cache {

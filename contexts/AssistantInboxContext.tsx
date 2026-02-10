@@ -1,10 +1,10 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { DarkMatterSuggestion, NoteType, ConfidenceLabel } from '../types';
+import { WanderingPlanetSuggestion, NoteType, ConfidenceLabel } from '../types';
 
 const STORAGE_KEY = 'cs_assistant_inbox_v1';
 const STALE_JOB_MS = 20 * 60 * 1000;
 
-export type AssistantJobKind = 'note_analysis' | 'dark_matter_analysis';
+export type AssistantJobKind = 'note_analysis' | 'wandering_planet_analysis';
 
 export type AssistantJob = {
   id: string;
@@ -35,7 +35,7 @@ export type NoteSuggestionPayload = {
   reasoning?: string;
 };
 
-export type DarkMatterReadyPayload = {
+export type WanderingPlanetReadyPayload = {
   suggestionCount: number;
 };
 
@@ -49,14 +49,14 @@ export type AssistantMessage =
     }
   | {
       id: string;
-      kind: 'dark_matter_ready';
+      kind: 'wandering_planet_ready';
       title: string;
       createdAt: number;
-      payload: DarkMatterReadyPayload;
+      payload: WanderingPlanetReadyPayload;
     };
 
-export type DarkMatterAnalysisSession = {
-  suggestions: DarkMatterSuggestion[];
+export type WanderingPlanetAnalysisSession = {
+  suggestions: WanderingPlanetSuggestion[];
   noteIds: string[];
   createdAt: number;
 };
@@ -64,20 +64,20 @@ export type DarkMatterAnalysisSession = {
 type AssistantInboxState = {
   jobs: AssistantJob[];
   messages: AssistantMessage[];
-  darkMatterAnalysis: DarkMatterAnalysisSession | null;
+  wanderingPlanetAnalysis: WanderingPlanetAnalysisSession | null;
 };
 
 type AssistantInboxContextProps = {
   jobs: AssistantJob[];
   messages: AssistantMessage[];
-  darkMatterAnalysis: DarkMatterAnalysisSession | null;
+  wanderingPlanetAnalysis: WanderingPlanetAnalysisSession | null;
   createJob: (kind: AssistantJobKind, meta?: AssistantJob['meta']) => string;
   removeJob: (id: string) => void;
   addMessage: (message: AssistantMessage) => void;
   dismissMessage: (id: string) => void;
   dismissMessagesByKind: (kind: AssistantMessage['kind']) => void;
-  setDarkMatterAnalysis: (analysis: DarkMatterAnalysisSession | null) => void;
-  updateDarkMatterSuggestions: (suggestions: DarkMatterSuggestion[]) => void;
+  setWanderingPlanetAnalysis: (analysis: WanderingPlanetAnalysisSession | null) => void;
+  updateWanderingPlanetSuggestions: (suggestions: WanderingPlanetSuggestion[]) => void;
   messageCount: number;
   hasMessages: boolean;
 };
@@ -93,27 +93,27 @@ const createInboxId = () => {
 
 const sanitizeState = (value: unknown): AssistantInboxState => {
   if (!value || typeof value !== 'object') {
-    return { jobs: [], messages: [], darkMatterAnalysis: null };
+    return { jobs: [], messages: [], wanderingPlanetAnalysis: null };
   }
   const raw = value as Partial<AssistantInboxState>;
   return {
     jobs: Array.isArray(raw.jobs) ? raw.jobs : [],
     messages: Array.isArray(raw.messages) ? raw.messages : [],
-    darkMatterAnalysis: raw.darkMatterAnalysis ?? null
+    wanderingPlanetAnalysis: raw.wanderingPlanetAnalysis ?? null
   };
 };
 
 const loadStoredState = (): AssistantInboxState => {
   if (typeof window === 'undefined') {
-    return { jobs: [], messages: [], darkMatterAnalysis: null };
+    return { jobs: [], messages: [], wanderingPlanetAnalysis: null };
   }
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
-    if (!raw) return { jobs: [], messages: [], darkMatterAnalysis: null };
+    if (!raw) return { jobs: [], messages: [], wanderingPlanetAnalysis: null };
     const stored = sanitizeState(JSON.parse(raw));
     return { ...stored, jobs: [] };
   } catch {
-    return { jobs: [], messages: [], darkMatterAnalysis: null };
+    return { jobs: [], messages: [], wanderingPlanetAnalysis: null };
   }
 };
 
@@ -126,7 +126,7 @@ export const AssistantInboxProvider: React.FC<{ children: React.ReactNode }> = (
       const persistedState: AssistantInboxState = {
         jobs: [],
         messages: state.messages,
-        darkMatterAnalysis: state.darkMatterAnalysis
+        wanderingPlanetAnalysis: state.wanderingPlanetAnalysis
       };
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(persistedState));
     } catch {
@@ -175,17 +175,17 @@ export const AssistantInboxProvider: React.FC<{ children: React.ReactNode }> = (
     setState((prev) => ({ ...prev, messages: prev.messages.filter((message) => message.kind !== kind) }));
   }, []);
 
-  const setDarkMatterAnalysis = useCallback((analysis: DarkMatterAnalysisSession | null) => {
-    setState((prev) => ({ ...prev, darkMatterAnalysis: analysis }));
+  const setWanderingPlanetAnalysis = useCallback((analysis: WanderingPlanetAnalysisSession | null) => {
+    setState((prev) => ({ ...prev, wanderingPlanetAnalysis: analysis }));
   }, []);
 
-  const updateDarkMatterSuggestions = useCallback((suggestions: DarkMatterSuggestion[]) => {
+  const updateWanderingPlanetSuggestions = useCallback((suggestions: WanderingPlanetSuggestion[]) => {
     setState((prev) => {
-      if (!prev.darkMatterAnalysis) return prev;
+      if (!prev.wanderingPlanetAnalysis) return prev;
       return {
         ...prev,
-        darkMatterAnalysis: {
-          ...prev.darkMatterAnalysis,
+        wanderingPlanetAnalysis: {
+          ...prev.wanderingPlanetAnalysis,
           suggestions
         }
       };
@@ -199,28 +199,28 @@ export const AssistantInboxProvider: React.FC<{ children: React.ReactNode }> = (
     () => ({
       jobs: state.jobs,
       messages: state.messages,
-      darkMatterAnalysis: state.darkMatterAnalysis,
+      wanderingPlanetAnalysis: state.wanderingPlanetAnalysis,
       createJob,
       removeJob,
       addMessage,
       dismissMessage,
       dismissMessagesByKind,
-      setDarkMatterAnalysis,
-      updateDarkMatterSuggestions,
+      setWanderingPlanetAnalysis,
+      updateWanderingPlanetSuggestions,
       messageCount,
       hasMessages
     }),
     [
       state.jobs,
       state.messages,
-      state.darkMatterAnalysis,
+      state.wanderingPlanetAnalysis,
       createJob,
       removeJob,
       addMessage,
       dismissMessage,
       dismissMessagesByKind,
-      setDarkMatterAnalysis,
-      updateDarkMatterSuggestions,
+      setWanderingPlanetAnalysis,
+      updateWanderingPlanetSuggestions,
       messageCount,
       hasMessages
     ]

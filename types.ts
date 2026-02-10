@@ -1,7 +1,7 @@
-import { NoteType, ConfidenceLabel, DarkMatterSuggestionKind } from './shared/domain';
+import { NoteType, ConfidenceLabel, WanderingPlanetSuggestionKind } from './shared/domain';
 
 export { NoteType };
-export type { ConfidenceLabel, DarkMatterSuggestionKind };
+export type { ConfidenceLabel, WanderingPlanetSuggestionKind };
 
 export interface Note {
   id: string;
@@ -26,9 +26,9 @@ export interface AnalysisResult {
   reasoning: string;
 }
 
-export interface DarkMatterSuggestion {
+export interface WanderingPlanetSuggestion {
   id: string;
-  kind: DarkMatterSuggestionKind;
+  kind: WanderingPlanetSuggestionKind;
   title: string;
   existingQuestionId?: string;
   noteIds: string[];
@@ -37,8 +37,8 @@ export interface DarkMatterSuggestion {
   reasoning: string;
 }
 
-export interface DarkMatterAnalysisResult {
-  suggestions: DarkMatterSuggestion[];
+export interface WanderingPlanetAnalysisResult {
+  suggestions: WanderingPlanetSuggestion[];
 }
 
 export type NoteEvent =
@@ -80,23 +80,23 @@ export type NoteEvent =
 export type TelemetryEvent =
   | {
       id: string;
-      type: 'AI_DARK_MATTER_ANALYSIS_REQUESTED';
+      type: 'AI_WANDERING_PLANET_ANALYSIS_REQUESTED';
       createdAt: number;
       payload: { noteCount: number; questionCount: number };
     }
   | {
       id: string;
-      type: 'AI_DARK_MATTER_SUGGESTION_APPLIED';
+      type: 'AI_WANDERING_PLANET_SUGGESTION_APPLIED';
       createdAt: number;
       payload: {
-        kind: DarkMatterSuggestionKind;
+        kind: WanderingPlanetSuggestionKind;
         noteCount: number;
         suggestionId?: string;
       };
     }
   | {
       id: string;
-      type: 'AI_DARK_MATTER_SUGGESTION_DISMISSED';
+      type: 'AI_WANDERING_PLANET_SUGGESTION_DISMISSED';
       createdAt: number;
       payload: { suggestionId?: string };
     };

@@ -1,12 +1,12 @@
-import { ConfidenceLabel, DarkMatterSuggestionKind, NoteType } from './domain';
+import { ConfidenceLabel, WanderingPlanetSuggestionKind, NoteType } from './domain';
 import { confidenceLabelToScore, coerceConfidenceLabel } from './confidence';
 import { normalizeSubType } from './subtypes';
 import {
   CLASSIFICATIONS,
   CLASSIFICATION_CONFIDENCE_THRESHOLD,
-  DARK_MATTER_CONFIDENCE_THRESHOLD,
+  WANDERING_PLANET_CONFIDENCE_THRESHOLD,
   DEFAULT_ANALYSIS_REASONING,
-  DEFAULT_DARK_MATTER_REASONING,
+  DEFAULT_WANDERING_PLANET_REASONING,
   RELATION_CONFIDENCE_THRESHOLD
 } from './aiPolicy';
 
@@ -18,9 +18,9 @@ export type NormalizedAnalysisResult = {
   reasoning: string;
 };
 
-export type NormalizedDarkMatterSuggestion = {
+export type NormalizedWanderingPlanetSuggestion = {
   id: string;
-  kind: DarkMatterSuggestionKind;
+  kind: WanderingPlanetSuggestionKind;
   title: string;
   existingQuestionId?: string;
   noteIds: string[];
@@ -28,8 +28,8 @@ export type NormalizedDarkMatterSuggestion = {
   reasoning: string;
 };
 
-export type NormalizedDarkMatterResult = {
-  suggestions: NormalizedDarkMatterSuggestion[];
+export type NormalizedWanderingPlanetResult = {
+  suggestions: NormalizedWanderingPlanetSuggestion[];
 };
 
 const asRecord = (value: unknown): Record<string, unknown> | null =>
@@ -95,16 +95,16 @@ export function normalizeAnalysisResult(
   };
 }
 
-export function normalizeDarkMatterResult(
+export function normalizeWanderingPlanetResult(
   input: unknown,
   validNoteIds: Set<string>,
   validQuestionIds: Set<string>,
   questionTitleById: Map<string, string>,
   maxClusters: number
-): NormalizedDarkMatterResult {
+): NormalizedWanderingPlanetResult {
   const record = asRecord(input);
   const rawSuggestions = Array.isArray(record?.suggestions) ? record.suggestions : [];
-  const suggestions: NormalizedDarkMatterSuggestion[] = [];
+  const suggestions: NormalizedWanderingPlanetSuggestion[] = [];
   const usedNoteIds = new Set<string>();
   const usedSuggestionIds = new Set<string>();
 
@@ -116,7 +116,7 @@ export function normalizeDarkMatterResult(
     const kindRaw = typeof suggestion.kind === 'string' ? suggestion.kind : '';
     const kind =
       kindRaw === 'new_question' || kindRaw === 'existing_question'
-        ? (kindRaw as DarkMatterSuggestionKind)
+        ? (kindRaw as WanderingPlanetSuggestionKind)
         : null;
     if (!kind) continue;
 
@@ -153,12 +153,12 @@ export function normalizeDarkMatterResult(
 
     const confidenceLabel = normalizeConfidenceLabel(suggestion);
     const confidenceScore = confidenceLabelToScore(confidenceLabel);
-    if (confidenceScore < DARK_MATTER_CONFIDENCE_THRESHOLD) continue;
+    if (confidenceScore < WANDERING_PLANET_CONFIDENCE_THRESHOLD) continue;
 
     const reasoning =
       typeof suggestion.reasoning === 'string' && suggestion.reasoning.trim()
         ? suggestion.reasoning.trim()
-        : DEFAULT_DARK_MATTER_REASONING;
+        : DEFAULT_WANDERING_PLANET_REASONING;
 
     let id = normalizeId(suggestion.id) || `s${suggestions.length + 1}`;
     if (usedSuggestionIds.has(id)) {

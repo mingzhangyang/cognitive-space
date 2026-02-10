@@ -47,7 +47,7 @@ export const useQuestionDetailDowngrade = ({
       if (shouldRelink) {
         navigate(`/question/${relinkQuestionId}`);
       } else {
-        navigate('/dark-matter');
+        navigate('/wandering-planet');
       }
     } finally {
       setIsDowngrading(false);

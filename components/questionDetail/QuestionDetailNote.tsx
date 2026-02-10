@@ -28,6 +28,7 @@ export interface QuestionDetailNoteSharedProps {
   handleSaveEdit: () => Promise<void> | void;
   handleCancelEdit: () => void;
   handleDelete: (id: string, isQuestion: boolean) => void;
+  openCopyToQuestion: (noteId: string) => void;
   openMoveToQuestion: (noteId: string) => void;
   handleDragStart: (noteId: string, sectionKey: string) => void;
   handleDragEnter: (noteId: string, sectionKey: string) => void;
@@ -58,6 +59,7 @@ const QuestionDetailNote: React.FC<QuestionDetailNoteProps> = ({
   handleSaveEdit,
   handleCancelEdit,
   handleDelete,
+  openCopyToQuestion,
   openMoveToQuestion,
   handleDragStart,
   handleDragEnter,
@@ -77,6 +79,12 @@ const QuestionDetailNote: React.FC<QuestionDetailNoteProps> = ({
         action="copy"
         onClick={() => handleCopyNote(note.content)}
       />
+      {availableQuestions.length > 0 && (
+        <ActionIconButton
+          action="copy_to"
+          onClick={() => openCopyToQuestion(note.id)}
+        />
+      )}
       {availableQuestions.length > 0 && (
         <IconButton
           label={t('move_to_question')}
@@ -158,6 +166,15 @@ const QuestionDetailNote: React.FC<QuestionDetailNoteProps> = ({
                     handleCopyNote(note.content);
                   }}
                 />
+                {availableQuestions.length > 0 && (
+                  <ActionSheetButton
+                    action="copy_to"
+                    onClick={() => {
+                      setMobileNoteActionsId(null);
+                      openCopyToQuestion(note.id);
+                    }}
+                  />
+                )}
                 {availableQuestions.length > 0 && (
                   <ActionSheetButton
                     action="move"

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type MouseEvent } from 'reac
 import { useNavigate } from 'react-router-dom';
 import {
   deleteNote,
-  getDarkMatterCount,
+  getWanderingPlanetCount,
   getNotes,
   getQuestions,
   updateNoteContent
@@ -14,7 +14,7 @@ import { useCopyToClipboard } from './useCopyToClipboard';
 export const useHomeModel = () => {
   const [questions, setQuestions] = useState<Note[]>([]);
   const [hasNotes, setHasNotes] = useState(false);
-  const [darkMatterCount, setDarkMatterCount] = useState(0);
+  const [wanderingPlanetCount, setWanderingPlanetCount] = useState(0);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [mobileQuestionActionsId, setMobileQuestionActionsId] = useState<string | null>(null);
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
@@ -35,8 +35,8 @@ export const useHomeModel = () => {
     setHasNotes(allNotes.length > 0);
     const nextQuestions = await getQuestions();
     setQuestions(nextQuestions.sort((a, b) => b.updatedAt - a.updatedAt));
-    const darkMatterTotal = await getDarkMatterCount();
-    setDarkMatterCount(darkMatterTotal);
+    const wanderingPlanetTotal = await getWanderingPlanetCount();
+    setWanderingPlanetCount(wanderingPlanetTotal);
   }, []);
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -159,7 +159,7 @@ export const useHomeModel = () => {
     t,
     questions,
     hasNotes,
-    darkMatterCount,
+    wanderingPlanetCount,
     deleteTarget,
     mobileQuestionActionsId,
     editingQuestionId,
