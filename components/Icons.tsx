@@ -203,7 +203,7 @@ export const EmptyStateIllustration = ({ className }: { className?: string }) =>
   <img src="/favison.svg" className={className} alt="" aria-hidden="true" />
 );
 
-// Wandering Planet empty-state illustration: asteroid icon
+// Asteroid icon: use asteroid asset for consistency
 export const AsteroidIcon = ({ className }: { className?: string }) => (
   <img src="/asteroid.svg" className={className} alt="" aria-hidden="true" />
 );
