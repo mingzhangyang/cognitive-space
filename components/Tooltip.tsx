@@ -30,7 +30,10 @@ const Tooltip: React.FC<TooltipProps> = ({ content, placement = 'top', children 
   const idRef = useRef(`tooltip-${Math.random().toString(36).slice(2, 9)}`);
   const id = idRef.current;
   const [open, setOpen] = useState(false);
-  const [canShow, setCanShow] = useState(true);
+  const [canShow, setCanShow] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return !window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+  });
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -46,7 +49,7 @@ const Tooltip: React.FC<TooltipProps> = ({ content, placement = 'top', children 
   }, []);
 
   const hasContent = Boolean(content);
-  const shouldShowOnHover = hasContent && canShow;
+  const shouldShow = hasContent && canShow;
 
   useEffect(() => {
     if (!hasContent || !canShow) setOpen(false);
@@ -62,19 +65,19 @@ const Tooltip: React.FC<TooltipProps> = ({ content, placement = 'top', children 
       ? [childProps['aria-describedby'], id].filter(Boolean).join(' ')
       : childProps['aria-describedby'],
     onMouseEnter: (e: React.MouseEvent<Element>) => {
-      if (shouldShowOnHover) setOpen(true);
+      if (shouldShow) setOpen(true);
       childProps.onMouseEnter?.(e);
     },
     onMouseLeave: (e: React.MouseEvent<Element>) => {
-      if (shouldShowOnHover) setOpen(false);
+      if (shouldShow) setOpen(false);
       childProps.onMouseLeave?.(e);
     },
     onFocus: (e: React.FocusEvent<Element>) => {
-      if (hasContent) setOpen(true);
+      if (shouldShow) setOpen(true);
       childProps.onFocus?.(e);
     },
     onBlur: (e: React.FocusEvent<Element>) => {
-      if (hasContent) setOpen(false);
+      if (shouldShow) setOpen(false);
       childProps.onBlur?.(e);
     }
   });
