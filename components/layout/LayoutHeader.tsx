@@ -64,6 +64,9 @@ const LayoutHeader: React.FC<LayoutHeaderProps> = ({
     navigate('/about');
   };
 
+  const headerIconSizeClassName = 'h-9 w-9';
+  const headerIconClassName = 'btn-glass-icon btn-glass-icon-borderless';
+
   return (
     <header className="relative z-20 mb-8 sm:mb-10 flex flex-wrap items-center justify-between gap-3">
       <Link
@@ -77,7 +80,7 @@ const LayoutHeader: React.FC<LayoutHeaderProps> = ({
           <Tooltip content={t('back_problems')}>
             <Link
               to="/"
-              className="btn-icon btn-glass-icon"
+              className={`btn-icon ${headerIconSizeClassName} ${headerIconClassName} cursor-pointer`}
               aria-label={t('back_problems')}
             >
               <HomeIcon className="w-4 h-4" />
@@ -87,7 +90,8 @@ const LayoutHeader: React.FC<LayoutHeaderProps> = ({
         <IconButton
           label={t('assistant_inbox_title')}
           onClick={onOpenInbox}
-          className="btn-glass-icon btn-glass-icon-borderless relative"
+          sizeClassName={headerIconSizeClassName}
+          className={`${headerIconClassName} relative`}
         >
           <InboxIcon className="w-4 h-4" />
           {messageCount > 0 && (
@@ -102,7 +106,8 @@ const LayoutHeader: React.FC<LayoutHeaderProps> = ({
             ref={menuButtonRef}
             label={menuOpen ? t('menu_close') : t('menu_open')}
             onClick={() => setMenuOpen((prev) => !prev)}
-            className="btn-glass-icon btn-glass-icon-borderless"
+            sizeClassName={headerIconSizeClassName}
+            className={headerIconClassName}
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             aria-controls="app-menu"
