@@ -49,7 +49,7 @@ export async function handleAnalyze(
     .filter((q): q is { id: string; content: string } => Boolean(q));
   const questionIds = existingQuestions.map((q) => q.id);
 
-  const cacheKey = getAnalyzeCacheKey(text, language, existingQuestions);
+  const cacheKey = await getAnalyzeCacheKey(text, language, existingQuestions);
   const cache = getCacheClient();
   const cacheRequest = buildCacheRequest(request, cacheKey);
 

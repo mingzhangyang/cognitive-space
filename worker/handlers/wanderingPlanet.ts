@@ -70,7 +70,7 @@ export async function handleWanderingPlanetAnalyze(
     }
   }
 
-  const cacheKey = getWanderingPlanetCacheKey(
+  const cacheKey = await getWanderingPlanetCacheKey(
     language,
     maxClusters,
     notes,

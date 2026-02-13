@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { getWanderingPlanetCount, getWanderingPlanetPage, getQuestions } from '../../services/storageService';
+import {
+  getWanderingPlanetCount,
+  getWanderingPlanetPage,
+  getQuestions,
+  type WanderingPlanetPage
+} from '../../services/storageService';
 import { Note } from '../../types';
 
 export const useWanderingPlanetData = () => {
@@ -9,7 +14,7 @@ export const useWanderingPlanetData = () => {
   const [analysisNotes, setAnalysisNotes] = useState<Note[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
-  const [nextCursor, setNextCursor] = useState<number | null>(null);
+  const [nextCursor, setNextCursor] = useState<WanderingPlanetPage['nextCursor']>(null);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
   const aiRevealThreshold = 4;

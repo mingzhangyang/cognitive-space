@@ -1,36 +1,40 @@
 import { hashString } from './utils';
 
-export function getAnalyzeCacheKey(
+export async function getAnalyzeCacheKey(
   text: string,
   language: string,
   existingQuestions: Array<{ id: string; content: string }>
-): string {
+): Promise<string> {
   const sortedQuestions = [...existingQuestions].sort((a, b) => a.id.localeCompare(b.id));
-  const questionDigest = sortedQuestions
-    .map((q) => `${q.id}:${q.content.length}:${hashString(q.content)}`)
-    .join('|');
-  const raw = `analyze:v3:${language}:text:${text.length}:${hashString(text)}:questions:${questionDigest}`;
-  return `analyze:${hashString(raw)}`;
+  const raw = JSON.stringify({
+    version: 4,
+    language,
+    text,
+    existingQuestions: sortedQuestions
+  });
+  return `analyze:${await hashString(raw)}`;
 }
 
-export function getWanderingPlanetCacheKey(
+export async function getWanderingPlanetCacheKey(
   language: string,
   maxClusters: number,
   notes: Array<{ id: string; content: string; type?: string }>,
   existingQuestions: Array<{ id: string; content: string }>
-): string {
+): Promise<string> {
   const sortedNotes = [...notes].sort((a, b) => a.id.localeCompare(b.id));
   const sortedQuestions = [...existingQuestions].sort((a, b) => a.id.localeCompare(b.id));
-
-  const noteDigest = sortedNotes
-    .map((note) => `${note.id}:${note.content.length}:${hashString(note.content)}:${note.type ?? ''}`)
-    .join('|');
-  const questionDigest = sortedQuestions
-    .map((q) => `${q.id}:${q.content.length}:${hashString(q.content)}`)
-    .join('|');
-
-  const raw = `wandering-planet:v3:${language}:${maxClusters}:notes:${noteDigest}:questions:${questionDigest}`;
-  return `wp:${hashString(raw)}`;
+  const raw = JSON.stringify({
+    version: 4,
+    language,
+    maxClusters,
+    notes: sortedNotes.map((note) => ({
+      id: note.id,
+      content: note.content,
+      type: note.type ?? ''
+    })),
+    existingQuestions: sortedQuestions
+  });
+  return `wp:${await hashString(raw)}`;
 }
 
 export function getCacheClient(): Cache {
