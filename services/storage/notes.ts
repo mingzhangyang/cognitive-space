@@ -1,15 +1,20 @@
 import type { IDBPTransaction } from 'idb';
 import { Note, NoteEvent, NoteType } from '../../types';
 import { normalizeSubType } from '../../utils/subtypes';
-import { withDb } from './db';
+import { withDb, withDbOrThrow } from './db';
 import { appendEventTx, ensureProjection, markProjectionUpToDateTx } from './events';
 import { emitNoteEvent } from './noteEvents';
 import { STORE_EVENTS, STORE_META, STORE_NOTES } from './constants';
 import { CognitiveSpaceDB } from './schema';
 
+export interface WanderingPlanetCursor {
+  updatedAt: number;
+  id: string;
+}
+
 export interface WanderingPlanetPage {
   notes: Note[];
-  nextCursor: number | null;
+  nextCursor: WanderingPlanetCursor | null;
   hasMore: boolean;
 }
 
@@ -58,8 +63,7 @@ export const getNotes = async (): Promise<Note[]> => {
 };
 
 export const saveNote = async (note: Note): Promise<void> => {
-  await withDb<void>(
-    undefined,
+  await withDbOrThrow(
     async (db) => {
       await ensureProjection(db);
       const tx = db.transaction([STORE_NOTES, STORE_EVENTS, STORE_META], 'readwrite');
@@ -135,8 +139,7 @@ export const createNoteObject = (content: string): Note => {
 };
 
 export const deleteNote = async (noteId: string): Promise<void> => {
-  await withDb<void>(
-    undefined,
+  await withDbOrThrow(
     async (db) => {
       await ensureProjection(db);
       const tx = db.transaction([STORE_NOTES, STORE_EVENTS, STORE_META], 'readwrite');
@@ -169,8 +172,7 @@ export const deleteNote = async (noteId: string): Promise<void> => {
 };
 
 export const updateNoteContent = async (noteId: string, newContent: string): Promise<void> => {
-  await withDb<void>(
-    undefined,
+  await withDbOrThrow(
     async (db) => {
       await ensureProjection(db);
       const tx = db.transaction([STORE_NOTES, STORE_EVENTS, STORE_META], 'readwrite');
@@ -218,8 +220,7 @@ export const updateNoteMeta = async (
     ...updates,
     ...(typeof updates.subType === 'string' ? { subType: normalizeSubType(updates.subType) } : {})
   };
-  await withDb<void>(
-    undefined,
+  await withDbOrThrow(
     async (db) => {
       await ensureProjection(db);
       const tx = db.transaction([STORE_NOTES, STORE_EVENTS, STORE_META], 'readwrite');
@@ -276,8 +277,7 @@ export const demoteQuestion = async (
   const relinkQuestionId = options?.relinkQuestionId ?? null;
   const includeSelf = options?.includeSelf ?? false;
   const nextParentId = relinkQuestionId ?? null;
-  await withDb<void>(
-    undefined,
+  await withDbOrThrow(
     async (db) => {
       await ensureProjection(db);
       const tx = db.transaction([STORE_NOTES, STORE_EVENTS, STORE_META], 'readwrite');
@@ -323,7 +323,7 @@ export const demoteQuestion = async (
 
 export const getWanderingPlanetPage = async (
   limit: number,
-  cursorUpdatedAt?: number
+  cursorState?: WanderingPlanetCursor
 ): Promise<WanderingPlanetPage> => {
   return await withDb(
     { notes: [], nextCursor: null, hasMore: false },
@@ -331,24 +331,37 @@ export const getWanderingPlanetPage = async (
       await ensureProjection(db);
       const tx = db.transaction(STORE_NOTES, 'readonly');
       const index = tx.store.index('by-updated');
-      const range = typeof cursorUpdatedAt === 'number'
-        ? IDBKeyRange.upperBound(cursorUpdatedAt)
+      const range = cursorState
+        ? IDBKeyRange.upperBound(cursorState.updatedAt)
         : undefined;
       let cursor = await index.openCursor(range, 'prev');
       const notes: Note[] = [];
-      let lastIncludedUpdatedAt: number | null = null;
+      let lastIncludedNote: Note | null = null;
       let hasMore = false;
 
       const isWanderingPlanetNote = (note: Note) =>
         note.type !== NoteType.QUESTION && (note.parentId === null || note.parentId === undefined);
+      const isBeforeCursor = (note: Note): boolean => {
+        if (!cursorState) return true;
+        if (note.updatedAt !== cursorState.updatedAt) return true;
+        return note.id < cursorState.id;
+      };
 
       while (cursor) {
+        if (!isBeforeCursor(cursor.value)) {
+          cursor = await cursor.continue();
+          continue;
+        }
         if (isWanderingPlanetNote(cursor.value)) {
           notes.push(cursor.value);
-          lastIncludedUpdatedAt = cursor.value.updatedAt;
+          lastIncludedNote = cursor.value;
           if (notes.length >= limit) {
             cursor = await cursor.continue();
             while (cursor) {
+              if (!isBeforeCursor(cursor.value)) {
+                cursor = await cursor.continue();
+                continue;
+              }
               if (isWanderingPlanetNote(cursor.value)) {
                 hasMore = true;
                 break;
@@ -362,7 +375,10 @@ export const getWanderingPlanetPage = async (
       }
 
       await tx.done;
-      return { notes, nextCursor: lastIncludedUpdatedAt, hasMore };
+      const nextCursor = lastIncludedNote
+        ? { updatedAt: lastIncludedNote.updatedAt, id: lastIncludedNote.id }
+        : null;
+      return { notes, nextCursor, hasMore };
     },
     'Failed to load Wandering Planet page'
   );

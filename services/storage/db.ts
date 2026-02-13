@@ -38,3 +38,21 @@ export const withDb = async <T>(
     return fallback;
   }
 };
+
+export const withDbOrThrow = async <T>(
+  action: (db: IDBPDatabase<CognitiveSpaceDB>) => Promise<T>,
+  errorMessage: string
+): Promise<T> => {
+  const db = await getDb();
+  if (!db) {
+    const error = new Error('IndexedDB is unavailable');
+    logDbError(errorMessage, error);
+    throw error;
+  }
+  try {
+    return await action(db);
+  } catch (error) {
+    logDbError(errorMessage, error);
+    throw error;
+  }
+};

@@ -3,13 +3,30 @@ export const asRecord = (value: unknown): Record<string, unknown> | null =>
     ? (value as Record<string, unknown>)
     : null;
 
-export function hashString(input: string): string {
-  let hash = 2166136261;
+const FALLBACK_HASH_MASK = 0xffffffffffffffffn;
+const FALLBACK_HASH_OFFSET = 0xcbf29ce484222325n;
+const FALLBACK_HASH_PRIME = 0x100000001b3n;
+
+const toHex = (bytes: Uint8Array): string =>
+  Array.from(bytes)
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+
+const fallbackHashString = (input: string): string => {
+  let hash = FALLBACK_HASH_OFFSET;
   for (let i = 0; i < input.length; i += 1) {
-    hash ^= input.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
+    hash ^= BigInt(input.charCodeAt(i));
+    hash = (hash * FALLBACK_HASH_PRIME) & FALLBACK_HASH_MASK;
   }
-  return (hash >>> 0).toString(16);
+  return hash.toString(16).padStart(16, '0');
+};
+
+export async function hashString(input: string): Promise<string> {
+  if (typeof crypto !== 'undefined' && crypto.subtle) {
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
+    return toHex(new Uint8Array(digest));
+  }
+  return fallbackHashString(input);
 }
 
 export function safeParseJson(text: string): unknown {
